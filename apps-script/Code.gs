@@ -18,20 +18,34 @@ function findRow_(sh, key) {
   return -1;
 }
 
-function handle_(p) {
-  var pw = p.pw || '';
-  if (pw !== props_().getProperty('SHARED_PASSWORD')) return { ok: false, error: 'auth' };
-  if (p.action === 'adminAuth') {
-    return { ok: p.admin === props_().getProperty('ADMIN_PASSWORD') };
+// 읽기: 잠금 없이 바로 실행
+function read_(p) {
+  var sh = store_();
+  if (p.action === 'get') {
+    var r = findRow_(sh, p.key);
+    return { ok: true, value: r < 0 ? null : JSON.parse(sh.getRange(r, 2).getValue()) };
   }
+  if (p.action === 'list') {
+    var prefix = p.prefix || '';
+    var last = sh.getLastRow();
+    var out = {};
+    if (last > 1) {
+      var data = sh.getRange(2, 1, last - 1, 2).getValues();
+      for (var i = 0; i < data.length; i++) {
+        if (String(data[i][0]).indexOf(prefix) === 0) out[data[i][0]] = JSON.parse(data[i][1]);
+      }
+    }
+    return { ok: true, value: out };
+  }
+  return { ok: false, error: 'bad_action' };
+}
+
+// 쓰기: 동시에 덮어쓰지 않도록 잠금 사용
+function write_(p) {
   var lock = LockService.getScriptLock();
-  lock.waitLock(20000);
+  lock.waitLock(30000);
   try {
     var sh = store_();
-    if (p.action === 'get') {
-      var r = findRow_(sh, p.key);
-      return { ok: true, value: r < 0 ? null : JSON.parse(sh.getRange(r, 2).getValue()) };
-    }
     if (p.action === 'set') {
       var row = findRow_(sh, p.key);
       var vals = [p.key, p.value, new Date()];
@@ -43,22 +57,19 @@ function handle_(p) {
       if (d > 0) sh.deleteRow(d);
       return { ok: true };
     }
-    if (p.action === 'list') {
-      var prefix = p.prefix || '';
-      var last = sh.getLastRow();
-      var out = {};
-      if (last > 1) {
-        var data = sh.getRange(2, 1, last - 1, 2).getValues();
-        for (var i = 0; i < data.length; i++) {
-          if (String(data[i][0]).indexOf(prefix) === 0) out[data[i][0]] = JSON.parse(data[i][1]);
-        }
-      }
-      return { ok: true, value: out };
-    }
     return { ok: false, error: 'bad_action' };
   } finally {
     lock.releaseLock();
   }
+}
+
+function handle_(p) {
+  if (p.pw !== props_().getProperty('SHARED_PASSWORD')) return { ok: false, error: 'auth' };
+  if (p.action === 'adminAuth') {
+    return { ok: p.admin === props_().getProperty('ADMIN_PASSWORD') };
+  }
+  if (p.action === 'get' || p.action === 'list') return read_(p);
+  return write_(p);
 }
 
 function doGet(e) { return out_(handle_(e.parameter)); }

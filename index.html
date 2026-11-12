@@ -380,7 +380,7 @@ const DA={
   async post(body){const r=await fetch(API_URL,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify({...body,pw:LS.g("dsac_pw")||""})});const j=await r.json();if(!j.ok)throw authErr(j);pollers.forEach(f=>f());return j}
 };
 function snap(path,v){return{id:path,exists:v!==null&&v!==undefined,data:()=>v}}
-function poll(fn,ok,err){let last=null,stop=false;const run=async()=>{if(stop)return;try{const s=await fn();const j=JSON.stringify(s.docs?s.docs.map(d=>[d.id,d.data()]):s.data());if(j!==last){last=j;ok(s)}}catch(e){if(err)err(e)}};pollers.add(run);run();const t=setInterval(run,6000);return()=>{stop=true;clearInterval(t);pollers.delete(run)}}
+function poll(fn,ok,err){let last=null,stop=false;const run=async()=>{if(stop)return;try{const s=await fn();const j=JSON.stringify(s.docs?s.docs.map(d=>[d.id,d.data()]):s.data());if(j!==last){last=j;ok(s)}}catch(e){if(err)err(e)}};pollers.add(run);run();const t=setInterval(run,15000);return()=>{stop=true;clearInterval(t);pollers.delete(run)}}
 function docRef(path){return{
   async get(){return snap(path,await DA.get(path))},
   async set(v){await DA.post({action:"set",key:path,value:JSON.stringify(v)})},
