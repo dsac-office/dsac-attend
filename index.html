@@ -450,6 +450,24 @@ const LG_IN="font:inherit;font-size:15px;padding:11px 12px;border:1px solid var(
 const LG_BTN="font:inherit;font-size:15px;font-weight:700;padding:12px;border:0;border-radius:10px;background:var(--btn);color:var(--on-btn);cursor:pointer";
 if(!LS.g("dsac_uid")){document.addEventListener("DOMContentLoaded",showLogin);if(document.readyState!=="loading")showLogin()}
 
+/* 기존 데이터 가져오기: 관리자가 주소 끝에 ?import 를 붙여 열면 백업 파일을 올려 저장 */
+function showImport(){
+  if(document.getElementById("im"))return;
+  const box=document.createElement("div");box.id="im";
+  box.style.cssText="position:fixed;left:0;right:0;bottom:0;z-index:9998;background:var(--surface);border-top:1px solid var(--line);padding:14px 16px;display:flex;gap:12px;align-items:center;flex-wrap:wrap;font-size:14px;color:var(--ink)";
+  box.innerHTML='<b>데이터 가져오기</b><input type="file" accept="application/json" id="im_f"><span id="im_m" style="color:var(--muted)"></span>';
+  document.body.appendChild(box);
+  box.querySelector("#im_f").onchange=async e=>{
+    const f=e.target.files[0];if(!f)return;const m=box.querySelector("#im_m");
+    try{
+      const j=JSON.parse(await f.text());const ents=Object.entries(j.docs||{});let n=0;
+      for(const[k,v] of ents){await DA.post({action:"set",key:k,value:JSON.stringify(v)});n++;m.textContent=`${n}/${ents.length} 저장 중…`}
+      m.textContent=`${n}개를 저장했어요. 주소 끝의 ?import 를 빼고 다시 열어 주세요.`;
+    }catch(err){m.textContent="가져오지 못했어요: "+(err.code||err.message)}
+  };
+}
+if(/[?&]import/.test(location.search)&&LS.g("dsac_uid")&&LS.g("dsac_adm")==="1"){document.addEventListener("DOMContentLoaded",showImport);if(document.readyState!=="loading")showImport()}
+
 </script>
 <script>
 "use strict";
