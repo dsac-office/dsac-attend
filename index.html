@@ -443,7 +443,7 @@ function showLogin(){
       if(!r&&adm){r={name:nm,team:"",active:true};await DA.post({action:"set",key:"roster/"+id,value:JSON.stringify(r)})}
       if(!r||r.active===false||String(r.name).replace(/\s/g,"")!==nm.replace(/\s/g,"")){LS.d("dsac_pw");$("#lg_go").disabled=false;return err("등록된 사번과 이름이 맞지 않아요. 담당자에게 문의해 주세요")}
       if(!(await DA.get("sheets/"+id)))await DA.post({action:"set",key:"sheets/"+id,value:JSON.stringify({emp:{id,name:r.name,team:r.team||""},p:{}})});
-      if(!(await DA.get("ot/"+id)))await DA.post({action:"set",key:"ot/"+id,value:JSON.stringify({name:r.name,rank:rk,items:{}})});
+      {const o=await DA.get("ot/"+id);await DA.post({action:"set",key:"ot/"+id,value:JSON.stringify({...(o||{items:{}}),name:r.name,rank:rk})})}
       LS.s("dsac_uid",id);LS.s("dsac_name",r.name);LS.s("dsac_adm",adm?"1":"0");
       location.reload();
     }catch(e){LS.d("dsac_pw");$("#lg_go").disabled=false;err(e.code==="auth"?"공유 비밀번호가 맞지 않아요":"저장소에 연결하지 못했어요. 잠시 후 다시 해 주세요")}
@@ -1208,7 +1208,7 @@ function render(ext){
   if(!db||!uid){app().innerHTML=`<div class="center"><img class="logo lt" src="${LOGO_LT}" alt="달서아트센터 DSAC"><div class="card"><h2>로그인이 필요해요</h2><div class="mute">Claude에 로그인한 상태에서 이 링크를 열어 주세요.</div></div></div>`;return}
   if(S.mine===undefined)return;
   if(!S.mine&&flexName()&&!S.autoNamed){S.autoNamed=true;db.doc("ot/"+uid).set({name:flexName(),items:{}}).catch(()=>{});app().innerHTML=shell('<div class="card mute">불러오는 중…</div>');return}
-  if(!S.mine||!S.mine.name||!RANKS.includes(S.mine.rank))return renderName();
+  if(!S.mine||!S.mine.name)return renderName();
   if(S.view==="admin"&&isAdmin)return renderAdmin();
   S.view="me";renderMe();
 }
@@ -1217,7 +1217,7 @@ document.addEventListener("click",e=>{const b=e.target.closest("[data-onav]");if
 /* 처음 한 번: 이름 */
 async function renderName(){
   let pre="";try{const me=await userNS.me();pre=me&&me.name||""}catch{}
-  if(S.mine&&S.mine.name&&RANKS.includes(S.mine.rank))return;
+  if(S.mine&&S.mine.name)return;
   if(window.MODE!=="ot")return;
   app().innerHTML=`<div class="center"><img class="logo lt" src="${LOGO_LT}" alt="달서아트센터 DSAC"><div class="card"><h2>시간외근무 신청</h2>
   <div class="mute">기안문에 들어갈 이름을 적어 주세요. 처음 한 번만 하면 돼요.</div>
