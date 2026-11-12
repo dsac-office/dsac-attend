@@ -302,7 +302,7 @@ textarea{width:100%}
 .it .a .ol{padding:4px 4px}
 @media(max-width:560px){.it{grid-template-columns:58px 1fr auto;gap:4px 10px}}
 .empty{color:var(--muted);padding:8px 0}
-/* 모아보기 */
+/* 신청 목록 */
 .pick{display:flex;gap:8px 10px;align-items:center;flex-wrap:wrap}
 .pick input[type=date]{font-size:15px;padding:7px 10px}
 .qd{display:flex;gap:6px;flex-wrap:wrap}
@@ -1195,7 +1195,7 @@ const mdk=ms=>{const n=new Date(ms+9*36e5);return `${n.getUTCMonth()+1}/${n.getU
 /* 화면 뼈대 */
 const app=()=>$("#app");
 function shell(inner){
-  const nav=isAdmin?[["me","신청하기"],["admin","모아보기"]]:[];
+  const nav=isAdmin?[["me","신청하기"],["admin","신청 목록"]]:[];
   const nm=S.mine&&S.mine.name;
   return`<div class="top"><div class="in">${logoBtn()}
   <nav><button data-home>홈</button>${nav.map(([k,l])=>`<button data-onav="${k}" class="${k===S.view?"on":""}">${l}</button>`).join("")}</nav><span class="sp"></span>
@@ -1302,7 +1302,7 @@ function renderMe(){
   });
 }
 
-/* 수합자: 모아보기 */
+/* 수합자: 신청 목록 */
 function allItems(){const out=[];for(const[u,doc]of Object.entries(S.all))for(const it of items(doc))out.push({...it,uid:u,name:doc.name||"",rk:doc.rank||""});return out}
 function pendingAll(){return allItems().filter(x=>x.st!=="done")}
 const sortG=(a,b)=>a.d.localeCompare(b.d)||a.ts-b.ts;
@@ -1321,7 +1321,7 @@ function renderAdmin(){
   const groups={};for(const x of done)(groups[x.dt||"(제목 없음)"]??=[]).push(x);
   const gl=Object.entries(groups).sort((a,b)=>Math.max(...b[1].map(x=>x.da||0))-Math.max(...a[1].map(x=>x.da||0))).slice(0,S.showDone?100:6);
   const cnt=d=>pend.filter(x=>x.d===d).length;
-  app().innerHTML=shell(`<div class="head"><div><h1>시간외근무 모아보기</h1><p>기안 올리기 전 ${all.length}건</p></div></div>
+  app().innerHTML=shell(`<div class="head"><div><h1>시간외근무 신청 목록</h1><p>기안 올리기 전 ${all.length}건</p></div></div>
   <div class="card">${!all.length?`<div class="empty">기안할 신청이 없어요</div>`:`
   <div class="qd rkrow"><button data-rk="" class="${!S.rk?"on":""}">전체<i>${all.length}</i></button>${rkNames.map(r=>`<button data-rk="${esc(r==="미정"?"":r)}" class="${S.rk===(r==="미정"?"":r)?"on":""}">${esc(r)}<i>${all.filter(x=>(x.rk||"미정")===r).length}</i></button>`).join("")}</div>
   <div class="pick"><div class="qd">${days.map(d=>`<button data-day="${d}" class="${d>=S.from&&d<=S.to?"on":""}">${md(d)}(${DOW[pd(d).getUTCDay()]})<i>${cnt(d)}</i></button>`).join("")}</div></div>
