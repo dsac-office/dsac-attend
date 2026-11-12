@@ -469,6 +469,16 @@ function showImport(){
 }
 if(/[?&]import/.test(location.search)&&LS.g("dsac_uid")&&LS.g("dsac_adm")==="1"){document.addEventListener("DOMContentLoaded",showImport);if(document.readyState!=="loading")showImport()}
 
+/* 로그아웃 버튼: 로그인한 기기에서만 화면 왼쪽 아래에 작게 보임 */
+function addLogout(){
+  if(!LS.g("dsac_uid")||document.getElementById("lo"))return;
+  const b=document.createElement("button");b.id="lo";b.textContent="로그아웃";
+  b.style.cssText="position:fixed;left:12px;bottom:12px;z-index:9000;font:inherit;font-size:12px;color:var(--muted);background:var(--surface);border:1px solid var(--line);border-radius:999px;padding:5px 10px;cursor:pointer";
+  b.onclick=()=>{["dsac_pw","dsac_uid","dsac_name","dsac_adm"].forEach(LS.d);location.replace(location.pathname)};
+  document.body.appendChild(b);
+}
+if(LS.g("dsac_uid")){document.addEventListener("DOMContentLoaded",addLogout);if(document.readyState!=="loading")addLogout()}
+
 </script>
 <script>
 "use strict";
