@@ -403,7 +403,8 @@ const dlShim={async save({filename,data}){const url=URL.createObjectURL(data ins
 window.claude={use:async n=>({db:dbShim,user:userShim,downloads:dlShim}[n]||null)};
 
 /* 로그아웃: 주소 끝에 ?logout 을 붙여 열면 이 기기의 로그인 정보를 지움 */
-if(/[?&]logout/.test(location.search)){["dsac_pw","dsac_uid","dsac_name","dsac_adm"].forEach(LS.d);location.replace(location.pathname)}
+function doLogout(){LS.s("dsac_last",JSON.stringify({id:LS.g("dsac_uid")||"",name:LS.g("dsac_name")||""}));["dsac_pw","dsac_uid","dsac_name","dsac_adm"].forEach(LS.d);location.replace(location.pathname)}
+if(/[?&]logout/.test(location.search))doLogout();
 
 /* 첫 접속 로그인: 공유 비밀번호 + 사번 + 이름 + 직급 (관리자는 관리자 비밀번호) */
 function showLogin(){
@@ -425,6 +426,7 @@ function showLogin(){
     </div></div>`;
   document.body.appendChild(box);
   const $=s=>box.querySelector(s);
+  try{const last=JSON.parse(LS.g("dsac_last")||"null");if(last){$("#lg_id").value=last.id||"";$("#lg_nm").value=last.name||""}}catch(e){}
   $("#lg_ad").onchange=e=>{$("#lg_apw").style.display=e.target.checked?"block":"none"};
   $("#lg_go").onclick=async()=>{
     const pw=$("#lg_pw").value,id=$("#lg_id").value.trim(),nm=$("#lg_nm").value.trim(),rk=$("#lg_rk").value;
@@ -474,7 +476,7 @@ function addLogout(){
   if(!LS.g("dsac_uid")||document.getElementById("lo"))return;
   const b=document.createElement("button");b.id="lo";b.textContent="로그아웃";
   b.style.cssText="position:fixed;left:12px;bottom:12px;z-index:9000;font:inherit;font-size:12px;color:var(--muted);background:var(--surface);border:1px solid var(--line);border-radius:999px;padding:5px 10px;cursor:pointer";
-  b.onclick=()=>{["dsac_pw","dsac_uid","dsac_name","dsac_adm"].forEach(LS.d);location.replace(location.pathname)};
+  b.onclick=doLogout;
   document.body.appendChild(b);
 }
 if(LS.g("dsac_uid")){document.addEventListener("DOMContentLoaded",addLogout);if(document.readyState!=="loading")addLogout()}
