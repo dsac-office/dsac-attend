@@ -569,7 +569,7 @@ function calcSheet(period,entries,hol,monthCnt){
 
 /* ===== 화면 뼈대 ===== */
 function shell(inner,active){
-  const nav=isAdmin?[["me","내 근무표"],["admin","전직원 현황"],["manage","관리"]]:[];
+  const nav=isAdmin?[["me","내 근무표"],["admin","전직원 탄력근무표"],["manage","관리"]]:[];
   return`<div class="top"><div class="in">${logoBtn()}
   <nav><button data-home>홈</button>${nav.map(([k,l])=>`<button data-nav="${k}" class="${k===active?"on":""}">${l}</button>`).join("")}</nav><span class="sp"></span>
   <span class="who">${S.my&&S.my.emp?`${esc(S.my.emp.team)} ${esc(S.my.emp.name)}`:""}${isAdmin?" · 관리자":""}</span></div></div><div class="wrap">${inner}</div>`;
@@ -591,7 +591,7 @@ function renderHome(){
     <div class="tiles">
       <button class="tile" data-mode="flex" data-mine><span class="ic">${IC.flex}</span><span class="tt"><b>탄력근무계획표</b></span></button>
       <button class="tile" data-mode="ot"><span class="ic">${IC.ot}</span><span class="tt"><b>시간외근무 신청</b></span></button>
-      ${isAdmin?`<button class="tile adm" data-admin><span class="ic">${IC.admin}</span><span class="tt"><b>전직원 관리</b></span></button>`:""}
+      ${isAdmin?`<button class="tile adm" data-admin><span class="ic">${IC.admin}</span><span class="tt"><b>전직원 탄력근무표</b></span></button>`:""}
     </div></div></div>`;
 }
 document.addEventListener("click",e=>{
@@ -651,7 +651,7 @@ function renderSheetPage(target,mode){
   if(!doc){S.view="admin";return render()}
   T={uid:target,pid:p.id,ro:(p.locked&&!isAdmin)||canWrite===false};
   const st=cfg.settings,emp=doc.emp||{name:"",team:""};
-  const back=mode==="admin"?`<button class="btn ghost sm" data-nav="admin" style="align-self:flex-start">← 전직원 현황</button>`:"";
+  const back=mode==="admin"?`<button class="btn ghost sm" data-nav="admin" style="align-self:flex-start">← 전직원 탄력근무표</button>`:"";
   app().innerHTML=shell(`${back}
   <div class="head"><div><h1>${mode==="admin"?`${esc(emp.team)} ${esc(emp.name)} 님`:`${esc(emp.name)} 님의 탄력근무계획표`}</h1><p>${esc(p.name)} · ${md(p.start_date)} ~ ${md(addDays(p.start_date,p.weeks*7-1))} · 단위기간 ${p.weeks}주</p></div><span class="sp"></span>${periodSelect()}</div>
   ${canWrite===false?`<div class="notice">지금은 보기만 할 수 있어요. 입력하려면 담당자에게 작성 권한을 요청하세요.</div>`:p.locked?`<div class="notice">🔒 마감된 기간이에요.${T.ro?" 고칠 내용이 있으면 담당자에게 알려 주세요.":" 관리자는 수정할 수 있어요."}</div>`:""}
@@ -1017,7 +1017,7 @@ function renderAdmin(){
   rows.sort((a,b)=>a.emp.team.localeCompare(b.emp.team,"ko")||a.emp.name.localeCompare(b.emp.name,"ko"));
   const n=rows.length+missing.length,bad=rows.filter(x=>x.issue||x.dup).length,done=rows.filter(x=>x.conf===p.weeks).length,none=missing.length+rows.filter(x=>!x.started).length;
   app().innerHTML=shell(`
-  <div class="head"><div><h1>전직원 현황</h1><p>${esc(p.name)} · 한도나 평균을 넘은 직원을 먼저 확인하세요</p></div><span class="sp"></span>${periodSelect()}</div>
+  <div class="head"><div><h1>전직원 탄력근무표</h1><p>${esc(p.name)} · 한도나 평균을 넘은 직원을 먼저 확인하세요</p></div><span class="sp"></span>${periodSelect()}</div>
   <div class="card counts">${[["전체 직원",n],["확인 필요",bad,bad>0],["작성 완료",done],["아직 작성 안 함",none]].map(([l,v,b])=>`<div class="${b?"bad":""}"><b>${v}명</b><span>${l}</span></div>`).join("")}</div>
   <div class="card"><div class="filters"><input type="search" id="fq" placeholder="이름·사번 검색" value="${esc(keep.q)}" aria-label="이름 또는 사번 검색">
   <select id="ft" aria-label="팀 선택"><option value="">전체 팀</option>${teams.map(t=>`<option ${t===keep.t?"selected":""}>${esc(t)}</option>`).join("")}</select>
@@ -1030,7 +1030,7 @@ function renderAdmin(){
     const list=rows.filter(x=>(!ft||x.emp.team===ft)&&(!fi||x.issue||x.dup)&&(!fq||x.emp.name.includes(fq)||x.emp.id.includes(fq)));
     const miss=(!fi)?missing.filter(m=>(!ft||m.team===ft)&&(!fq||m.name.includes(fq)||m.id.includes(fq))):[];
     $("#atab").innerHTML=`<tr><th>이름</th><th class="n">작성</th><th class="n">기본 평균</th><th class="n">시간외 평균</th><th class="n">휴무 필요</th><th class="n">한도 초과</th><th>상태</th></tr>`+
-    list.map(({u,emp,r,conf,issue,started,dup})=>`<tr class="click" data-u="${esc(u)}"><td><b>${esc(emp.name)}</b><div class="sub">${esc(emp.team)}${emp.team?" · ":""}${esc(emp.id)}</div></td>
+    list.map(({u,emp,r,conf,issue,started,dup},ix,arr)=>(!ft&&(ix===0||arr[ix-1].emp.team!==emp.team)?`<tr class="teamh"><th colspan="7" style="text-align:left;background:var(--off);font-size:13px;color:var(--ink2);padding:10px 10px 6px">${esc(emp.team||"팀 미지정")}</th></tr>`:"")+`<tr class="click" data-u="${esc(u)}"><td><b>${esc(emp.name)}</b><div class="sub">${esc(emp.team)}${emp.team?" · ":""}${esc(emp.id)}</div></td>
       <td class="n">${conf}/${p.weeks}</td><td class="n ${r.avgBaseBad?"warn":""}">${f1(r.avgBase)}</td><td class="n ${r.avgOtBad?"warn":""}">${f1(r.avgOt)}</td><td class="n ${r.needLeave>EPS?"warn":""}">${f1(r.needLeave)}</td><td class="n ${r.warnWeeks?"warn":""}">${r.warnWeeks?r.warnWeeks+"주":"-"}</td>
       <td>${dup?'<span class="chip bad">사번 중복 연결</span>':issue?'<span class="chip bad">확인 필요</span>':conf===p.weeks?'<span class="chip ok">완료</span>':started?'<span class="chip pri">작성 중</span>':'<span class="chip">미작성</span>'}</td></tr>`).join("")+
     miss.map(m=>`<tr><td><b>${esc(m.name)}</b><div class="sub">${esc(m.team)}${m.team?" · ":""}${esc(m.id)}</div></td><td class="n mute">-</td><td class="n mute">-</td><td class="n mute">-</td><td class="n mute">-</td><td class="n mute">-</td><td><span class="chip">아직 시작 안 함</span></td></tr>`).join("")||`<tr><td colspan="7" class="mute">조건에 맞는 직원이 없어요</td></tr>`;
@@ -1197,7 +1197,7 @@ const mdk=ms=>{const n=new Date(ms+9*36e5);return `${n.getUTCMonth()+1}/${n.getU
 /* 화면 뼈대 */
 const app=()=>$("#app");
 function shell(inner){
-  const nav=isAdmin?[["me","신청하기"],["admin","신청 목록"]]:[];
+  const nav=isAdmin?[["me","신청하기"],["admin","신청현황"]]:[];
   const nm=S.mine&&S.mine.name;
   return`<div class="top"><div class="in">${logoBtn()}
   <nav><button data-home>홈</button>${nav.map(([k,l])=>`<button data-onav="${k}" class="${k===S.view?"on":""}">${l}</button>`).join("")}</nav><span class="sp"></span>
@@ -1326,7 +1326,7 @@ function renderAdmin(){
   const groups={};for(const x of done)(groups[x.dt||"(제목 없음)"]??=[]).push(x);
   const gl=Object.entries(groups).sort((a,b)=>Math.max(...b[1].map(x=>x.da||0))-Math.max(...a[1].map(x=>x.da||0))).slice(0,S.showDone?100:6);
   const cnt=d=>pend.filter(x=>x.d===d).length;
-  app().innerHTML=shell(`<div class="head"><div><h1>시간외근무 신청 목록</h1><p>기안 올리기 전 ${all.length}건</p></div></div>
+  app().innerHTML=shell(`<div class="head"><div><h1>시간외 신청현황</h1><p>기안 올리기 전 ${all.length}건</p></div></div>
   <div class="card">${!all.length?`<div class="empty">기안할 신청이 없어요</div>`:`
   <div class="qd rkrow"><button data-rk="" class="${!S.rk?"on":""}">전체<i>${all.length}</i></button>${rkNames.map(r=>`<button data-rk="${esc(r==="미정"?"":r)}" class="${S.rk===(r==="미정"?"":r)?"on":""}">${esc(r)}<i>${all.filter(x=>(x.rk||"미정")===r).length}</i></button>`).join("")}</div>
   <div class="pick"><div class="qd">${days.map(d=>`<button data-day="${d}" class="${d>=S.from&&d<=S.to?"on":""}">${md(d)}(${DOW[pd(d).getUTCDay()]})<i>${cnt(d)}</i></button>`).join("")}</div></div>
