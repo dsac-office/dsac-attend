@@ -1055,7 +1055,7 @@ function renderAdmin(){
   const TEAM_ORDER=["운영지원팀","문화기획팀","공연지원팀"];
   const tIdx=t=>{const k=TEAM_ORDER.indexOf(t);return k<0?99:k};
   const rIdx=r=>{const k=RANKS.indexOf(r||"");return k<0?99:k};
-  rows.sort((a,b)=>tIdx(a.emp.team)-tIdx(b.emp.team)||(a.emp.team||"").localeCompare(b.emp.team||"","ko")||rIdx(a.emp.rank||a.emp.rk)-rIdx(b.emp.rank||b.emp.rk)||a.emp.name.localeCompare(b.emp.name,"ko"));
+  rows.sort((a,b)=>tIdx(a.emp.team)-tIdx(b.emp.team)||(a.emp.team||"").localeCompare(b.emp.team||"","ko")||rIdx(a.emp.rank||a.emp.rk)-rIdx(b.emp.rank||b.emp.rk)||String(a.emp.name||"").localeCompare(String(b.emp.name||""),"ko"));
   const n=rows.length+missing.length,bad=rows.filter(x=>x.issue||x.dup).length,done=rows.filter(x=>x.conf===p.weeks).length,none=missing.length+rows.filter(x=>!x.started).length;
   app().innerHTML=shell(`
   <div class="head"><div><h1>전직원 탄력근무표</h1><p>${esc(p.name)} · 한도나 평균을 넘은 직원을 먼저 확인하세요</p></div><span class="sp"></span>${periodSelect()}</div>
