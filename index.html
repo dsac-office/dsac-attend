@@ -480,6 +480,7 @@ table.xl thead th{position:sticky;top:calc(var(--toph,58px) + var(--sumh,70px) +
 .logob:focus-visible{transform:translateY(-3px);outline:2px solid var(--accent);outline-offset:4px}
 @media (prefers-reduced-motion:reduce){.logob,.logob:hover{transition:none;transform:none}}
 /* 작성 완료 체크칸 */
+.bk{display:inline-flex;gap:4px;margin-left:8px;vertical-align:middle}.bk button{padding:3px 10px;border-radius:980px;border:1px solid var(--line);background:var(--surface);font-size:12px;font-weight:700;color:var(--muted);cursor:pointer}.bk button.on{background:var(--accent-soft);border-color:var(--accent);color:var(--accent-ink)}.bk[hidden]{display:none}
 .wcf{position:relative}
 .wcf input[type=checkbox]{accent-color:#58C0D0;width:16px;height:16px;margin:0;cursor:pointer;transform-origin:center}
 .pring{position:absolute;width:18px;height:18px;border-radius:50%;border:2px solid #58C0D0;left:0;top:0;will-change:transform,opacity}
@@ -1440,26 +1441,27 @@ function formHtml(it){
   <div class="hd-only" ${k==="휴일"?"":"hidden"}><label for="fr">기본근무(사용 시)</label><input id="fr" value="${esc(k==="휴일"?v.r:"")}" placeholder="예: 9:00~18:00"></div>
   <div><label for="fe">퇴근시간 (초과 끝)</label><input class="tm" id="fe" inputmode="numeric" autocomplete="off" placeholder="22:00" maxlength="8" value="${esc(v.e)}"></div>
   <div><label for="fm">초과시간 (자동, 수정 가능)</label><div class="min"><input type="number" id="fm" inputmode="numeric" min="0" step="10" value="${esc(v.m)}"><span>분</span></div></div>
-  <div class="w2" style="margin-top:-6px"><span id="fbk" style="font-size:12px;color:var(--muted)"></span> <select id="fbr" hidden style="font-size:12px;padding:2px 6px;margin-left:6px" aria-label="휴게 공제 위치"><option value="ot">초과에서 공제</option><option value="base">기본에서 공제</option></select></div>
+  <div class="w2" style="margin-top:-6px"><span id="fbk" style="font-size:12px;color:var(--muted)"></span> <span class="bk" id="fbr" hidden role="group" aria-label="휴게 공제 위치"><button type="button" data-v="ot" class="on" aria-pressed="true">초과에서</button><button type="button" data-v="base" aria-pressed="false">기본에서</button></span></div>
   <div class="w2"><label for="fw">근무내역</label><input id="fw" value="${esc(v.w)}" placeholder="예: 기획공연 준비"></div>
   <div class="fbar">${it?`<button class="btn ghost" id="fc">취소</button>`:""}<button class="btn" id="fo">${it?"수정":"신청"}</button></div>
   </div></div>`;
 }
+function brkOf(){return document.querySelector("#fbr .on")?.dataset.v||"ot"}
 function bindForm(it){
   let k=it&&it.k||(isHol($("#fd").value)?"휴일":"평일"),mTouched=!!(it&&it.m!=="");
   const setK=x=>{k=x;$("#fk").querySelectorAll("button").forEach(b=>b.classList.toggle("on",b.dataset.k===k));$("#f .wd-only").hidden=k==="휴일";$("#f .hd-only").hidden=k!=="휴일";recalc()};
   const tv=id=>normT($(id).value);
   const updBk=()=>{const el=$("#fbk"),sel=$("#fbr");if(!el)return;const a=toMin(tv("#fs")),e2=toMin(tv("#fe"));const tot=(a!=null&&e2!=null)?e2-a:0;const d=tot>=540?60:tot>240?30:0;const big=k==="휴일"&&d>0;if(sel)sel.hidden=!(k==="휴일"&&d===60);if(!big){el.textContent="";return}el.textContent=`휴게 ${d}분 자동 차감`};
-  const recalc=()=>{if(!mTouched)$("#fm").value=tv("#fe")?autoMin(k,tv("#fs"),tv("#fe"),tv("#fb"),$("#fr")?.value,$("#fbr")?.value):"";updBk()};
+  const recalc=()=>{if(!mTouched)$("#fm").value=tv("#fe")?autoMin(k,tv("#fs"),tv("#fe"),tv("#fb"),$("#fr")?.value,brkOf()):"";updBk()};
   $("#fk").onclick=e=>{const b=e.target.closest("button");if(b)setK(b.dataset.k)};
   $("#fd").onchange=()=>{const d=$("#fd").value;if(!d)return;$("#fk").querySelectorAll(".dw").forEach(x=>x.textContent=DOW[pd(d).getUTCDay()]);setK(isHol(d)?"휴일":"평일")};
   ["#fs","#fe","#fb","#fr"].forEach(id=>{const el=$(id);el.oninput=()=>{mTouched=false;recalc()};el.onblur=()=>{const n=normT(el.value);if(n)el.value=n}});
   $("#fm").oninput=()=>{mTouched=$("#fm").value!=="";updBk()};
-  if($("#fbr"))$("#fbr").onchange=()=>{mTouched=false;recalc()};
+  $("#fbr").onclick=e=>{const b=e.target.closest("button");if(!b)return;$("#fbr").querySelectorAll("button").forEach(x=>{const on=x===b;x.classList.toggle("on",on);x.setAttribute("aria-pressed",on)});mTouched=false;recalc()};
   recalc();
   if(it)$("#fc").onclick=()=>{S.edit=null;render()};
   $("#fo").onclick=async()=>{
-    const d=$("#fd").value,s=tv("#fs"),e=tv("#fe"),w=$("#fw").value.trim(),be=k==="평일"?(tv("#fb")||"18:00"):"",m=$("#fm").value===""?autoMin(k,s,e,be,$("#fr")?.value,$("#fbr")?.value):Math.round(+$("#fm").value);
+    const d=$("#fd").value,s=tv("#fs"),e=tv("#fe"),w=$("#fw").value.trim(),be=k==="평일"?(tv("#fb")||"18:00"):"",m=$("#fm").value===""?autoMin(k,s,e,be,$("#fr")?.value,brkOf()):Math.round(+$("#fm").value);
     const r=k==="휴일"?$("#fr").value.trim():(be!=="18:00"?`${hm(be)}~${hm(e)}`:"");
     if(!d)return toast("일자를 골라 주세요",true);
     if(!s||!e)return toast("출근·퇴근 시간을 입력해 주세요",true);
