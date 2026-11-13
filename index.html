@@ -393,6 +393,7 @@ table.gi td small.rk{display:inline;font-size:12px;color:var(--accent-ink);margi
 .home .tile.adm .tt{width:auto}
 .home .tile.adm::after{position:static}
 @media(min-width:720px){.home .tile{min-height:200px;padding:24px}.home .tile b{font-size:22px}.home .tile.adm{min-height:0}}
+.wcf{display:flex;gap:4px;align-items:center;justify-content:center;margin-top:8px;font-size:11px;font-weight:400;color:var(--muted);cursor:pointer;white-space:nowrap}.wcf input{margin:0}
 </style>
 <div id="app"><div class="center"><div class="card mute">불러오는 중…</div></div></div>
 <div id="toast"></div>
@@ -633,6 +634,7 @@ document.addEventListener("click",e=>{
   const h=e.target.closest("[data-home]"),m=e.target.closest("[data-mode]"),ad=e.target.closest("[data-admin]"),mg=e.target.closest("[data-manage]");
   if(mg){MODE="flex";S.view="manage";S.target=null;render();scrollTo(0,0);return}
   if(m&&m.dataset.mode==="flex"){S.view="me";S.target=null}
+  if(m&&m.dataset.mode==="ot"&&OT.toMe)OT.toMe();
   if(ad){MODE="flex";S.view="admin";S.target=null;render();scrollTo(0,0)}
   else if(h){MODE="home";render();scrollTo(0,0)}
   else if(m){MODE=m.dataset.mode;render();scrollTo(0,0)}
@@ -728,7 +730,7 @@ function weekBlock(w){
   const txtRow=D.map(o=>td(o,`<input type="text" class="tt" maxlength="24" placeholder="${(o.d>=1&&o.d<=5&&!o.holiday)?"09시~18시":""}" data-k="hours_text" data-d="${o.date}" aria-label="${md(o.date)} 기본근무시간" value="${esc(o.x.hours_text)}" ${dis}>`)).join("");
   const lvRow=D.map(o=>td(o,`<select data-k="leave" data-d="${o.date}" aria-label="${md(o.date)} 근태구분" class="${o.x.leave?"has":""}" ${dis}><option value=""></option>${st.leave_types.map(l=>`<option ${l.name===o.x.leave?"selected":""}>${esc(l.name)}</option>`).join("")}</select>`)).join("");
   const rows=6;
-  return`<tbody class="wb" id="wb${w}"><tr class="r-date"><th class="wk" rowspan="${rows}"><div class="wn">${w+1}주차</div><div class="wd">${md(s)} ~ ${md(e)}</div></th>
+  return`<tbody class="wb" id="wb${w}"><tr class="r-date"><th class="wk" rowspan="${rows}"><div class="wn">${w+1}주차</div><div class="wd">${md(s)} ~ ${md(e)}</div><label class="wcf"><input type="checkbox" id="cf${w}" data-wc="${w}" ${ws.c?"checked":""} ${dis}> 작성 완료</label></th>
     <th class="gb"><span class="lf">날짜</span><span class="ls">${w+1}주</span></th>${dateRow}<td class="tot"></td></tr>
   <tr class="r-base"><th class="gb">기본 <i>시간</i></th>${baseRow}<td class="tot" id="sb${w}"></td></tr>
   <tr class="r-ot"><th class="gb">시간외 <i>분</i></th>${otRow}<td class="tot" id="so${w}"></td></tr>
@@ -1079,7 +1081,7 @@ function renderAdmin(){
     const ft=$("#ft").value,fi=$("#fi").checked,fq=$("#fq").value.trim();
     const list=rows.filter(x=>(!ft||x.emp.team===ft)&&(!fi||x.issue||x.dup)&&(!fq||x.emp.name.includes(fq)||x.emp.id.includes(fq)));
     const miss=(!fi)?missing.filter(m=>(!ft||m.team===ft)&&(!fq||m.name.includes(fq)||m.id.includes(fq))):[];
-    $("#atab").innerHTML=`<tr><th>이름</th><th class="n">작성</th><th class="n">기본 평균</th><th class="n">시간외 평균</th><th class="n">휴무 필요(시간)</th><th class="n">한도 초과</th><th>상태</th></tr>`+
+    $("#atab").innerHTML=`<tr><th>이름</th><th class="n">작성 완료</th><th class="n">기본 평균</th><th class="n">시간외 평균</th><th class="n">휴무 필요(시간)</th><th class="n">한도 초과</th><th>상태</th></tr>`+
     [...list,...miss.map(m=>({miss:true,emp:{id:m.id,name:m.name,team:m.team,rank:m.rank,seq:m.seq}}))].sort(cmpEmp).map(({u,emp,r,conf,issue,started,dup,miss:ms},ix,arr)=>(!ft&&(ix===0||arr[ix-1].emp.team!==emp.team)?`<tr class="teamh"><th colspan="7" style="text-align:left;background:var(--off);font-size:13px;color:var(--ink2);padding:10px 10px 6px">${esc(emp.team||"팀 미지정")}</th></tr>`:"")+(ms?`<tr><td><b>${esc(emp.name)}</b><div class="sub">${esc(emp.team)}${emp.team?" · ":""}${esc(emp.id)}</div></td><td class="n mute">-</td><td class="n mute">-</td><td class="n mute">-</td><td class="n mute">-</td><td class="n mute">-</td><td><span class="chip">아직 시작 안 함</span></td></tr>`:`<tr class="click" data-u="${esc(u)}"><td><b>${esc(emp.name)}</b><div class="sub">${esc(emp.team)}${emp.team?" · ":""}${esc(emp.id)}</div></td>
       <td class="n">${conf}/${p.weeks}</td><td class="n ${r.avgBaseBad?"warn":""}">${f1(r.avgBase)}</td><td class="n ${r.avgOtBad?"warn":""}">${f1(r.avgOt)}</td><td class="n ${r.needLeave>EPS?"warn":""}">${f1(r.needLeave)}</td><td class="n ${r.warnWeeks?"warn":""}">${r.warnWeeks?r.warnWeeks+"주":"-"}</td>
       <td>${dup?'<span class="chip bad">사번 중복 연결</span>':issue?'<span class="chip bad">확인 필요</span>':conf===p.weeks?'<span class="chip ok">완료</span>':started?'<span class="chip pri">작성 중</span>':'<span class="chip">미작성</span>'}</td></tr>`)).join("")||`<tr><td colspan="7" class="mute">조건에 맞는 직원이 없어요</td></tr>`;
@@ -1441,7 +1443,7 @@ async function boot(){
   if(userNS){uid=await userNS.id();isAdmin=await userNS.canEdit()}
   S.ready=true;
   if(!db||!uid)return;
-  S.view=isAdmin?"admin":"me";
+  S.view="me";
   const tm=setTimeout(()=>{if(S.mine===undefined){S.mine=null;render()}},10000);
   db.doc("ot/"+uid).onSnapshot(s=>{
     clearTimeout(tm);
@@ -1457,7 +1459,7 @@ async function boot(){
   },()=>{});};
 }
 
-return{start:boot,render,rank:()=>S.mine&&S.mine.rank||"",pending:()=>isAdmin?pendingAll().length:0,mine:()=>S.mine?items(S.mine).filter(x=>x.st!=="done").length:0};
+return{start:boot,toMe:()=>{S.view="me";S.edit=null},render,rank:()=>S.mine&&S.mine.rank||"",pending:()=>isAdmin?pendingAll().length:0,mine:()=>S.mine?items(S.mine).filter(x=>x.st!=="done").length:0};
 })();
 boot();OT.start();
 </script>
