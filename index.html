@@ -1613,3 +1613,30 @@ return{start:boot,toMe:()=>{S.view="me";S.edit=null},render,rank:()=>S.mine&&S.m
 })();
 boot();OT.start();
 </script>
+<style>
+.fab{position:fixed;right:max(16px,env(safe-area-inset-right,0px));bottom:max(16px,env(safe-area-inset-bottom,0px));z-index:60;width:52px;height:52px;border-radius:50%;border:1px solid var(--line);background:var(--surface);color:var(--ink);box-shadow:0 6px 18px rgba(0,0,0,.12);cursor:pointer;display:grid;place-items:center;transition:transform 260ms cubic-bezier(.16,1,.3,1)}
+.fab svg{width:22px;height:22px}
+@media (hover:hover){.fab:hover{transform:translateY(-3px)}}
+.fab-p{position:fixed;right:max(16px,env(safe-area-inset-right,0px));bottom:calc(max(16px,env(safe-area-inset-bottom,0px)) + 64px);z-index:60;width:min(240px,calc(100vw - 32px));background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:8px;box-shadow:0 10px 30px rgba(0,0,0,.14);display:none}
+.fab-p.on{display:block}
+.fab-p button.q{display:block;width:100%;text-align:left;padding:10px 12px;border-radius:10px;border:0;background:transparent;color:var(--ink);font-weight:700;font-size:15px;cursor:pointer}
+.fab-p button.q:hover{background:var(--track)}
+.fab-p .pin{display:flex;align-items:center;gap:8px;padding:10px 12px;font-size:14px;font-weight:700;color:var(--ink2);border-top:1px solid var(--line);margin-top:6px}
+@media (prefers-reduced-motion:reduce){.fab{transition:none}.fab:hover{transform:none}}
+</style>
+<script>
+(function(){
+  let pinned=false;try{pinned=localStorage.getItem("dsac_fab_pin")==="1"}catch(e){}
+  const b=document.createElement("button");b.className="fab";b.setAttribute("aria-label","바로가기 열기");
+  b.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>';
+  const p=document.createElement("div");p.className="fab-p";
+  p.innerHTML='<button class="q" data-go="flex">탄력근무표</button><button class="q" data-go="ot">시간외 신청</button><label class="pin"><input type="checkbox" id="fabpin"> 고정</label>';
+  document.body.append(p,b);
+  const pin=p.querySelector("#fabpin");pin.checked=pinned;
+  const show=on=>p.classList.toggle("on",on);
+  show(pinned);
+  b.onclick=()=>show(!p.classList.contains("on"));
+  pin.onchange=()=>{try{localStorage.setItem("dsac_fab_pin",pin.checked?"1":"0")}catch(e){}};
+  p.onclick=e=>{const g=e.target.closest("[data-go]");if(!g)return;const el=document.querySelector('[data-mode="'+g.dataset.go+'"]');if(el)el.click();if(!pin.checked)show(false)};
+})();
+</script>
