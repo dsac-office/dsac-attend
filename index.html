@@ -1615,11 +1615,11 @@ boot();OT.start();
 .fab{position:fixed;right:max(16px,env(safe-area-inset-right,0px));bottom:max(16px,env(safe-area-inset-bottom,0px));z-index:60;width:52px;height:52px;border-radius:50%;border:1px solid var(--line);background:var(--surface);color:var(--ink);box-shadow:0 6px 18px rgba(0,0,0,.12);cursor:pointer;display:grid;place-items:center;transition:transform 260ms cubic-bezier(.16,1,.3,1)}
 .fab svg{width:22px;height:22px}
 @media (hover:hover){.fab:hover{transform:translateY(-3px)}}
-.fab-p{position:fixed;right:max(16px,env(safe-area-inset-right,0px));bottom:calc(max(16px,env(safe-area-inset-bottom,0px)) + 64px);z-index:60;width:min(240px,calc(100vw - 32px));background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:8px;box-shadow:0 10px 30px rgba(0,0,0,.14);display:none}
+.fab-p{position:fixed;right:max(16px,env(safe-area-inset-right,0px));bottom:calc(max(16px,env(safe-area-inset-bottom,0px)) + 64px);z-index:60;width:min(268px,calc(100vw - 32px));background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:8px;box-shadow:0 10px 30px rgba(0,0,0,.14);display:none}
 .fab-p.on{display:block}
 .fab-p button.q{display:block;width:100%;text-align:left;padding:10px 12px;border-radius:10px;border:0;background:transparent;color:var(--ink);font-weight:700;font-size:15px;cursor:pointer}
 .fab-p button.q:hover{background:var(--track)}
-.fab-t{padding:4px 6px 0}.fab-tb{width:100%;border-collapse:collapse;font-size:14px}.fab-tb th,.fab-tb td{padding:6px 4px;text-align:left;border-bottom:1px solid var(--line)}.fab-tb th{color:var(--muted);font-weight:700;font-size:12px}.fab-tb .sum td{font-weight:800;border-bottom:0}.fab-tb td:last-child{text-align:right;font-variant-numeric:tabular-nums}.fab-e{font-size:13px;color:var(--muted);padding:8px 4px}
+.fab-t{padding:4px 6px 0}.fab-tb{width:100%;border-collapse:collapse;font-size:14px}.fab-tb th,.fab-tb td{padding:6px 4px;text-align:left;border-bottom:1px solid var(--line)}.fab-tb th{color:var(--muted);font-weight:700;font-size:12px}.fab-tb .sum td{font-weight:800;border-bottom:0}.fab-tb td:last-child{text-align:right;font-variant-numeric:tabular-nums}.fab-e{font-size:13px;color:var(--muted);padding:8px 4px}.fab-big{display:flex;align-items:baseline;gap:6px;padding:6px 6px 0}.fab-big b{font-size:34px;font-weight:800;color:var(--ink);font-variant-numeric:tabular-nums}.fab-big span{font-size:14px;color:var(--muted);font-weight:700}.fab-sub{font-size:12px;color:var(--muted);padding:0 6px 6px}.fab-bar{transform-box:fill-box;transform-origin:bottom;animation:fabGrow 620ms cubic-bezier(.16,1,.3,1) both}@keyframes fabGrow{from{transform:scaleY(0)}to{transform:scaleY(1)}}@media (prefers-reduced-motion:reduce){.fab-bar{animation:none}}
 .fab-p .pin{display:flex;align-items:center;gap:8px;padding:10px 12px;font-size:14px;font-weight:700;color:var(--ink2);border-top:1px solid var(--line);margin-top:6px}
 @media (prefers-reduced-motion:reduce){.fab{transition:none}.fab:hover{transform:none}}
 </style>
@@ -1636,7 +1636,10 @@ boot();OT.start();
   const drawT=()=>{const box=p.querySelector(".fab-t");const ym=new Date(Date.now()+9*3600e3).toISOString().slice(0,7);
     const rows=[];try{for(const pp of Object.values((S.my&&S.my.p)||{}))for(const[dk,e]of Object.entries((pp&&pp.d)||{}))if(dk.slice(0,7)===ym&&(+e.o||0)>0)rows.push([dk,+e.o])}catch(e){}
     rows.sort((a,b)=>a[0].localeCompare(b[0]));const tot=rows.reduce((a,r)=>a+r[1],0);
-    box.innerHTML=rows.length?`<table class="fab-tb"><tr><th>날짜</th><th>시간외</th></tr>${rows.map(r=>`<tr><td>${esc2(r[0].slice(5))}</td><td>${(r[1]/60).toFixed(1)}h</td></tr>`).join("")}<tr class="sum"><td>합계</td><td>${(tot/60).toFixed(1)}h</td></tr></table>`:'<div class="fab-e">이번 달 근무표에 입력된 시간외가 없어요</div>'};
+    if(!rows.length){box.innerHTML='<div class="fab-e">이번 달 근무표에 입력된 시간외가 없어요</div>';return}
+    const max=Math.max(...rows.map(r=>r[1]),60),W=236,H=92,bw=Math.max(8,Math.min(28,(W-8)/rows.length-6));
+    const bars=rows.map((r,k)=>{const h=Math.max(4,Math.round(r[1]/max*(H-22))),x=4+k*((W-8)/rows.length),y=H-18-h;return `<rect x="${x.toFixed(1)}" y="${y}" width="${bw.toFixed(1)}" height="${h}" rx="5" fill="var(--accent)" class="fab-bar" style="animation-delay:${k*60}ms"><title>${esc2(r[0].slice(5))} ${(r[1]/60).toFixed(1)}h</title></rect><text x="${(x+bw/2).toFixed(1)}" y="${H-4}" text-anchor="middle" font-size="10" fill="var(--muted)">${esc2(r[0].slice(8))}</text>`}).join("");
+    box.innerHTML=`<div class="fab-big"><b>${(tot/60).toFixed(1)}</b><span>시간</span></div><div class="fab-sub">이번 달 시간외 · ${rows.length}일</div><svg viewBox="0 0 ${W} ${H}" width="100%" role="img" aria-label="날짜별 시간외 막대그래프">${bars}</svg>`;
   const show=on=>{p.classList.toggle("on",on);if(on)drawT()};
   show(pinned);
   b.onclick=()=>show(!p.classList.contains("on"));
