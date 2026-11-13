@@ -524,12 +524,11 @@ function showLogin(){
   const box=document.createElement("div");box.id="lg";
   box.style.cssText="position:fixed;inset:0;z-index:9999;background:var(--bg);display:flex;align-items:center;justify-content:center;padding:24px 16px;overflow:auto";
   box.innerHTML=`<div style="width:100%;max-width:360px">
-    <div class="lg-title" style="font-family:'Gill Sans','Gill Sans MT',sans-serif;font-size:clamp(20px,6.4vw,27px);font-weight:700;letter-spacing:.08em;color:var(--ink);line-height:1.25;margin-bottom:40px;padding-bottom:18px;border-bottom:3px solid #58C0D0">DALSEO ARTS CENTER<br><span style="display:block;margin-top:8px;font-size:30px;font-weight:700;letter-spacing:0;color:#58C0D0">근무 관리</span></div>
+    <div class="lg-title" style="font-family:'Gill Sans','Gill Sans MT',sans-serif;font-size:clamp(20px,5.6vw,24px);font-weight:700;letter-spacing:.12em;color:var(--ink);line-height:1.4;margin-bottom:28px">DALSEO ARTS CENTER<br><span style="font-size:clamp(20px,5.6vw,24px);font-weight:700;letter-spacing:0;color:var(--muted)">근무 관리</span></div>
     <div style="display:grid;gap:10px">
       <input id="lg_pw" type="password" placeholder="공유 비밀번호" style="${LG_IN}">
       <input id="lg_id" inputmode="numeric" placeholder="사번" style="${LG_IN}">
       <input id="lg_nm" placeholder="이름" style="${LG_IN}">
-      <select id="lg_rk" style="${LG_IN}"><option value="">직급 선택</option>${RK.map(r=>`<option>${r}</option>`).join("")}</select>
       <label style="font-size:13px;color:var(--muted);display:flex;gap:6px;align-items:center;padding:0 4px"><input id="lg_ad" type="checkbox"> 관리자로 들어가요</label>
       <input id="lg_apw" type="password" placeholder="관리자 비밀번호" style="${LG_IN};display:none">
       <button id="lg_go" style="${LG_BTN}">들어가기</button>
@@ -540,12 +539,11 @@ function showLogin(){
   try{const last=JSON.parse(LS.g("dsac_last")||"null");if(last){$("#lg_id").value=last.id||"";$("#lg_nm").value=last.name||""}}catch(e){}
   $("#lg_ad").onchange=e=>{$("#lg_apw").style.display=e.target.checked?"block":"none"};
   $("#lg_go").onclick=async()=>{
-    const pw=$("#lg_pw").value,id=$("#lg_id").value.trim(),nm=$("#lg_nm").value.trim(),rk=$("#lg_rk").value;
+    const pw=$("#lg_pw").value,id=$("#lg_id").value.trim(),nm=$("#lg_nm").value.trim();
     const err=m=>$("#lg_err").textContent=m;
     const shake=id=>{const el=$(id);if(!el)return;el.classList.remove("shake");void el.offsetWidth;el.classList.add("shake","inval");el.setAttribute("aria-invalid","true");el.focus()};
     box.querySelectorAll("#lg_pw,#lg_apw").forEach(el=>el.oninput=()=>{el.classList.remove("inval","shake");el.removeAttribute("aria-invalid")});
     if(!pw||!id||!nm)return err("비밀번호, 사번, 이름을 모두 입력해 주세요");
-    if(!rk)return err("직급을 골라 주세요");
     busy($("#lg_go"),true);
     try{
       LS.s("dsac_pw",pw);
@@ -557,7 +555,7 @@ function showLogin(){
       if(!r||r.active===false||String(r.name).replace(/\s/g,"")!==nm.replace(/\s/g,"")){LS.d("dsac_pw");$("#lg_go").disabled=false;return err("등록된 사번과 이름이 맞지 않아요. 담당자에게 문의해 주세요")}
       LS.s("dsac_uid",id);
       if(!(await DA.get("sheets/"+id)))await DA.post({action:"set",key:"sheets/"+id,value:JSON.stringify({emp:{id,name:r.name,team:r.team||""},p:{}})});
-      {const o=await DA.get("ot/"+id);await DA.post({action:"set",key:"ot/"+id,value:JSON.stringify({...(o||{items:{}}),name:r.name,rank:rk})})}
+      {const o=await DA.get("ot/"+id);await DA.post({action:"set",key:"ot/"+id,value:JSON.stringify({...(o||{items:{}}),name:r.name,rank:r.rank||""})})}
       LS.s("dsac_uid",id);LS.s("dsac_name",r.name);LS.s("dsac_adm",adm?"1":"0");if(!adm)LS.d("dsac_apw");
       location.reload();
     }catch(e){LS.d("dsac_pw");$("#lg_go").disabled=false;if(e.code==="auth")shake("#lg_pw");err(e.code==="auth"?"공유 비밀번호가 맞지 않아요":"저장소에 연결하지 못했어요. 잠시 후 다시 해 주세요")}
