@@ -1248,6 +1248,7 @@ function formHtml(it){
   <div class="hd-only" ${k==="휴일"?"":"hidden"}><label for="fr">인정 시간대 (필요할 때만)</label><input id="fr" value="${esc(k==="휴일"?v.r:"")}" placeholder="예: 9:00~18:00"></div>
   <div><label for="fe">퇴근시간 (초과 끝)</label><input class="tm" id="fe" inputmode="numeric" autocomplete="off" placeholder="22:00" maxlength="8" value="${esc(v.e)}"></div>
   <div><label for="fm">초과시간 (자동, 수정 가능)</label><div class="min"><input type="number" id="fm" inputmode="numeric" min="0" step="10" value="${esc(v.m)}"><span>분</span></div></div>
+  <div class="w2" style="margin-top:-6px"><span id="fbk" style="font-size:12px;color:var(--muted)"></span></div>
   <div class="w2"><label for="fw">근무내역</label><input id="fw" value="${esc(v.w)}" placeholder="예: 기획공연 준비"></div>
   <div class="fbar">${it?`<button class="btn ghost" id="fc">취소</button>`:""}<button class="btn" id="fo">${it?"고치기":"신청"}</button></div>
   </div></div>`;
@@ -1256,11 +1257,13 @@ function bindForm(it){
   let k=it&&it.k||(isHol($("#fd").value)?"휴일":"평일"),mTouched=!!(it&&it.m!=="");
   const setK=x=>{k=x;$("#fk").querySelectorAll("button").forEach(b=>b.classList.toggle("on",b.dataset.k===k));$("#f .wd-only").hidden=k==="휴일";$("#f .hd-only").hidden=k!=="휴일";recalc()};
   const tv=id=>normT($(id).value);
-  const recalc=()=>{if(!mTouched)$("#fm").value=tv("#fe")?autoMin(k,tv("#fs"),tv("#fe"),tv("#fb")):""};
+  const updBk=()=>{const el=$("#fbk");if(!el)return;const a=toMin(tv("#fs")),e2=toMin(tv("#fe"));if(k!=="휴일"||a==null||e2==null||e2<=a){el.textContent="";return}const g=(e2-a)-(+$("#fm").value||0);el.textContent=g>0?`휴게 ${g}분 자동 차감`:""};
+  const recalc=()=>{if(!mTouched)$("#fm").value=tv("#fe")?autoMin(k,tv("#fs"),tv("#fe"),tv("#fb")):"";updBk()};
   $("#fk").onclick=e=>{const b=e.target.closest("button");if(b)setK(b.dataset.k)};
   $("#fd").onchange=()=>{const d=$("#fd").value;if(!d)return;$("#fk").querySelectorAll(".dw").forEach(x=>x.textContent=DOW[pd(d).getUTCDay()]);setK(isHol(d)?"휴일":"평일")};
   ["#fs","#fe","#fb"].forEach(id=>{const el=$(id);el.oninput=()=>{mTouched=false;recalc()};el.onblur=()=>{const n=normT(el.value);if(n)el.value=n}});
-  $("#fm").oninput=()=>{mTouched=$("#fm").value!==""};
+  $("#fm").oninput=()=>{mTouched=$("#fm").value!=="";updBk()};
+  recalc();
   if(it)$("#fc").onclick=()=>{S.edit=null;render()};
   $("#fo").onclick=async()=>{
     const d=$("#fd").value,s=tv("#fs"),e=tv("#fe"),w=$("#fw").value.trim(),be=k==="평일"?(tv("#fb")||"18:00"):"",m=$("#fm").value===""?autoMin(k,s,e,be):Math.round(+$("#fm").value);
