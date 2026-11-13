@@ -404,11 +404,11 @@ table.gi td small.rk{display:inline;font-size:12px;color:var(--accent-ink);margi
 .sx .sc b{font-size:20px;font-weight:700;letter-spacing:-.02em;color:var(--ink)}
 .sx .sc small{font-size:12px;color:var(--muted)}
 .sx .sc.good b{color:var(--ok)}.sx .sc.bad b{color:var(--warn)}
-.sx .sm{gap:12px}.sx .mm{font-size:12px;font-weight:700;color:var(--accent-ink)}.sx .mm b{font-size:15px;color:var(--ink);margin-left:2px}
+.sx .sm{display:flex;align-items:center;gap:8px;padding-left:16px;border-left:1px solid var(--line)}.sx .mm{display:flex;align-items:baseline;gap:5px;background:var(--accent-soft);border-radius:10px;padding:5px 11px;font-size:13px;font-weight:700;color:var(--accent-ink);white-space:nowrap}.sx .mm b{font-size:18px;color:var(--ink);letter-spacing:-.02em;font-variant-numeric:tabular-nums}.sx .mm small{font-size:11px;color:var(--muted);font-weight:600}
 .sx .sst{margin-left:auto;padding-left:16px;font-size:13px;font-weight:600;display:flex;gap:6px;align-items:center;flex-wrap:wrap}
 .sx .sst .ok{color:var(--ok)}.sx .sst .bad{color:var(--warn)}
 .sx .sst .lnk{border:0;background:var(--warn-soft);color:var(--warn);font-weight:700;border-radius:8px;padding:1px 7px;cursor:pointer;font-size:12px}
-@media(max-width:700px){#sum.sumx{padding:8px 12px;border-radius:14px}.sx{gap:4px 0}.sx .sc{padding:0 8px;gap:4px}.sx .sl{font-size:11px}.sx .sc b{font-size:15px}.sx .sc small{display:none}.sx .sm{flex-basis:100%;border-left:0;padding-left:0;gap:10px}.sx .mm b{font-size:13px}.sx .sst{margin-left:0;padding-left:0;flex-basis:100%;font-size:12px}}
+@media(max-width:700px){#sum.sumx{padding:10px 12px;border-radius:14px}.sx{gap:8px 0}.sx .sc{padding:0 10px;gap:5px}.sx .sl{font-size:12px}.sx .sc b{font-size:19px}.sx .sc small{display:none}.sx .sm{flex-basis:100%;border-left:0;padding-left:0;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}.sx .sm>.sl{display:none}.sx .mm{justify-content:center;padding:6px 4px;min-width:0}.sx .mm b{font-size:17px}.sx .mm small{display:none}.sx .sst{margin-left:0;padding-left:0;flex-basis:100%;font-size:13px}}
 </style>
 <div id="app"><div class="center"><div class="card mute">불러오는 중…</div></div></div>
 <div id="toast"></div>
@@ -727,7 +727,7 @@ function renderSheetPage(target,mode){
   $("#psel").onchange=e=>{S.periodId=e.target.value;render()};
   $("#sum").onclick=e=>{const b=e.target.closest("[data-jr]");if(!b)return;const r=$("#wb"+b.dataset.jr);r.scrollIntoView({behavior:"smooth",block:"center"});r.classList.add("flash");setTimeout(()=>r.classList.remove("flash"),1600)};
   bindSheet();paint();applyFold();
-  setTopH();
+  setTopH();setTimeout(setTopH,400);setTimeout(setTopH,1500);
   $("#cal").addEventListener("click",e=>{const b=e.target.closest("[data-fold]");if(!b)return;const k=b.dataset.fold,F=foldState();F[k]=F[k]?0:1;if(T.uid===uid&&S.my){S.my.ui={...(S.my.ui||{}),fold:{...F}};save(uid,{ui:{fold:{[k]:F[k]}}})}else LOCAL_FOLD[k]=F[k];applyFold()});
   {const now=new Date(Date.now()+9*36e5).toISOString().slice(0,10),wi=Math.floor((pd(now)-pd(p.start_date))/(7*864e5)),key=target+"|"+p.id;
    if(wi>=0&&wi<p.weeks&&SCROLLED!==key){SCROLLED=key;const el=$("#wb"+wi);if(el){el.classList.add("now");requestAnimationFrame(()=>{el.scrollIntoView({block:"start"});const t=document.querySelector(".top"),sm=$("#sum");scrollBy(0,-((t?t.offsetHeight:0)+(sm?sm.offsetHeight:0)+50))})}}else if(wi>=0&&wi<p.weeks){const el=$("#wb"+wi);if(el)el.classList.add("now")}}
@@ -783,7 +783,7 @@ function paint(){
     <div class="sc ${r.avgBaseBad?"bad":""}"><span class="sl">기본 주평균</span><b>${f1(r.avgBase)}</b><small>/ ${st.avg_base} · 합 ${f1(baseSum)}</small></div>
     <div class="sc ${r.avgOtBad?"bad":""}"><span class="sl">시간외 주평균</span><b>${f1(r.avgOt)}</b><small>/ ${st.avg_ot_max} · 합 ${f1(r.otMin/60)}</small></div>
     <div class="sc ${r.needLeave>EPS?"bad":"good"}"><span class="sl">남은 휴무</span><b>${f1(r.needLeave)}</b><small>시간</small></div>
-    ${(r.months.forEach(m=>{const e=$("#mr"+m.ym);if(e)e.textContent=f1(m.ot)+"시간"}),"")}<div class="sc sm">${r.months.filter(m=>m.days>=15).map(m=>`<span class="mm">${+m.ym.slice(5)}월 <b>${f1(m.ot)}</b></span>`).join("")}</div>
+    ${(r.months.forEach(m=>{const e=$("#mr"+m.ym);if(e)e.textContent=f1(m.ot)+"시간"}),"")}<div class="sm"><span class="sl">월별 시간외</span>${r.months.filter(m=>m.days>=15).map(m=>`<span class="mm">${+m.ym.slice(5)}월 <b>${f1(m.ot)}</b><small>시간</small></span>`).join("")}</div>
     <div class="sst">${issues.length||bw.length?`<span class="bad">⚠ ${issues.join(" · ")}${issues.length&&bw.length?" · ":""}${bw.length?"한도 초과":""}</span>${bw.map(wk=>`<button class="lnk" data-jr="${wk.w}">${wk.w+1}주</button>`).join("")}`:`<span class="ok">✓ 붉은 칸 없음</span>`}</div></div>`;
   r.weeks.forEach(wk=>{
     const w=wk.w,conf=!!(sd.weeks[w]&&sd.weeks[w].c),tb=$("#wb"+w);if(!tb)return;
