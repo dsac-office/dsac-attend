@@ -1364,7 +1364,7 @@ function renderAdmin(){
   if(window.__loadAdminOT)window.__loadAdminOT();
   const all=pendingAll().sort(sortG);
   const pend=S.rk?all.filter(x=>x.rk===S.rk):all;
-  const rkIdx=r=>{const k=RANKS.indexOf(r);return k<0?99:k};
+  const rkIdx=r=>{const k=["4급","5급","6급","7급"].indexOf(r);return k<0?99:k};
   const rkNames=[...new Set(all.map(x=>x.rk||"미정"))].sort((a,b)=>rkIdx(a)-rkIdx(b));
   const days=[...new Set(pend.map(x=>x.d))];
   const todayK=new Date(Date.now()+9*3600e3).toISOString().slice(0,10);
