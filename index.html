@@ -1639,3 +1639,12 @@ boot();OT.start();
   p.onclick=e=>{const g=e.target.closest("[data-go]");if(!g)return;const el=document.querySelector('[data-mode="'+g.dataset.go+'"]');if(el)el.click();if(!pin.checked)show(false)};
 })();
 </script>
+<style>
+/* 넓은 창(PC·exe)에서만 상단을 넉넉하게. 폰은 그대로 */
+@media (min-width:700px){
+  .top .in{max-width:1200px;padding-top:16px;padding-bottom:16px;gap:14px}
+  .top nav{gap:6px;margin-left:12px}
+  .top nav button{font-size:16px;padding:9px 18px}
+  .wrap{max-width:1200px;padding-top:36px}
+}
+</style>
