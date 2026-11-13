@@ -1280,7 +1280,7 @@ function formHtml(it){
   <div><label>구분</label><div class="kind" id="fk">${["평일","휴일"].map(x=>`<button type="button" data-k="${x}" class="${x===k?"on":""} ${x==="휴일"?"hd":""}">${x}(<span class="dw">${DOW[pd(v.d).getUTCDay()]}</span>)</button>`).join("")}</div></div>
   <div><label for="fs">출근시간</label><input class="tm" id="fs" inputmode="numeric" autocomplete="off" placeholder="09:00" maxlength="8" value="${esc(v.s)}"></div>
   <div class="wd-only" ${k==="휴일"?"hidden":""}><label for="fb">기본근무 끝</label><input class="tm" id="fb" inputmode="numeric" autocomplete="off" placeholder="18:00" maxlength="8" value="${esc(v.b||"18:00")}"></div>
-  <div class="hd-only" ${k==="휴일"?"":"hidden"}><label for="fr">인정 시간대 (필요할 때만)</label><input id="fr" value="${esc(k==="휴일"?v.r:"")}" placeholder="예: 9:00~18:00"></div>
+  <div class="hd-only" ${k==="휴일"?"":"hidden"}><label for="fr">기본근무(사용 시)</label><input id="fr" value="${esc(k==="휴일"?v.r:"")}" placeholder="예: 9:00~18:00"></div>
   <div><label for="fe">퇴근시간 (초과 끝)</label><input class="tm" id="fe" inputmode="numeric" autocomplete="off" placeholder="22:00" maxlength="8" value="${esc(v.e)}"></div>
   <div><label for="fm">초과시간 (자동, 수정 가능)</label><div class="min"><input type="number" id="fm" inputmode="numeric" min="0" step="10" value="${esc(v.m)}"><span>분</span></div></div>
   <div class="w2" style="margin-top:-6px"><span id="fbk" style="font-size:12px;color:var(--muted)"></span></div>
@@ -1325,12 +1325,11 @@ function renderMe(){
   const list=items(S.mine).sort((a,b)=>b.d.localeCompare(a.d)||b.ts-a.ts);
   const edit=S.edit&&list.find(x=>x.id===S.edit);
   const wait=list.filter(x=>x.st!=="done"),done=list.filter(x=>x.st==="done").slice(0,S.showDone?200:5);
-  app().innerHTML=shell(`<div class="head"><div><h1>${esc(S.mine.name)} ${esc(S.mine.rank||"")} · 시간외근무 신청</h1></div><span class="sp"></span><button class="ol" id="rn">이름 바꾸기</button></div>
+  app().innerHTML=shell(`<div class="head"><div><h1>${esc(S.mine.name)} ${esc(S.mine.rank||"")} · 시간외근무 신청</h1></div></div>
   ${formHtml(edit)}
   <div class="card"><h3>기안 전 <span class="chip pri">${wait.length}</span></h3><div class="list">${wait.map(x=>itemRow(x,true)).join("")||`<div class="empty">아직 없어요</div>`}</div></div>
   ${done.length?`<div class="card"><h3>상신 완료</h3><div class="list">${done.map(x=>itemRow(x,true)).join("")}</div>${!S.showDone&&list.filter(x=>x.st==="done").length>5?`<button class="ol" id="more">더 보기</button>`:""}</div>`:""}`);
   bindForm(edit);
-  $("#rn").onclick=()=>{S.mine={...S.mine,name:""};renderName()};
   const mo=$("#more");if(mo)mo.onclick=()=>{S.showDone=true;render()};
   app().querySelectorAll("[data-ed]").forEach(b=>b.onclick=()=>{S.edit=b.dataset.ed;render();scrollTo({top:0,behavior:"smooth"})});
   app().querySelectorAll("[data-del]").forEach(b=>b.onclick=async()=>{
@@ -1352,7 +1351,8 @@ function renderAdmin(){
   const rkIdx=r=>{const k=RANKS.indexOf(r);return k<0?99:k};
   const rkNames=[...new Set(all.map(x=>x.rk||"미정"))].sort((a,b)=>rkIdx(a)-rkIdx(b));
   const days=[...new Set(pend.map(x=>x.d))];
-  if(days.length&&(!S.from||!S.to)){S.from=days[0];S.to=days[0]}
+  const todayK=new Date(Date.now()+9*3600e3).toISOString().slice(0,10);
+  if(!S.from||!S.to){S.from=S.to=todayK}
   const rows=pend.filter(x=>S.from&&x.d>=S.from&&x.d<=S.to);
   const title=S.from?titleOf(S.from,S.to):"";
   const done=allItems().filter(x=>x.st==="done");
@@ -1361,16 +1361,14 @@ function renderAdmin(){
   const cnt=d=>pend.filter(x=>x.d===d).length;
   app().innerHTML=shell(`<div class="head"><div><h1>시간외 신청현황</h1><p>기안 올리기 전 ${all.length}건</p></div></div>
   <div class="card">${!all.length?`<div class="empty">기안할 신청이 없어요</div>`:`
-  <div class="qd rkrow"><button data-rk="" class="${!S.rk?"on":""}">전체<i>${all.length}</i></button>${rkNames.map(r=>`<button data-rk="${esc(r==="미정"?"":r)}" class="${S.rk===(r==="미정"?"":r)?"on":""}">${esc(r)}<i>${all.filter(x=>(x.rk||"미정")===r).length}</i></button>`).join("")}</div>
-  <div class="pick"><div class="qd">${days.map(d=>`<button data-day="${d}" class="${d>=S.from&&d<=S.to?"on":""}">${md(d)}(${DOW[pd(d).getUTCDay()]})<i>${cnt(d)}</i></button>`).join("")}</div></div>
   <div class="pick" style="margin-top:10px"><input type="date" id="af" value="${S.from}"><span class="mute">~</span><input type="date" id="at" value="${S.to}"></div>
   <div class="ttl"><span class="tt" id="tt">${esc(title)}</span><button class="btn ghost sm" id="ct">제목 복사</button></div>
   <div class="otw"><table class="gi"><thead><tr><th>연번</th><th>일 자</th><th>구 분</th><th>성 명</th><th>출근시간</th><th>퇴근시간</th><th>수당시간</th><th>근무내역</th></tr></thead><tbody>
-  ${rows.map((x,i)=>`<tr><td>${i+1}</td><td>${kdate(x.d)}</td><td class="${kindOf(x)==="휴일"?"hd":""}">${kindLabel(x)}</td><td>${esc(x.name)}${x.rk?` <small class="rk">${esc(x.rk)}</small>`:""}</td><td>${hm(x.s)}</td><td>${hm(x.e)}</td><td>${x.m}${x.r?`<small>(${esc(x.r)})</small>`:""}</td><td class="wk">${esc(x.w)}</td></tr>`).join("")||`<tr><td colspan="8" class="mute">이 기간에 신청이 없어요</td></tr>`}
+  ${rows.map((x,i)=>`<tr><td>${i+1}</td><td>${kdate(x.d)}</td><td>${kindLabel(x)}</td><td>${esc(x.name)}${x.rk?` <small class="rk">${esc(x.rk)}</small>`:""}</td><td>${hm(x.s)}</td><td>${hm(x.e)}</td><td>${x.m}${x.r?`<small>(${esc(x.r)})</small>`:""}</td><td class="wk">${esc(x.w)}</td></tr>`).join("")||`<tr><td colspan="8" class="mute">이 기간에 신청이 없어요</td></tr>`}
   </tbody></table></div>
-  ${rows.length?`<div class="acts"><button class="btn" id="cp">표 복사</button><button class="btn ghost" id="xl">엑셀 받기</button><span class="sp"></span><button class="btn ghost" id="fin">✓ 상신 완료 (${rows.length}건)</button></div>`:""}`}
+  ${rows.length?`<div class="acts"><button class="btn" id="cp">표 복사</button><button class="btn ghost" id="xl">엑셀 받기</button><span class="sp"></span><button class="btn ghost" id="fin">✓ 상신 완료</button></div>`:""}`}
   </div>
-  ${gl.length?`<div class="card"><h3>상신 완료</h3>${gl.map(([t,xs])=>`<div class="grp"><b>${esc(t)}</b><span class="chip">${xs.length}건</span><button class="ol" data-cpg="${esc(t)}">표 복사</button><button class="ol del" data-undo="${esc(t)}">되돌리기</button></div>`).join("")}${!S.showDone&&Object.keys(groups).length>6?`<button class="ol" id="more">더 보기</button>`:""}</div>`:""}`);
+  ${gl.length?`<div class="card"><h3>상신 완료</h3>${gl.map(([t,xs])=>`<div class="grp"><b>${esc(t)}</b><button class="ol" data-cpg="${esc(t)}">표 복사</button><button class="ol del" data-undo="${esc(t)}">되돌리기</button></div>`).join("")}${!S.showDone&&Object.keys(groups).length>6?`<button class="ol" id="more">더 보기</button>`:""}</div>`:""}`);
   app().querySelectorAll("[data-rk]").forEach(b=>b.onclick=()=>{S.rk=b.dataset.rk;S.from=S.to=null;render()});
   app().querySelectorAll("[data-day]").forEach(b=>b.onclick=()=>{
     const d=b.dataset.day;
