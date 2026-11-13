@@ -9,7 +9,7 @@
 <meta property="og:type" content="website"><meta property="og:title" content="근무 관리"><meta property="og:description" content="탄력근무 관리 · 시간외 신청"><meta property="og:url" content="https://dsac-attend.web.app/"><meta property="og:image" content="https://dsac-attend.web.app/og-v5.png"><meta name="twitter:card" content="summary_large_image"><meta name="description" content="탄력근무 관리 · 시간외 신청">
 <style>
 
-@font-face{font-family:'Cabin';font-weight:400;font-style:normal;font-display:swap;src:url(/fonts/cabin-400.woff2) format('woff2')}@font-face{font-family:'Cabin';font-weight:500;font-style:normal;font-display:swap;src:url(/fonts/cabin-500.woff2) format('woff2')}@font-face{font-family:'Cabin';font-weight:600;font-style:normal;font-display:swap;src:url(/fonts/cabin-600.woff2) format('woff2')}@font-face{font-family:'Cabin';font-weight:700;font-style:normal;font-display:swap;src:url(/fonts/cabin-700.woff2) format('woff2')}@font-face{font-family:'Pretendard';font-weight:400;font-style:normal;font-display:swap;src:url(/fonts/pretendard-1.woff) format('woff')}
+@font-face{font-family:'Pretendard';font-weight:400;font-style:normal;font-display:swap;src:url(/fonts/pretendard-1.woff) format('woff')}
 @font-face{font-family:'Pretendard';font-weight:600;font-style:normal;font-display:swap;src:url(/fonts/pretendard-2.woff) format('woff')}
 @font-face{font-family:'Pretendard';font-weight:700;font-style:normal;font-display:swap;src:url(/fonts/pretendard-3.woff) format('woff')}
 
@@ -374,11 +374,11 @@ table.gi td small.rk{display:inline;font-size:12px;color:var(--accent-ink);margi
 @media(max-width:719px){.tiles{margin-top:0}.home{margin-top:4px}.hero{padding:8px 2px 18px;margin-bottom:4px}.hero h1{font-size:22px}.hero .home-p{font-size:14px}.tile{padding:14px 2px;gap:12px}.tile .ic{width:36px;height:36px;border-radius:11px}.tile .ic svg{width:20px;height:20px}.tile b{font-size:16px}.tile::after{font-size:20px}}
 
 /* home type: wide display English (reference style) */
-.home .eyebrow{margin:0;font-family:'Cabin',var(--f);font-size:13px;letter-spacing:.14em;color:var(--muted);font-weight:600}
-.home .hero h1{font-family:'Cabin',var(--f);font-size:clamp(40px,12vw,60px);font-weight:700;letter-spacing:-.01em;line-height:1.05;margin-top:8px;text-transform:none}
+.home .eyebrow{margin:0;font-family:"Gill Sans","Gill Sans MT",var(--f);font-size:13px;letter-spacing:.14em;color:var(--muted);font-weight:600}
+.home .hero h1{font-family:"Gill Sans","Gill Sans MT",var(--f);font-size:clamp(40px,12vw,60px);font-weight:700;letter-spacing:-.01em;line-height:1.05;margin-top:8px;text-transform:none}
 .home .home-sub{margin:10px 0 0;font-size:18px;color:var(--ink2);font-weight:600}
 .home .hero .home-p{display:none}
-.home .tile b{font-family:'Cabin',var(--f);font-size:22px;font-weight:700;letter-spacing:0}
+.home .tile b{font-family:"Gill Sans","Gill Sans MT",var(--f);font-size:22px;font-weight:700;letter-spacing:0}
 .home .tile small{display:block;margin-top:6px;font-size:14px;color:var(--muted);font-weight:600}
 .home .tile[data-mode="ot"] small{color:#BDBDC2}
 @media(min-width:720px){.home .tile b{font-size:28px}.home .hero h1{font-size:72px}}
@@ -570,7 +570,7 @@ function showLogin(){
   const box=document.createElement("div");box.id="lg";
   box.style.cssText="position:fixed;inset:0;z-index:9999;background:var(--bg);display:flex;align-items:center;justify-content:center;padding:24px 16px;overflow:auto";
   box.innerHTML=`<div style="width:100%;max-width:360px">
-    <div class="lg-title" style="font-family:'Cabin',sans-serif;font-size:clamp(20px,5.6vw,24px);font-weight:700;letter-spacing:.12em;color:var(--ink);line-height:1.4;margin-bottom:28px">DALSEO ARTS CENTER<br><span style="font-size:clamp(20px,5.6vw,24px);font-weight:700;letter-spacing:0;color:var(--muted)">근무 관리</span></div>
+    <div class="lg-title" style="font-family:'Gill Sans','Gill Sans MT',sans-serif;font-size:clamp(20px,5.6vw,24px);font-weight:700;letter-spacing:.12em;color:var(--ink);line-height:1.4;margin-bottom:28px">DALSEO ARTS CENTER<br><span style="font-size:clamp(20px,5.6vw,24px);font-weight:700;letter-spacing:0;color:var(--muted)">근무 관리</span></div>
     <div style="display:grid;gap:10px">
       <input id="lg_pw" type="password" placeholder="공유 비밀번호" style="${LG_IN}">
       <input id="lg_id" inputmode="numeric" placeholder="사번" style="${LG_IN}">
