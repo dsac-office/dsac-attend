@@ -1485,12 +1485,12 @@ function itemRow(it,mine){
   const hd=kindOf(it)==="휴일";
   return`<div class="it"><div class="d">${md(it.d)}<small class="${hd?"hd":""}">${kindLabel(it)}</small></div>
   <div class="t"><div><b>${hm(it.s)}~${hm(it.e)}</b> · <b>${it.m}분</b>${it.r?` <span class="m">(${esc(it.r)})</span>`:""}</div><div class="w">${esc(it.w)}</div></div>
-  <div class="a">${it.st==="done"?`<span class="chip ok">마감</span>`:mine?`<button class="ol" data-ed="${it.id}">수정</button><button class="ol del" data-del="${it.id}">취소</button>`:""}</div></div>`;
+  <div class="a">${mine?`<button class="ol" data-ed="${it.id}">수정</button><button class="ol del" data-del="${it.id}">취소</button>`:""}</div></div>`;
 }
 function renderMe(){
   const list=items(S.mine).sort((a,b)=>b.d.localeCompare(a.d)||b.ts-a.ts);
   const edit=S.edit&&list.find(x=>x.id===S.edit);
-  const wait=list.filter(x=>x.st!=="done"),done=list.filter(x=>x.st==="done").slice(0,S.showDone?200:5);
+  const wait=list,done=[];
   app().innerHTML=shell(`<div class="head"><div><h1>${esc(S.mine.name)} · 시간외근무 신청</h1></div></div>
   ${formHtml(edit)}
   <div class="card"><h3>신청내역 <span class="chip pri">${wait.length}</span></h3><div class="list">${wait.map(x=>itemRow(x,true)).join("")||`<div class="empty">아직 없어요</div>`}</div></div>
