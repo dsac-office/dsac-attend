@@ -779,6 +779,7 @@ document.addEventListener("click",e=>{if(e.target.closest&&e.target.closest(".ba
 async function __chkBuild(){try{const r=await fetch(location.origin+"/index.html",{method:"HEAD",cache:"no-store"});const t=r.headers.get("etag")||r.headers.get("last-modified");if(!t)return;const old=LS.g("dsac_build");if(old&&old!==t){LS.s("dsac_build",t);location.reload();return}LS.s("dsac_build",t)}catch(e){}}
 document.addEventListener("visibilitychange",()=>{if(!document.hidden)__chkBuild()});
 __chkBuild();
+document.addEventListener("pointerdown",e=>{if(e.pointerType!=="touch"||!navigator.vibrate)return;if(e.target.closest&&e.target.closest(".tile,.kind button,.top nav button,.fab,.fab-p button,.backb,.ol,.xin,button.btn,#lg_go,.bk button")){try{navigator.vibrate(12)}catch(err){}}},{passive:true});
 var NAV_R=false;
 document.addEventListener("click",e=>{if(e.target&&e.target.id==="sv"){const ks=Object.keys(wq||{});ks.forEach(t=>flush(t));toast("저장했어요")}});
 var __nav="";
