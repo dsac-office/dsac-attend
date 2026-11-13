@@ -1188,7 +1188,7 @@ async function boot(){
       if(changed&&S.view==="admin"&&usable())render();
     },()=>{});
     db.collection("roster").onSnapshot(s=>{
-      const r={};s.docs.forEach(x=>r[x.id]=structuredClone(x.data()));S.roster=r;
+      const r={};s.docs.forEach(x=>{const d=x.data();if(d&&typeof d==="object")r[x.id]={...structuredClone(d),name:String(d.name||"")}});S.roster=r;
       if((S.view==="manage"||S.view==="admin")&&usable())render();
     },()=>{});
   }
