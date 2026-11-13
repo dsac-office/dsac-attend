@@ -447,6 +447,7 @@ table.xl thead th{position:sticky;top:calc(var(--toph,58px) + var(--sumh,70px) +
 @keyframes spinRot{to{transform:rotate(360deg)}}
 @keyframes spinShow{from{opacity:0}to{opacity:1}}
 @media (prefers-reduced-motion:reduce){.spin{animation:none;opacity:1}}
+.spin-wrap{display:flex;justify-content:center;padding:56px 0}
 </style>
 <div id="app"><div class="center"><div class="tdots" role="status" aria-label="불러오는 중"><i style="--i:0"></i><i style="--i:1"></i><i style="--i:2"></i></div></div></div>
 <div id="toast"></div>
@@ -494,6 +495,7 @@ function doLogout(){LS.s("dsac_last",JSON.stringify({id:LS.g("dsac_uid")||"",nam
 if(/[?&]logout/.test(location.search))doLogout();
 
 /* 대기 표시: 버튼 안에 작은 스피너 (300ms 뒤에만 보임) */
+function spinBlock(){return '<div class="spin-wrap"><div class="spin" role="status" aria-label="로딩 중"></div></div>'}
 function busy(el,on){if(!el)return;const old=el.querySelector(":scope>.spin.inl");if(on){el.disabled=true;if(!old){const s=document.createElement("span");s.className="spin inl";s.setAttribute("role","status");s.setAttribute("aria-label","로딩 중");el.appendChild(s)}}else{el.disabled=false;if(old)old.remove()}}
 
 /* 첫 접속 로그인: 공유 비밀번호 + 사번 + 이름 + 직급 (관리자는 관리자 비밀번호) */
@@ -713,11 +715,12 @@ function renderInner(){
   if(MODE==="home")return renderHome();
   if(MODE==="ot")return OT.render(true);
   if(!db||!uid)return renderBlocked();
+  if(S.view==="admin"&&isAdmin&&!S.allLoaded){app().innerHTML=shell(spinBlock(),"admin");return}
   if(S.view==="admin"&&isAdmin)return renderAdmin();
   if(S.view==="manage"&&isAdmin)return renderManage();
   if(S.view==="emp"&&isAdmin&&S.target)return renderSheetPage(S.target,"admin");
   S.view="me";
-  if(S.my===undefined)return;
+  if(S.my===undefined){app().innerHTML=shell(spinBlock(),"me");return}
   if(!S.my)return renderClaim();
   return renderSheetPage(uid,"me");
 }
@@ -1237,7 +1240,7 @@ function renderManage(){
     $("#hadd").onclick=async()=>{const d=g("hd"),n=g("hn").trim();if(!d||!n)return toast("날짜와 이름을 입력해 주세요",true);cfg.holidays=cfg.holidays.filter(h=>h.date!==d).concat({date:d,name:n});if(await saveCfg())renderManage()};
     app().querySelectorAll(".hdel").forEach(b=>b.onclick=async()=>{cfg.holidays=cfg.holidays.filter(h=>h.date!==b.dataset.d);if(await saveCfg())renderManage()});
   }
-  if(tab==="set")$("#ssave").onclick=async()=>{
+  if(tab==="set")$("#ssave").onclick=async()=>{busy($("#ssave"),true);setTimeout(()=>busy($("#ssave"),false),900);
     for(const k of["base_week_max","ot_week_max","total_week_max","day_max","avg_base","avg_ot_max","default_daily_base","holiday_credit"]){const v=parseFloat(g("s_"+k));if(!(v>=0&&v<=200))return toast("숫자를 확인해 주세요",true);cfg.settings[k]=v}
     cfg.settings.teams=g("s_teams").split(",").map(s=>s.trim()).filter(Boolean);
     cfg.settings.leave_types=[...$("#lt").querySelectorAll("tr")].slice(1).map(tr=>{const i=tr.querySelectorAll("input");return{name:i[0].value.trim(),credit:parseFloat(i[1].value)||0,base:i[2].value===""?null:parseFloat(i[2].value)}}).filter(l=>l.name);
@@ -1269,7 +1272,7 @@ async function boot(){
   },()=>{S.my=null;render()});
   window.__loadAdminFlex=()=>{if(!isAdmin||window.__adminFlexOn)return;window.__adminFlexOn=true;
     db.collection("sheets").onSnapshot(s=>{
-      const all={};s.docs.forEach(x=>all[x.id]=structuredClone(x.data()));
+      S.allLoaded=true;const all={};s.docs.forEach(x=>all[x.id]=structuredClone(x.data()));
       for(const u of Object.keys(all))if(pending(u)&&S.all[u])all[u]=S.all[u];
       const changed=JSON.stringify(all)!==JSON.stringify(S.all);S.all=all;
       if(changed&&S.view==="admin"&&usable())render();
@@ -1316,8 +1319,6 @@ function autoMin(k,s,e,be){
   const w=b-a;return w-(w>=510?60:w>240?30:0);
 }
 
-/* 대기 표시: 버튼 안에 작은 스피너 (300ms 뒤에만 보임) */
-function busy(el,on){if(!el)return;const old=el.querySelector(":scope>.spin.inl");if(on){el.disabled=true;if(!old){const s=document.createElement("span");s.className="spin inl";s.setAttribute("role","status");s.setAttribute("aria-label","로딩 중");el.appendChild(s)}}else{el.disabled=false;if(old)old.remove()}}
 
 /* 상태 */
 let db=null,userNS=null,dl=null,uid=null,isAdmin=false;
@@ -1340,7 +1341,7 @@ function render(ext){
   if(window.MODE!=="ot"||!S.ready)return;
   if(ext&&!usable())return;
   if(!db||!uid){app().innerHTML=`<div class="center"><img class="logo lt" src="${LOGO_LT}" alt="달서아트센터 DSAC"><div class="card"><h2>로그인이 필요해요</h2><div class="mute">Claude에 로그인한 상태에서 이 링크를 열어 주세요.</div></div></div>`;return}
-  if(S.mine===undefined)return;
+  if(S.mine===undefined){app().innerHTML=shell(spinBlock());return}
   if(!S.mine&&flexName()&&!S.autoNamed){S.autoNamed=true;db.doc("ot/"+uid).set({name:flexName(),items:{}}).catch(()=>{});app().innerHTML=shell('<div class="center"><div class="tdots" role="status" aria-label="불러오는 중"><i style="--i:0"></i><i style="--i:1"></i><i style="--i:2"></i></div></div>');return}
   if(!S.mine||!S.mine.name)return renderName();
   if(S.view==="admin"&&isAdmin)return renderAdmin();
@@ -1444,6 +1445,7 @@ function titleOf(from,to){const y=from.slice(0,4);return`시간외근무 신청�
 function minCell(x){return`${x.m}${x.r?`\n(${x.r})`:""}`}
 function renderAdmin(){
   if(window.__loadAdminOT)window.__loadAdminOT();
+  if(!S.adminLoaded){app().innerHTML=shell(spinBlock());return}
   const all=pendingAll().sort(sortG);
   const pend=S.rk?all.filter(x=>x.rk===S.rk):all;
   const rkIdx=r=>{const k=["4급","5급","6급","7급"].indexOf(r);return k<0?99:k};
@@ -1532,7 +1534,7 @@ async function boot(){
     if(usable()||had===undefined||!had||!had.name)render(window.MODE==="home");
   },()=>{clearTimeout(tm);S.mine=null;render()});
   window.__loadAdminOT=()=>{if(!isAdmin||window.__adminOTOn)return;window.__adminOTOn=true;db.collection("ot").onSnapshot(s=>{
-    const all={};s.docs.forEach(x=>all[x.id]=structuredClone(x.data()));
+    S.adminLoaded=true;const all={};s.docs.forEach(x=>all[x.id]=structuredClone(x.data()));
     const ch=JSON.stringify(all)!==JSON.stringify(S.all);S.all=all;
     if(ch)render(true);
   },()=>{});};
