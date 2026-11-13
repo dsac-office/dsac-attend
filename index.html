@@ -464,10 +464,11 @@ table.xl thead th{position:sticky;top:calc(var(--toph,58px) + var(--sumh,70px) +
 .top nav button:active,.tabs button:active,.top nav button:focus-visible,.tabs button:focus-visible{transform:translateY(-3px);outline:none}
 @media (prefers-reduced-motion:reduce){.top nav button,.tabs button,.top nav button:hover,.tabs button:hover,.top nav button:active,.tabs button:active{transition:none;transform:none}}
 /* 로그인 제목 슬라이드 업 */
-.lg-title{animation:clipReveal 1000ms cubic-bezier(.65,0,.35,1) both;will-change:clip-path}
+.lg-title{animation:slideUp 700ms cubic-bezier(.16,1,.3,1) both;will-change:transform,opacity}
+.hero-rv{animation:clipReveal 1000ms cubic-bezier(.65,0,.35,1) both;will-change:clip-path}
 @keyframes clipReveal{from{clip-path:inset(-20% 100% -20% 0)}to{clip-path:inset(-20% 0 -20% 0)}}
 @keyframes slideUp{from{transform:translateY(32px);opacity:0}to{transform:translateY(0);opacity:1}}
-@media (prefers-reduced-motion:reduce){.lg-title{animation:none;clip-path:none;will-change:auto}}
+@media (prefers-reduced-motion:reduce){.lg-title{animation:none;will-change:auto}.hero-rv{animation:none;clip-path:none;will-change:auto}}
 /* 평일·휴일 선택 애니메이션 */
 .kind button{transition:transform 260ms cubic-bezier(.16,1,.3,1),background-color 260ms cubic-bezier(.16,1,.3,1),color 260ms cubic-bezier(.16,1,.3,1),box-shadow 260ms cubic-bezier(.16,1,.3,1)}
 .kind button.on{animation:kpop 340ms cubic-bezier(.16,1,.3,1)}
@@ -740,9 +741,9 @@ function renderHome(){
   const nm=flexName(),rk=OT.rank();
   app().innerHTML=`<div class="top"><div class="in">${logoBtn()}<span class="sp"></span><span class="who">${isAdmin?"관리자":""}</span><button class="lo2" data-logout>로그아웃</button></div></div>
   <div class="wrap"><div class="home">
-    <div class="card hero">
+    <div class="card hero"><div class="hero-rv">
       <p class="eyebrow">DALSEO ARTS CENTER</p><h1>Work Plan</h1><p class="home-sub">근무 관리</p>
-      ${nm?`<p class="home-p"><b>${esc(nm)}</b>${rk?` ${esc(rk)}`:""}</p>`:""}</div>
+      ${nm?`<p class="home-p"><b>${esc(nm)}</b>${rk?` ${esc(rk)}`:""}</p>`:""}</div></div>
     <div class="tiles">
       <button class="tile" data-mode="flex" data-mine><span class="ic">${ART.flex}</span><span class="tt"><b>Flex Plan</b><small>탄력근무계획표</small></span></button>
       <button class="tile" data-mode="ot"><span class="ic">${ART.ot}</span><span class="tt"><b>Overtime</b><small>시간외근무 신청</small></span></button>
