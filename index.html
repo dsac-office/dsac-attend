@@ -634,8 +634,12 @@ document.addEventListener("click",e=>{
   else if(h){MODE="home";render();scrollTo(0,0)}
   else if(m){MODE=m.dataset.mode;render();scrollTo(0,0)}
 });
+var NAV_R=false;
+document.addEventListener("click",e=>{if(e.target&&e.target.id==="sv"){const ks=Object.keys(wq||{});ks.forEach(t=>flush(t));toast("저장했어요")}});
 function render(){
   if(!S.ready)return;
+  if(!NAV_R){NAV_R=true;try{const n=JSON.parse(sessionStorage.getItem("dsac_nav")||"null");if(n){MODE=n.MODE||MODE;if(n.view)S.view=n.view;if(n.target!=null)S.target=n.target}}catch(e){}}
+  try{sessionStorage.setItem("dsac_nav",JSON.stringify({MODE,view:S.view,target:S.target}))}catch(e){}
   if(!db||!uid)return renderBlocked();
   if(MODE==="home")return renderHome();
   if(MODE==="ot")return OT.render(true);
@@ -690,7 +694,7 @@ function renderSheetPage(target,mode){
   ${canWrite===false?`<div class="notice">지금은 보기만 할 수 있어요. 입력하려면 담당자에게 작성 권한을 요청하세요.</div>`:p.locked?`<div class="notice">🔒 마감된 기간이에요.${T.ro?" 고칠 내용이 있으면 담당자에게 알려 주세요.":" 관리자는 수정할 수 있어요."}</div>`:""}
   <div class="card sumx" id="sum"></div>
   <div class="card calcard">
-    <div class="calhead"><span class="mute small">기본은 <b>시간</b>, 시간외는 <b>분</b>으로 입력 · 자동 저장</span><span class="sp"></span><span class="save" id="saved"></span><span class="xo"><button class="xin" data-ex="xlsx">엑셀 저장</button><button class="xin" data-ex="pdf">PDF</button><button class="xin" data-ex="print">인쇄</button>${T.ro?"":`<button class="xin" id="xin">엑셀 불러오기</button><input type="file" id="xfile" accept=".xlsx,.xls" hidden>`}</span></div>
+    <div class="calhead"><span class="mute small">기본은 <b>시간</b>, 시간외는 <b>분</b>으로 입력 · 자동 저장</span><span class="sp"></span><span class="save" id="saved"></span><span class="xo"><button class="xin" id="sv">저장</button><button class="xin" data-ex="xlsx">엑셀 저장</button><button class="xin" data-ex="pdf">PDF</button><button class="xin" data-ex="print">인쇄</button>${T.ro?"":`<button class="xin" id="xin">엑셀 불러오기</button><input type="file" id="xfile" accept=".xlsx,.xls" hidden>`}</span></div>
     <div class="tw"><table class="xl" id="cal"><thead><tr><th class="wk">주차</th><th class="gb">구분</th>${DOW.map((d,i)=>`<th class="${i===0?"hol":i===6?"sat":""}">${d}</th>`).join("")}<th class="tot">합계</th></tr></thead>
     ${Array.from({length:p.weeks},(_,w)=>weekBlock(w)+monthRow(w)).join("")}</table></div>
   </div>`,mode==="admin"?"admin":"me");
@@ -1062,7 +1066,7 @@ function renderAdmin(){
     const ft=$("#ft").value,fi=$("#fi").checked,fq=$("#fq").value.trim();
     const list=rows.filter(x=>(!ft||x.emp.team===ft)&&(!fi||x.issue||x.dup)&&(!fq||x.emp.name.includes(fq)||x.emp.id.includes(fq)));
     const miss=(!fi)?missing.filter(m=>(!ft||m.team===ft)&&(!fq||m.name.includes(fq)||m.id.includes(fq))):[];
-    $("#atab").innerHTML=`<tr><th>이름</th><th class="n">작성</th><th class="n">기본 평균</th><th class="n">시간외 평균</th><th class="n">휴무 필요</th><th class="n">한도 초과</th><th>상태</th></tr>`+
+    $("#atab").innerHTML=`<tr><th>이름</th><th class="n">작성</th><th class="n">기본 평균</th><th class="n">시간외 평균</th><th class="n">휴무 필요(시간)</th><th class="n">한도 초과</th><th>상태</th></tr>`+
     list.map(({u,emp,r,conf,issue,started,dup},ix,arr)=>(!ft&&(ix===0||arr[ix-1].emp.team!==emp.team)?`<tr class="teamh"><th colspan="7" style="text-align:left;background:var(--off);font-size:13px;color:var(--ink2);padding:10px 10px 6px">${esc(emp.team||"팀 미지정")}</th></tr>`:"")+`<tr class="click" data-u="${esc(u)}"><td><b>${esc(emp.name)}</b><div class="sub">${esc(emp.team)}${emp.team?" · ":""}${esc(emp.id)}</div></td>
       <td class="n">${conf}/${p.weeks}</td><td class="n ${r.avgBaseBad?"warn":""}">${f1(r.avgBase)}</td><td class="n ${r.avgOtBad?"warn":""}">${f1(r.avgOt)}</td><td class="n ${r.needLeave>EPS?"warn":""}">${f1(r.needLeave)}</td><td class="n ${r.warnWeeks?"warn":""}">${r.warnWeeks?r.warnWeeks+"주":"-"}</td>
       <td>${dup?'<span class="chip bad">사번 중복 연결</span>':issue?'<span class="chip bad">확인 필요</span>':conf===p.weeks?'<span class="chip ok">완료</span>':started?'<span class="chip pri">작성 중</span>':'<span class="chip">미작성</span>'}</td></tr>`).join("")+
