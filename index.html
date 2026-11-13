@@ -780,11 +780,11 @@ function paint(){
   if(r.avgOtBad)issues.push(`시간외 주평균이 ${st.avg_ot_max}시간을 넘었어요`);
   const bw=r.weeks.filter(wk=>wk.warn);
   $("#sum").innerHTML=`<div class="sx">
-    <div class="sc ${r.avgBaseBad?"bad":""}"><span class="sl">기본 주평균</span><b>${f1(r.avgBase)}</b><small>/ ${st.avg_base} · 합 ${f1(baseSum)}</small></div>
-    <div class="sc ${r.avgOtBad?"bad":""}"><span class="sl">시간외 주평균</span><b>${f1(r.avgOt)}</b><small>/ ${st.avg_ot_max} · 합 ${f1(r.otMin/60)}</small></div>
+    <div class="sc ${r.avgBaseBad?"bad":""}"><span class="sl">기본 주평균</span><b>${f1(r.avgBase)}</b><small>/ ${st.avg_base}</small></div>
+    <div class="sc ${r.avgOtBad?"bad":""}"><span class="sl">시간외 주평균</span><b>${f1(r.avgOt)}</b><small>/ ${st.avg_ot_max}</small></div>
     <div class="sc ${r.needLeave>EPS?"bad":"good"}"><span class="sl">남은 휴무</span><b>${f1(r.needLeave)}</b><small>시간</small></div>
-    ${(r.months.forEach(m=>{const e=$("#mr"+m.ym);if(e)e.textContent=f1(m.ot)+"시간"}),"")}<div class="sm"><span class="sl">월별 시간외</span>${r.months.filter(m=>m.days>=15).map(m=>`<span class="mm">${+m.ym.slice(5)}월 <b>${f1(m.ot)}</b><small>시간</small></span>`).join("")}</div>
-    <div class="sst">${issues.length||bw.length?`<span class="bad">⚠ ${issues.join(" · ")}${issues.length&&bw.length?" · ":""}${bw.length?"한도 초과":""}</span>${bw.map(wk=>`<button class="lnk" data-jr="${wk.w}">${wk.w+1}주</button>`).join("")}`:`<span class="ok">✓ 붉은 칸 없음</span>`}</div></div>`;
+    ${(r.months.forEach(m=>{const e=$("#mr"+m.ym);if(e)e.textContent=f1(m.ot)+"시간"}),"")}<div class="sm">${r.months.filter(m=>m.days>=15).map(m=>`<span class="mm">${+m.ym.slice(5)}월 <b>${f1(m.ot)}</b><small>시간</small></span>`).join("")}</div>
+    <div class="sst">${r.avgBaseBad||r.avgOtBad?`<span class="bad">⚠ ${[r.avgBaseBad?"기본":"",r.avgOtBad?"시간외":""].filter(Boolean).join("·")} 평균 초과</span>`:bw.length?"":`<span class="ok">✓ 붉은 칸 없음</span>`}</div></div>`;
   r.weeks.forEach(wk=>{
     const w=wk.w,conf=!!(sd.weeks[w]&&sd.weeks[w].c),tb=$("#wb"+w);if(!tb)return;
     tb.classList.toggle("conf",conf);
