@@ -477,6 +477,12 @@ table.xl thead th{position:sticky;top:calc(var(--toph,58px) + var(--sumh,70px) +
 @media (hover:hover){.logob:hover{transform:translateY(-3px)}}
 .logob:focus-visible{transform:translateY(-3px);outline:2px solid var(--accent);outline-offset:4px}
 @media (prefers-reduced-motion:reduce){.logob,.logob:hover{transition:none;transform:none}}
+/* 작성 완료 체크칸 */
+.wcf{position:relative}
+.wcf input[type=checkbox]{accent-color:#58C0D0;width:16px;height:16px;margin:0;cursor:pointer;transform-origin:center}
+.pring{position:absolute;width:18px;height:18px;border-radius:50%;border:2px solid #58C0D0;left:0;top:0;will-change:transform,opacity}
+.ppart{position:absolute;left:0;top:0;width:5px;height:5px;border-radius:50%;background:#58C0D0;will-change:transform,opacity}
+@media (prefers-reduced-motion:reduce){.pburst{display:none}}
 </style>
 <div id="app"><div class="center"><div class="tdots" role="status" aria-label="불러오는 중"><i style="--i:0"></i><i style="--i:1"></i><i style="--i:2"></i></div></div></div>
 <div id="toast"></div>
@@ -524,6 +530,26 @@ function doLogout(){LS.s("dsac_last",JSON.stringify({id:LS.g("dsac_uid")||"",nam
 if(/[?&]logout/.test(location.search))doLogout();
 
 /* 대기 표시: 버튼 안에 작은 스피너 (300ms 뒤에만 보임) */
+/* 작성 완료 체크 펄스 (체크할 때만, 움직임 줄이기 설정이면 색만 바뀜) */
+function wkBurst(input){
+  if(matchMedia("(prefers-reduced-motion: reduce)").matches)return;
+  const host=input.parentElement;if(!host)return;
+  const cs=getComputedStyle(host);if(cs.position==="static")host.style.position="relative";
+  const r=input.getBoundingClientRect(),hr=host.getBoundingClientRect();
+  const cx=r.left-hr.left+r.width/2,cy=r.top-hr.top+r.height/2;
+  const wrap=document.createElement("span");wrap.className="pburst";wrap.setAttribute("aria-hidden","true");
+  wrap.style.cssText=`position:absolute;left:${cx}px;top:${cy}px;width:0;height:0;pointer-events:none;z-index:3`;
+  host.appendChild(wrap);
+  const ring=document.createElement("span");ring.className="pring";wrap.appendChild(ring);
+  ring.animate([{transform:"translate(-50%,-50%) scale(.4)",opacity:.9},{transform:"translate(-50%,-50%) scale(2.2)",opacity:0}],{duration:420,easing:"cubic-bezier(.16,1,.3,1)",fill:"forwards"});
+  for(let i=0;i<8;i++){
+    const p=document.createElement("span");p.className="ppart";wrap.appendChild(p);
+    const a=i*Math.PI/4,dx=Math.cos(a)*30,dy=Math.sin(a)*30;
+    p.animate([{transform:"translate(-50%,-50%) translate(0,0) scale(1)",opacity:1},{transform:`translate(-50%,-50%) translate(${dx}px,${dy}px) scale(.3)`,opacity:0}],{duration:520,easing:"cubic-bezier(.16,1,.3,1)",fill:"forwards"});
+  }
+  input.animate([{transform:"scale(.7)"},{transform:"scale(1.3)"},{transform:"scale(1)"}],{duration:420,easing:"cubic-bezier(.16,1,.3,1)"});
+  setTimeout(()=>wrap.remove(),600);
+}
 function spinBlock(){return '<div class="spin-wrap"><div class="spin" role="status" aria-label="로딩 중"></div></div>'}
 function busy(el,on){if(!el)return;const old=el.querySelector(":scope>.spin.inl");if(on){el.disabled=true;if(!old){const s=document.createElement("span");s.className="spin inl";s.setAttribute("role","status");s.setAttribute("aria-label","로딩 중");el.appendChild(s)}}else{el.disabled=false;if(old)old.remove()}}
 
@@ -1128,7 +1154,7 @@ function bindSheet(){
   };
   const wkSave=w=>{const doc=getDoc(T.uid),pp=ensure(doc,T.pid),rec={c:$("#cf"+w).checked?1:0,m:(pp.w[w]&&pp.w[w].m)||""};pp.w[w]=rec;save(T.uid,{p:{[T.pid]:{w:{[w]:rec}}}});paint()};
   root.addEventListener("input",e=>{if(e.target.dataset.k&&e.target.dataset.k!=="leave")onEdit(e)});
-  root.addEventListener("change",e=>{const t=e.target;if(t.dataset.k==="leave")onEdit(e);else if(t.dataset.wc!==undefined)wkSave(+t.dataset.wc);});
+  root.addEventListener("change",e=>{const t=e.target;if(t.dataset.k==="leave")onEdit(e);else if(t.dataset.wc!==undefined){const w=+t.dataset.wc;wkSave(w);if(t.checked){const n=$("#cf"+w);if(n)wkBurst(n)}}});
   /* 엑셀처럼 Enter·화살표로 칸 이동 */
   root.addEventListener("keydown",e=>{
     const t=e.target;if(!t.matches("input[data-k]"))return;
