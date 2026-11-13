@@ -725,7 +725,7 @@ function renderInner(){
   if(MODE==="home")return renderHome();
   if(MODE==="ot")return OT.render(true);
   if(!db||!uid)return renderBlocked();
-  if(S.view==="admin"&&isAdmin&&!S.allLoaded){app().innerHTML=shell(spinBlock(),"admin");return}
+  if(S.view==="admin"&&isAdmin&&!S.allLoaded){if(window.__loadAdminFlex)window.__loadAdminFlex();app().innerHTML=shell(spinBlock(),"admin");return}
   if(S.view==="admin"&&isAdmin)return renderAdmin();
   if(S.view==="manage"&&isAdmin)return renderManage();
   if(S.view==="emp"&&isAdmin&&S.target)return renderSheetPage(S.target,"admin");
@@ -1148,7 +1148,7 @@ function renderAdmin(){
   const p=curPeriod();
   if(!p){app().innerHTML=shell('<div class="card">단위기간이 없어요.</div>',"admin");return}
   const{rows,missing}=rowsOf(p);
-  const teams=[...new Set(rows.map(x=>x.emp.team))].filter(Boolean);
+  const teams=[...new Set(["운영지원팀","문화기획팀","공연지원팀",...rows.map(x=>x.emp.team),...missing.map(m=>m.team)])].filter(Boolean);
   const keep=app().querySelector("#fq")?{t:$("#ft").value,i:$("#fi").checked,q:$("#fq").value}:{t:"",i:false,q:""};
   const TEAM_ORDER=["운영지원팀","문화기획팀","공연지원팀"];
   const tIdx=t=>{const k=TEAM_ORDER.indexOf(t);return k<0?99:k};
