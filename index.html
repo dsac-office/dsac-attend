@@ -424,6 +424,14 @@ table.gi td small.rk{display:inline;font-size:12px;color:var(--accent-ink);margi
 button,.btn,[role="button"]{touch-action:manipulation;-webkit-tap-highlight-color:transparent;transition:transform 260ms ease-out}
 button:active:not(:disabled),.btn:active,[role="button"]:active{transform:scale(.94);transition-duration:110ms}
 @media (prefers-reduced-motion:reduce){button:active:not(:disabled),.btn:active,[role="button"]:active{transform:none}}
+/* 근무표 도구줄·요일줄 고정 */
+#sum.sumx{box-shadow:0 12px 0 0 var(--bg)}
+.calcard{overflow:clip}
+.calcard .tw{overflow:visible}
+table.xl{min-width:0}
+.calhead{position:sticky;top:calc(var(--toph,58px) + var(--sumh,70px));z-index:12;background:var(--surface);padding-top:12px;margin-top:-12px}
+table.xl thead th{position:sticky;top:calc(var(--toph,58px) + var(--sumh,70px) + var(--calh,44px));z-index:11;box-shadow:inset 0 -1px 0 var(--line)}
+@media(max-width:700px){.calhead{position:static;margin-top:0;padding-top:0}table.xl thead th{top:calc(var(--toph,58px) + var(--sumh,70px))}}
 </style>
 <div id="app"><div class="center"><div class="tdots" role="status" aria-label="불러오는 중"><i style="--i:0"></i><i style="--i:1"></i><i style="--i:2"></i></div></div></div>
 <div id="toast"></div>
@@ -747,13 +755,13 @@ function renderSheetPage(target,mode){
   setTopH();setTimeout(setTopH,400);setTimeout(setTopH,1500);
   $("#cal").addEventListener("click",e=>{const b=e.target.closest("[data-fold]");if(!b)return;const k=b.dataset.fold,F=foldState();F[k]=F[k]?0:1;if(T.uid===uid&&S.my){S.my.ui={...(S.my.ui||{}),fold:{...F}};save(uid,{ui:{fold:{[k]:F[k]}}})}else LOCAL_FOLD[k]=F[k];applyFold()});
   {const now=new Date(Date.now()+9*36e5).toISOString().slice(0,10),wi=Math.floor((pd(now)-pd(p.start_date))/(7*864e5)),key=target+"|"+p.id;
-   if(wi>=0&&wi<p.weeks&&SCROLLED!==key){SCROLLED=key;const el=$("#wb"+wi);if(el){el.classList.add("now");requestAnimationFrame(()=>{el.scrollIntoView({block:"start"});const t=document.querySelector(".top"),sm=$("#sum");scrollBy(0,-((t?t.offsetHeight:0)+(sm?sm.offsetHeight:0)+50))})}}else if(wi>=0&&wi<p.weeks){const el=$("#wb"+wi);if(el)el.classList.add("now")}}
+   if(wi>=0&&wi<p.weeks&&SCROLLED!==key){SCROLLED=key;const el=$("#wb"+wi);if(el){el.classList.add("now");requestAnimationFrame(()=>{el.scrollIntoView({block:"start"});const t=document.querySelector(".top"),sm=$("#sum");const ch=document.querySelector(".calhead"),th=document.querySelector("#cal thead");scrollBy(0,-((t?t.offsetHeight:0)+(sm?sm.offsetHeight+12:0)+(ch?ch.offsetHeight:0)+(th?th.offsetHeight:0)))})}}else if(wi>=0&&wi<p.weeks){const el=$("#wb"+wi);if(el)el.classList.add("now")}}
   app().querySelectorAll("[data-ex]").forEach(b=>b.onclick=()=>{const k=b.dataset.ex,u=T.uid;if(k==="xlsx")exportXlsx(u);else if(k==="pdf")exportPdf(u);else doPrint(u)});
   const xin=$("#xin");if(xin){xin.onclick=()=>$("#xfile").click();$("#xfile").onchange=e=>{const f=e.target.files[0];e.target.value="";if(f)importXlsx(f,T.uid)}}
 }
 /* 월별 접기: 주의 수요일이 속한 달 기준, 상태는 본인 근무표 문서(ui.fold)에 저장 */
 let SCROLLED=null;
-function setTopH(){const t=document.querySelector(".top");if(t)document.documentElement.style.setProperty("--toph",t.offsetHeight+"px")}
+function setTopH(){const R=document.documentElement.style,t=document.querySelector(".top"),sm=document.getElementById("sum"),ch=document.querySelector(".calhead");if(t)R.setProperty("--toph",t.offsetHeight+"px");if(sm)R.setProperty("--sumh",(sm.offsetHeight+12)+"px");if(ch)R.setProperty("--calh",ch.offsetHeight+"px")}
 addEventListener("resize",setTopH);const LOCAL_FOLD={};
 const weekMonth=w=>{const P=curPeriod(),cnt={};for(let i=0;i<P.weeks*7;i++){const ym=addDays(P.start_date,i).slice(0,7);cnt[ym]=(cnt[ym]||0)+1}
   for(const d of [3,6,0]){const m=addDays(P.start_date,w*7+d).slice(0,7);if(cnt[m]>=15)return m}return addDays(P.start_date,w*7+3).slice(0,7)};
