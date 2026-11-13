@@ -420,6 +420,10 @@ table.gi td small.rk{display:inline;font-size:12px;color:var(--accent-ink);margi
 .shake{animation:shake 650ms ease-out 1}
 .inval{border-color:#d93a3a!important}
 @media (prefers-reduced-motion:reduce){.tdots i{animation:none;opacity:1}.shake{animation:none}}
+/* 누름 피드백 */
+button,.btn,[role="button"]{touch-action:manipulation;-webkit-tap-highlight-color:transparent;transition:transform 260ms ease-out}
+button:active:not(:disabled),.btn:active,[role="button"]:active{transform:scale(.94);transition-duration:110ms}
+@media (prefers-reduced-motion:reduce){button:active:not(:disabled),.btn:active,[role="button"]:active{transform:none}}
 </style>
 <div id="app"><div class="center"><div class="tdots" role="status" aria-label="불러오는 중"><i style="--i:0"></i><i style="--i:1"></i><i style="--i:2"></i></div></div></div>
 <div id="toast"></div>
