@@ -588,6 +588,7 @@ function showLogin(){
     busy($("#lg_go"),true);
     try{
       LS.s("dsac_pw",pw);
+      LS.s("dsac_uid",id);
       const [,r0,sh,o]=await Promise.all([DA.get("config/main"),DA.get("roster/"+id),DA.get("sheets/"+id),DA.get("ot/"+id)]);
       let adm=false;
       if($("#lg_ad").checked){try{LS.s("dsac_apw",$("#lg_apw").value);await DA.post({action:"adminAuth",admin:$("#lg_apw").value});adm=true}catch(e){adm=false;LS.d("dsac_apw")}if(!adm){$("#lg_go").disabled=false;shake("#lg_apw");return err("관리자 비밀번호가 맞지 않아요")}}
@@ -1536,9 +1537,9 @@ function renderAdmin(){
   <div class="otw"><table class="gi"><thead><tr><th>연번</th><th>일 자</th><th>구 분</th><th>성 명</th><th>출근시간</th><th>퇴근시간</th><th>수당시간</th><th>근무내역</th></tr></thead><tbody>
   ${rows.map((x,i)=>`<tr><td>${i+1}</td><td>${kdate(x.d)}</td><td>${kindLabel(x)}</td><td>${esc(x.name)}</td><td>${hm(x.s)}</td><td>${hm(x.e)}</td><td>${x.m}${x.r?`<small>(${esc(x.r)})</small>`:""}</td><td class="wk">${esc(x.w)}</td></tr>`).join("")||`<tr><td colspan="8" class="mute">이 기간에 신청이 없어요</td></tr>`}
   </tbody></table></div>
-  ${rows.length?`<div class="acts"><button class="btn" id="cp">표 복사</button><button class="btn ghost" id="xl">엑셀 받기</button><span class="sp"></span><button class="btn ghost" id="fin">✓ 상신 완료</button></div>`:""}`}
+  ${rows.length?`<div class="acts"><button class="btn" id="cp">표 복사</button><button class="btn ghost" id="xl">엑셀 받기</button><span class="sp"></span></div>`:""}`}
   </div>
-  ${gl.length?`<div class="card"><h3>상신 완료</h3>${gl.map(([t,xs])=>`<div class="grp"><b>${esc(t)}</b><button class="ol" data-cpg="${esc(t)}">표 복사</button><button class="ol del" data-undo="${esc(t)}">되돌리기</button></div>`).join("")}${!S.showDone&&Object.keys(groups).length>6?`<button class="ol" id="more">더 보기</button>`:""}</div>`:""}`);
+  `);
   app().querySelectorAll("[data-rk]").forEach(b=>b.onclick=()=>{S.rk=b.dataset.rk;S.from=S.to=null;render()});
   app().querySelectorAll("[data-day]").forEach(b=>b.onclick=()=>{
     const d=b.dataset.day;
@@ -1551,10 +1552,8 @@ function renderAdmin(){
   if(af){af.onchange=()=>{S.allOn=false;if(af.value){S.from=af.value;const we=wkend(af.value);if(we)[S.from,S.to]=we;else if(S.to<S.from||wkend(S.to))S.to=S.from;render()}};at.onchange=()=>{S.allOn=false;if(at.value){S.to=at.value;if(S.to<S.from)S.from=S.to;render()}}}
   const cp=$("#cp");if(cp)cp.onclick=()=>copyTable(rows);
   const xl=$("#xl");if(xl)xl.onclick=()=>downloadXlsx(rows,title);
-  const fin=$("#fin");if(fin)fin.onclick=()=>markDone(rows,title,fin);
   const mo=$("#more");if(mo)mo.onclick=()=>{S.showDone=true;render()};
   app().querySelectorAll("[data-cpg]").forEach(b=>b.onclick=()=>copyTable(groups[b.dataset.cpg].sort(sortG)));
-  app().querySelectorAll("[data-undo]").forEach(b=>b.onclick=()=>{b.disabled=true;setStatus(groups[b.dataset.undo],{st:"",dt:"",da:0},"기안 전으로 되돌렸어요")});
 }
 async function setStatus(rows,patch,msg){
   const by={};for(const x of rows)(by[x.uid]??={})[x.id]=patch;
