@@ -394,6 +394,7 @@ table.gi td small.rk{display:inline;font-size:12px;color:var(--accent-ink);margi
 .home .tile.adm::after{position:static}
 @media(min-width:720px){.home .tile{min-height:200px;padding:24px}.home .tile b{font-size:22px}.home .tile.adm{min-height:0}}
 .wcf{display:flex;gap:4px;align-items:center;justify-content:center;margin-top:8px;font-size:11px;font-weight:400;color:var(--muted);cursor:pointer;white-space:nowrap}.wcf input{margin:0}
+.fold td{padding:0;border:0;background:transparent}.fbtn{font:inherit;font-size:15px;font-weight:700;color:var(--ink);background:none;border:0;padding:14px 6px 8px;cursor:pointer;display:flex;gap:6px;align-items:center}.fbtn .fi{font-size:12px;color:var(--muted);width:12px}.fbtn.closed{color:var(--muted)}table.xl tbody.wb.now th.wk .wn::after{content:"이번 주";display:block;margin-top:4px;font-size:11px;font-weight:700;color:#3a9fae}
 </style>
 <div id="app"><div class="center"><div class="card mute">불러오는 중…</div></div></div>
 <div id="toast"></div>
@@ -704,14 +705,25 @@ function renderSheetPage(target,mode){
   <div class="card calcard">
     <div class="calhead"><span class="mute small">기본은 <b>시간</b>, 시간외는 <b>분</b>으로 입력 · 자동 저장</span><span class="sp"></span><span class="save" id="saved"></span><span class="xo"><button class="xin" id="sv">저장</button><button class="xin" data-ex="xlsx">엑셀 저장</button><button class="xin" data-ex="pdf">PDF</button><button class="xin" data-ex="print">인쇄</button>${T.ro?"":`<button class="xin" id="xin">엑셀 불러오기</button><input type="file" id="xfile" accept=".xlsx,.xls" hidden>`}</span></div>
     <div class="tw"><table class="xl" id="cal"><thead><tr><th class="wk">주차</th><th class="gb">구분</th>${DOW.map((d,i)=>`<th class="${i===0?"hol":i===6?"sat":""}">${d}</th>`).join("")}<th class="tot">합계</th></tr></thead>
-    ${Array.from({length:p.weeks},(_,w)=>weekBlock(w)+monthRow(w)).join("")}</table></div>
+    ${Array.from({length:p.weeks},(_,w)=>foldRow(w)+weekBlock(w)+monthRow(w)).join("")}</table></div>
   </div>`,mode==="admin"?"admin":"me");
   $("#psel").onchange=e=>{S.periodId=e.target.value;render()};
   $("#sum").onclick=e=>{const b=e.target.closest("[data-jr]");if(!b)return;const r=$("#wb"+b.dataset.jr);r.scrollIntoView({behavior:"smooth",block:"center"});r.classList.add("flash");setTimeout(()=>r.classList.remove("flash"),1600)};
-  bindSheet();paint();
+  bindSheet();paint();applyFold();
+  $("#cal").addEventListener("click",e=>{const b=e.target.closest("[data-fold]");if(!b)return;const k=b.dataset.fold,F=foldState();F[k]=F[k]?0:1;if(T.uid===uid&&S.my){S.my.ui={...(S.my.ui||{}),fold:{...F}};save(uid,{ui:{fold:{[k]:F[k]}}})}else LOCAL_FOLD[k]=F[k];applyFold()});
+  {const now=new Date(Date.now()+9*36e5).toISOString().slice(0,10),wi=Math.floor((pd(now)-pd(p.start_date))/(7*864e5)),key=target+"|"+p.id;
+   if(wi>=0&&wi<p.weeks&&SCROLLED!==key){SCROLLED=key;const el=$("#wb"+wi);if(el){el.classList.add("now");requestAnimationFrame(()=>{el.scrollIntoView({block:"start"});scrollBy(0,-80)})}}else if(wi>=0&&wi<p.weeks){const el=$("#wb"+wi);if(el)el.classList.add("now")}}
   app().querySelectorAll("[data-ex]").forEach(b=>b.onclick=()=>{const k=b.dataset.ex,u=T.uid;if(k==="xlsx")exportXlsx(u);else if(k==="pdf")exportPdf(u);else doPrint(u)});
   const xin=$("#xin");if(xin){xin.onclick=()=>$("#xfile").click();$("#xfile").onchange=e=>{const f=e.target.files[0];e.target.value="";if(f)importXlsx(f,T.uid)}}
 }
+/* 월별 접기: 주의 수요일이 속한 달 기준, 상태는 본인 근무표 문서(ui.fold)에 저장 */
+let SCROLLED=null;const LOCAL_FOLD={};
+const weekMonth=w=>{const P=curPeriod(),cnt={};for(let i=0;i<P.weeks*7;i++){const ym=addDays(P.start_date,i).slice(0,7);cnt[ym]=(cnt[ym]||0)+1}
+  for(const d of [3,6,0]){const m=addDays(P.start_date,w*7+d).slice(0,7);if(cnt[m]>=15)return m}return addDays(P.start_date,w*7+3).slice(0,7)};
+function foldState(){return T.uid===uid?{...((S.my&&S.my.ui&&S.my.ui.fold)||{})}:LOCAL_FOLD}
+function foldRow(w){const m=weekMonth(w);if(w>0&&weekMonth(w-1)===m)return"";return`<tbody class="fold"><tr><td colspan="10"><button class="fbtn" data-fold="${m}"><span class="fi">▾</span> ${+m.slice(5)}월</button></td></tr></tbody>`}
+function applyFold(){const F=foldState(),P=curPeriod();for(let w=0;w<P.weeks;w++){const tb=$("#wb"+w);if(tb)tb.style.display=F[weekMonth(w)]?"none":""}
+  document.querySelectorAll("#cal [data-fold]").forEach(b=>{const c=!!F[b.dataset.fold];b.querySelector(".fi").textContent=c?"▸":"▾";b.classList.toggle("closed",c)})}
 function monthRow(w){
   const P=curPeriod(),cnt={};for(let i=0;i<P.weeks*7;i++){const ym=addDays(P.start_date,i).slice(0,7);cnt[ym]=(cnt[ym]||0)+1}
   for(let d=0;d<7;d++){const dt=addDays(P.start_date,w*7+d),nx=addDays(dt,1);if((nx.slice(5,7)!==dt.slice(5,7)||(w===P.weeks-1&&d===6))&&cnt[dt.slice(0,7)]>=15)
@@ -1373,7 +1385,8 @@ function renderAdmin(){
   const rkNames=[...new Set(all.map(x=>x.rk||"미정"))].sort((a,b)=>rkIdx(a)-rkIdx(b));
   const days=[...new Set(pend.map(x=>x.d))];
   const todayK=new Date(Date.now()+9*3600e3).toISOString().slice(0,10);
-  if(!S.from||!S.to){S.from=S.to=todayK}
+  const wkend=d=>{const w=pd(d).getUTCDay();return w===6?[d,addDays(d,1)]:w===0?[addDays(d,-1),d]:null};
+  if(!S.from||!S.to){S.from=S.to=todayK;const we=wkend(todayK);if(we)[S.from,S.to]=we}
   const rows=pend.filter(x=>S.from&&x.d>=S.from&&x.d<=S.to);
   const title=S.from?titleOf(S.from,S.to):"";
   const done=allItems().filter(x=>x.st==="done");
@@ -1398,7 +1411,7 @@ function renderAdmin(){
     render();
   });
   const af=$("#af"),at=$("#at");
-  if(af){af.onchange=()=>{if(af.value){S.from=af.value;if(S.to<S.from)S.to=S.from;render()}};at.onchange=()=>{if(at.value){S.to=at.value;if(S.to<S.from)S.from=S.to;render()}}}
+  if(af){af.onchange=()=>{if(af.value){S.from=af.value;const we=wkend(af.value);if(we)[S.from,S.to]=we;else if(S.to<S.from||wkend(S.to))S.to=S.from;render()}};at.onchange=()=>{if(at.value){S.to=at.value;if(S.to<S.from)S.from=S.to;render()}}}
   const ct=$("#ct");if(ct)ct.onclick=()=>copyText(title,"제목을 복사했어요");
   const cp=$("#cp");if(cp)cp.onclick=()=>copyTable(rows);
   const xl=$("#xl");if(xl)xl.onclick=()=>downloadXlsx(rows,title);
