@@ -1639,7 +1639,7 @@ boot();OT.start();
     if(!rows.length){box.innerHTML='<div class="fab-e">이번 달 근무표에 입력된 시간외가 없어요</div>';return}
     const max=Math.max(...rows.map(r=>r[1]),60),W=236,H=92,bw=Math.max(8,Math.min(28,(W-8)/rows.length-6));
     const bars=rows.map((r,k)=>{const h=Math.max(4,Math.round(r[1]/max*(H-22))),x=4+k*((W-8)/rows.length),y=H-18-h;return `<rect x="${x.toFixed(1)}" y="${y}" width="${bw.toFixed(1)}" height="${h}" rx="5" fill="var(--accent)" class="fab-bar" style="animation-delay:${k*60}ms"><title>${esc2(r[0].slice(5))} ${(r[1]/60).toFixed(1)}h</title></rect><text x="${(x+bw/2).toFixed(1)}" y="${H-4}" text-anchor="middle" font-size="10" fill="var(--muted)">${esc2(r[0].slice(8))}</text>`}).join("");
-    box.innerHTML=`<div class="fab-big"><b>${(tot/60).toFixed(1)}</b><span>시간</span></div><div class="fab-sub">이번 달 시간외 · ${rows.length}일</div><svg viewBox="0 0 ${W} ${H}" width="100%" role="img" aria-label="날짜별 시간외 막대그래프">${bars}</svg>`;
+    box.innerHTML=`<div class="fab-big"><b>${(tot/60).toFixed(1)}</b><span>시간</span></div><div class="fab-sub">이번 달 시간외 · ${rows.length}일</div><svg viewBox="0 0 ${W} ${H}" width="100%" role="img" aria-label="날짜별 시간외 막대그래프">${bars}</svg>`;};
   const show=on=>{p.classList.toggle("on",on);if(on)drawT()};
   show(pinned);
   b.onclick=()=>show(!p.classList.contains("on"));
