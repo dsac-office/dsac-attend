@@ -758,7 +758,7 @@ function renderHome(){
       <p class="eyebrow">DALSEO ARTS CENTER</p><h1>Work Plan</h1><p class="home-sub">근무 관리</p>
       ${nm?`<p class="home-p"><b>${esc(nm)}</b>${rk?` ${esc(rk)}`:""}</p>`:""}</div></div>
     <div class="tiles">
-      <button class="tile" data-mode="flex" data-mine><span class="ic">${ART.flex}</span><span class="tt"><b>Flex Plan</b><small>탄력근무계획표</small></span></button>
+      <button class="tile" data-mode="flex" data-mine><span class="ic">${ART.flex}</span><span class="tt"><b>Flex Schedule</b><small>탄력근무계획표</small></span></button>
       <button class="tile" data-mode="ot"><span class="ic">${ART.ot}</span><span class="tt"><b>Overtime</b><small>시간외근무 신청</small></span></button>
       ${isAdmin?`<button class="tile adm" data-admin><span class="ic">${ART.adm}</span><span class="tt"><b>All Staff</b><small>전직원 탄력근무표</small></span></button>`:""}
       ${isAdmin?`<button class="tile adm" data-manage><span class="ic">${ART.set}</span><span class="tt"><b>Settings</b><small>관리</small></span></button>`:""}
