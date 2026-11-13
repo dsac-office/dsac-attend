@@ -1046,7 +1046,7 @@ const rowsOf=p=>{
   }
   rows.forEach(x=>x.dup=byEmp[x.emp.id].length>1);
   const linked=new Set(Object.keys(byEmp));
-  const missing=Object.entries(S.roster).filter(([id,d])=>d.active!==false&&!linked.has(id)).map(([id,d])=>({id,name:d.name,team:d.team||""}));
+  const missing=Object.entries(S.roster).filter(([id,d])=>d.active!==false&&!linked.has(id)).map(([id,d])=>({id,name:d.name,team:d.team||"",rank:d.rank||"",seq:d.seq||999}));
   return{rows,missing};
 };
 async function loadNames(uids){
@@ -1063,7 +1063,8 @@ function renderAdmin(){
   const TEAM_ORDER=["운영지원팀","문화기획팀","공연지원팀"];
   const tIdx=t=>{const k=TEAM_ORDER.indexOf(t);return k<0?99:k};
   const rIdx=r=>{const k=["4급","5급","6급","7급"].indexOf(r||"");return k<0?99:k};
-  rows.sort((a,b)=>tIdx(a.emp.team)-tIdx(b.emp.team)||(a.emp.team||"").localeCompare(b.emp.team||"","ko")||rIdx(a.emp.rank||a.emp.rk)-rIdx(b.emp.rank||b.emp.rk)||(a.emp.seq||999)-(b.emp.seq||999)||String(a.emp.name||"").localeCompare(String(b.emp.name||""),"ko"));
+  const cmpEmp=(a,b)=>tIdx(a.emp.team)-tIdx(b.emp.team)||(a.emp.team||"").localeCompare(b.emp.team||"","ko")||rIdx(a.emp.rank||a.emp.rk)-rIdx(b.emp.rank||b.emp.rk)||(a.emp.seq||999)-(b.emp.seq||999)||String(a.emp.name||"").localeCompare(String(b.emp.name||""),"ko");
+  rows.sort(cmpEmp);
   const n=rows.length+missing.length,bad=rows.filter(x=>x.issue||x.dup).length,done=rows.filter(x=>x.conf===p.weeks).length,none=missing.length+rows.filter(x=>!x.started).length;
   app().innerHTML=shell(`
   <div class="head"><div><h1>전직원 탄력근무표</h1><p>${esc(p.name)} · 한도나 평균을 넘은 직원을 먼저 확인하세요</p></div><span class="sp"></span>${periodSelect()}</div>
@@ -1079,10 +1080,9 @@ function renderAdmin(){
     const list=rows.filter(x=>(!ft||x.emp.team===ft)&&(!fi||x.issue||x.dup)&&(!fq||x.emp.name.includes(fq)||x.emp.id.includes(fq)));
     const miss=(!fi)?missing.filter(m=>(!ft||m.team===ft)&&(!fq||m.name.includes(fq)||m.id.includes(fq))):[];
     $("#atab").innerHTML=`<tr><th>이름</th><th class="n">작성</th><th class="n">기본 평균</th><th class="n">시간외 평균</th><th class="n">휴무 필요(시간)</th><th class="n">한도 초과</th><th>상태</th></tr>`+
-    list.map(({u,emp,r,conf,issue,started,dup},ix,arr)=>(!ft&&(ix===0||arr[ix-1].emp.team!==emp.team)?`<tr class="teamh"><th colspan="7" style="text-align:left;background:var(--off);font-size:13px;color:var(--ink2);padding:10px 10px 6px">${esc(emp.team||"팀 미지정")}</th></tr>`:"")+`<tr class="click" data-u="${esc(u)}"><td><b>${esc(emp.name)}</b><div class="sub">${esc(emp.team)}${emp.team?" · ":""}${esc(emp.id)}</div></td>
+    [...list,...miss.map(m=>({miss:true,emp:{id:m.id,name:m.name,team:m.team,rank:m.rank,seq:m.seq}}))].sort(cmpEmp).map(({u,emp,r,conf,issue,started,dup,miss:ms},ix,arr)=>(!ft&&(ix===0||arr[ix-1].emp.team!==emp.team)?`<tr class="teamh"><th colspan="7" style="text-align:left;background:var(--off);font-size:13px;color:var(--ink2);padding:10px 10px 6px">${esc(emp.team||"팀 미지정")}</th></tr>`:"")+(ms?`<tr><td><b>${esc(emp.name)}</b><div class="sub">${esc(emp.team)}${emp.team?" · ":""}${esc(emp.id)}</div></td><td class="n mute">-</td><td class="n mute">-</td><td class="n mute">-</td><td class="n mute">-</td><td class="n mute">-</td><td><span class="chip">아직 시작 안 함</span></td></tr>`:`<tr class="click" data-u="${esc(u)}"><td><b>${esc(emp.name)}</b><div class="sub">${esc(emp.team)}${emp.team?" · ":""}${esc(emp.id)}</div></td>
       <td class="n">${conf}/${p.weeks}</td><td class="n ${r.avgBaseBad?"warn":""}">${f1(r.avgBase)}</td><td class="n ${r.avgOtBad?"warn":""}">${f1(r.avgOt)}</td><td class="n ${r.needLeave>EPS?"warn":""}">${f1(r.needLeave)}</td><td class="n ${r.warnWeeks?"warn":""}">${r.warnWeeks?r.warnWeeks+"주":"-"}</td>
-      <td>${dup?'<span class="chip bad">사번 중복 연결</span>':issue?'<span class="chip bad">확인 필요</span>':conf===p.weeks?'<span class="chip ok">완료</span>':started?'<span class="chip pri">작성 중</span>':'<span class="chip">미작성</span>'}</td></tr>`).join("")+
-    miss.map(m=>`<tr><td><b>${esc(m.name)}</b><div class="sub">${esc(m.team)}${m.team?" · ":""}${esc(m.id)}</div></td><td class="n mute">-</td><td class="n mute">-</td><td class="n mute">-</td><td class="n mute">-</td><td class="n mute">-</td><td><span class="chip">아직 시작 안 함</span></td></tr>`).join("")||`<tr><td colspan="7" class="mute">조건에 맞는 직원이 없어요</td></tr>`;
+      <td>${dup?'<span class="chip bad">사번 중복 연결</span>':issue?'<span class="chip bad">확인 필요</span>':conf===p.weeks?'<span class="chip ok">완료</span>':started?'<span class="chip pri">작성 중</span>':'<span class="chip">미작성</span>'}</td></tr>`)).join("")||`<tr><td colspan="7" class="mute">조건에 맞는 직원이 없어요</td></tr>`;
     $("#atab").querySelectorAll("tr.click").forEach(tr=>{if(S.names[tr.dataset.u])tr.title="Claude 계정: "+S.names[tr.dataset.u];tr.onclick=()=>{S.target=tr.dataset.u;S.view="emp";render()}});
   };
   ["ft","fi","fq"].forEach(i=>$("#"+i).oninput=draw);draw();
@@ -1143,7 +1143,7 @@ function renderManage(){
         if(!id||!nm||!idOk(id)){skip++;continue}const was=!!S.roster[id],old=S.roster[id]||{};try{await db.doc("roster/"+id).set({name:nm,team:team||old.team||"",rank:rank||old.rank||"",seq:Number(seq)||old.seq||999,active:true});was?upd++:add++}catch{skip++}}
       toast(`${add}명 추가, ${upd}명 수정${skip?`, ${skip}건 건너뜀(형식 오류)`:""}`,skip>0)};
     app().querySelectorAll("tr[data-id]").forEach(tr=>{const id=tr.dataset.id;
-      tr.querySelector(".sv").onclick=async()=>{try{await db.doc("roster/"+id).set({name:tr.querySelector(".en").value.trim(),team:tr.querySelector(".et").value,active:true});toast("저장했어요")}catch{toast("저장하지 못했어요",true)}};
+      tr.querySelector(".sv").onclick=async()=>{try{await db.doc("roster/"+id).set({...(S.roster[id]||{}),name:tr.querySelector(".en").value.trim(),team:tr.querySelector(".et").value,active:true});toast("저장했어요")}catch{toast("저장하지 못했어요",true)}};
       tr.querySelector(".rm").onclick=async e=>{const b=e.target;if(b.dataset.sure!=="1"){b.dataset.sure="1";b.textContent="한 번 더 누르면 삭제";return}
         try{await db.doc("roster/"+id).delete();toast("삭제했어요 (입력된 근무 기록은 남아 있어요)")}catch{toast("삭제하지 못했어요",true)}};});
   }
