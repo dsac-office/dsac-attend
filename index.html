@@ -1410,7 +1410,7 @@ function shell(inner){
   const nav=isAdmin?[["me","신청하기"],["admin","신청현황"]]:[];
   const nm=S.mine&&S.mine.name;
   return`<div class="top"><div class="in">${logoBtn()}
-  <nav><button data-home>홈</button><button data-mode="flex">탄력근무표</button>${nav.map(([k,l])=>`<button data-onav="${k}" class="${k===S.view?"on":""}">${l}</button>`).join("")}</nav><span class="sp"></span>
+  <nav><button data-home>홈</button><button data-mode="flex">탄력근무표</button>${nav.map(([k,l])=>`<button data-onav="${k}" class="${k===S.view?"on":""}">${l}</button>`).join("")}${isAdmin?`<button data-nav="admin">전직원 탄력근무표</button><button data-manage>관리</button>`:""}</nav><span class="sp"></span>
   <span class="who">${nm?esc(nm):""}${isAdmin?" · 수합자":""}</span><button class="lo2" data-logout>로그아웃</button></div></div><div class="wrap">${inner}</div>`;
 }
 function render(ext){
