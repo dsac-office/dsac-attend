@@ -626,10 +626,12 @@ function renderHome(){
       <button class="tile" data-mode="flex" data-mine><span class="ic">${ART.flex}</span><span class="tt"><b>Flex Plan</b><small>탄력근무계획표</small></span></button>
       <button class="tile" data-mode="ot"><span class="ic">${ART.ot}</span><span class="tt"><b>Overtime</b><small>시간외근무 신청</small></span></button>
       ${isAdmin?`<button class="tile adm" data-admin><span class="ic">${ART.adm}</span><span class="tt"><b>All Staff</b><small>전직원 탄력근무표</small></span></button>`:""}
+      ${isAdmin?`<button class="tile adm" data-manage><span class="ic">${ART.adm}</span><span class="tt"><b>Settings</b><small>관리</small></span></button>`:""}
     </div></div></div>`;
 }
 document.addEventListener("click",e=>{
-  const h=e.target.closest("[data-home]"),m=e.target.closest("[data-mode]"),ad=e.target.closest("[data-admin]");
+  const h=e.target.closest("[data-home]"),m=e.target.closest("[data-mode]"),ad=e.target.closest("[data-admin]"),mg=e.target.closest("[data-manage]");
+  if(mg){MODE="flex";S.view="manage";S.target=null;render();scrollTo(0,0);return}
   if(m&&m.dataset.mode==="flex"){S.view="me";S.target=null}
   if(ad){MODE="flex";S.view="admin";S.target=null;render();scrollTo(0,0)}
   else if(h){MODE="home";render();scrollTo(0,0)}
@@ -638,6 +640,9 @@ document.addEventListener("click",e=>{
 var NAV_R=false;
 document.addEventListener("click",e=>{if(e.target&&e.target.id==="sv"){const ks=Object.keys(wq||{});ks.forEach(t=>flush(t));toast("저장했어요")}});
 function render(){
+  try{return renderInner()}catch(e){console.error(e);try{toast("화면을 열지 못했어요: "+(e.message||e),true)}catch(_){}}
+}
+function renderInner(){
   if(!S.ready)return;
   if(!NAV_R){NAV_R=true;try{const n=JSON.parse(sessionStorage.getItem("dsac_nav")||"null");if(n){MODE=n.MODE||MODE;if(n.view)S.view=n.view;if(n.target!=null)S.target=n.target}}catch(e){}}
   try{sessionStorage.setItem("dsac_nav",JSON.stringify({MODE,view:S.view,target:S.target}))}catch(e){}
