@@ -1633,11 +1633,10 @@ boot();OT.start();
   document.body.append(p,b);
   const pin=p.querySelector("#fabpin");pin.checked=pinned;
   const esc2=t=>String(t==null?"":t).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
-  const drawT=()=>{const box=p.querySelector(".fab-t");let list=[];try{list=(typeof items==="function"&&S.mine)?items(S.mine):[]}catch(e){}
-    const ym=new Date(Date.now()+9*3600e3).toISOString().slice(0,7);
-    const mine=list.filter(x=>String(x.d||"").slice(0,7)===ym).sort((a,b)=>String(a.d).localeCompare(String(b.d)));
-    const tot=mine.reduce((a,x)=>a+(+x.m||0),0);
-    box.innerHTML=mine.length?`<table class="fab-tb"><tr><th>날짜</th><th>시간외</th></tr>${mine.map(x=>`<tr><td>${esc2(String(x.d).slice(5))}</td><td>${((+x.m||0)/60).toFixed(1)}h</td></tr>`).join("")}<tr class="sum"><td>합계</td><td>${(tot/60).toFixed(1)}h</td></tr></table>`:'<div class="fab-e">이번 달 시간외 신청이 없어요</div>'};
+  const drawT=()=>{const box=p.querySelector(".fab-t");const ym=new Date(Date.now()+9*3600e3).toISOString().slice(0,7);
+    const rows=[];try{for(const pp of Object.values((S.my&&S.my.p)||{}))for(const[dk,e]of Object.entries((pp&&pp.d)||{}))if(dk.slice(0,7)===ym&&(+e.o||0)>0)rows.push([dk,+e.o])}catch(e){}
+    rows.sort((a,b)=>a[0].localeCompare(b[0]));const tot=rows.reduce((a,r)=>a+r[1],0);
+    box.innerHTML=rows.length?`<table class="fab-tb"><tr><th>날짜</th><th>시간외</th></tr>${rows.map(r=>`<tr><td>${esc2(r[0].slice(5))}</td><td>${(r[1]/60).toFixed(1)}h</td></tr>`).join("")}<tr class="sum"><td>합계</td><td>${(tot/60).toFixed(1)}h</td></tr></table>`:'<div class="fab-e">이번 달 근무표에 입력된 시간외가 없어요</div>'};
   const show=on=>{p.classList.toggle("on",on);if(on)drawT()};
   show(pinned);
   b.onclick=()=>show(!p.classList.contains("on"));
