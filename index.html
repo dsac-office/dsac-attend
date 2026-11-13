@@ -1135,7 +1135,7 @@ function renderAdmin(){
   rows.sort(cmpEmp);
   const n=rows.length+missing.length,bad=rows.filter(x=>x.issue||x.dup).length,done=rows.filter(x=>x.conf===p.weeks).length,none=missing.length+rows.filter(x=>!x.started).length;
   app().innerHTML=shell(`
-  <div class="head"><div><h1>전직원 탄력근무표</h1><p>${esc(p.name)} · 한도나 평균을 넘은 직원을 먼저 확인하세요</p></div><span class="sp"></span>${periodSelect()}</div>
+  <div class="head"><div><h1>전직원 탄력근무표</h1><p>${esc(p.name)}</p></div><span class="sp"></span>${periodSelect()}</div>
   <div class="card counts">${[["전체 직원",n],["확인 필요",bad,bad>0],["작성 완료",done],["아직 작성 안 함",none]].map(([l,v,b])=>`<div class="${b?"bad":""}"><b>${v}명</b><span>${l}</span></div>`).join("")}</div>
   <div class="card"><div class="filters"><input type="search" id="fq" placeholder="이름·사번 검색" value="${esc(keep.q)}" aria-label="이름 또는 사번 검색">
   <select id="ft" aria-label="팀 선택"><option value="">전체 팀</option>${teams.map(t=>`<option ${t===keep.t?"selected":""}>${esc(t)}</option>`).join("")}</select>
