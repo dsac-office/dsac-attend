@@ -1431,7 +1431,7 @@ const items=doc=>Object.entries(doc&&doc.items||{}).map(([id,v])=>({id,...v}));
 function formHtml(it){
   const v=it||{d:today(),s:"09:00",e:"",k:"",m:"",r:"",w:"",b:"18:00"};
   const k=v.k||(isHol(v.d)?"휴일":"평일");
-  return`<div class="card"><h2>${it?"신청 고치기":"시간외근무 신청"}</h2><div class="of" id="f">
+  return`<div class="card"><h2>${it?"신청 수정":"시간외근무 신청"}</h2><div class="of" id="f">
   <div><label for="fd">일자</label><input type="date" id="fd" value="${esc(v.d)}"></div>
   <div><label>구분</label><div class="kind" id="fk">${["평일","휴일"].map(x=>`<button type="button" data-k="${x}" class="${x===k?"on":""} ${x==="휴일"?"hd":""}">${x}(<span class="dw">${DOW[pd(v.d).getUTCDay()]}</span>)</button>`).join("")}</div></div>
   <div><label for="fs">출근시간</label><input class="tm" id="fs" inputmode="numeric" autocomplete="off" placeholder="09:00" maxlength="8" value="${esc(v.s)}"></div>
@@ -1441,7 +1441,7 @@ function formHtml(it){
   <div><label for="fm">초과시간 (자동, 수정 가능)</label><div class="min"><input type="number" id="fm" inputmode="numeric" min="0" step="10" value="${esc(v.m)}"><span>분</span></div></div>
   <div class="w2" style="margin-top:-6px"><span id="fbk" style="font-size:12px;color:var(--muted)"></span></div>
   <div class="w2"><label for="fw">근무내역</label><input id="fw" value="${esc(v.w)}" placeholder="예: 기획공연 준비"></div>
-  <div class="fbar">${it?`<button class="btn ghost" id="fc">취소</button>`:""}<button class="btn" id="fo">${it?"고치기":"신청"}</button></div>
+  <div class="fbar">${it?`<button class="btn ghost" id="fc">취소</button>`:""}<button class="btn" id="fo">${it?"수정":"신청"}</button></div>
   </div></div>`;
 }
 function bindForm(it){
@@ -1475,7 +1475,7 @@ function itemRow(it,mine){
   const hd=kindOf(it)==="휴일";
   return`<div class="it"><div class="d">${md(it.d)}<small class="${hd?"hd":""}">${kindLabel(it)}</small></div>
   <div class="t"><div><b>${hm(it.s)}~${hm(it.e)}</b> · <b>${it.m}분</b>${it.r?` <span class="m">(${esc(it.r)})</span>`:""}</div><div class="w">${esc(it.w)}</div></div>
-  <div class="a">${it.st==="done"?`<span class="chip ok">상신 완료 ${it.da?` ${mdk(it.da)}`:""}</span>`:mine?`<button class="ol" data-ed="${it.id}">고치기</button><button class="ol del" data-del="${it.id}">취소</button>`:""}</div></div>`;
+  <div class="a">${it.st==="done"?`<span class="chip ok">마감</span>`:mine?`<button class="ol" data-ed="${it.id}">수정</button><button class="ol del" data-del="${it.id}">취소</button>`:""}</div></div>`;
 }
 function renderMe(){
   const list=items(S.mine).sort((a,b)=>b.d.localeCompare(a.d)||b.ts-a.ts);
@@ -1483,8 +1483,8 @@ function renderMe(){
   const wait=list.filter(x=>x.st!=="done"),done=list.filter(x=>x.st==="done").slice(0,S.showDone?200:5);
   app().innerHTML=shell(`<div class="head"><div><h1>${esc(S.mine.name)} · 시간외근무 신청</h1></div></div>
   ${formHtml(edit)}
-  <div class="card"><h3>기안 전 <span class="chip pri">${wait.length}</span></h3><div class="list">${wait.map(x=>itemRow(x,true)).join("")||`<div class="empty">아직 없어요</div>`}</div></div>
-  ${done.length?`<div class="card"><h3>상신 완료</h3><div class="list">${done.map(x=>itemRow(x,true)).join("")}</div>${!S.showDone&&list.filter(x=>x.st==="done").length>5?`<button class="ol" id="more">더 보기</button>`:""}</div>`:""}`);
+  <div class="card"><h3>신청내역 <span class="chip pri">${wait.length}</span></h3><div class="list">${wait.map(x=>itemRow(x,true)).join("")||`<div class="empty">아직 없어요</div>`}</div></div>
+  ${done.length?`<div class="card"><h3>마감</h3><div class="list">${done.map(x=>itemRow(x,true)).join("")}</div>${!S.showDone&&list.filter(x=>x.st==="done").length>5?`<button class="ol" id="more">더 보기</button>`:""}</div>`:""}`);
   bindForm(edit);
   const mo=$("#more");if(mo)mo.onclick=()=>{S.showDone=true;render()};
   app().querySelectorAll("[data-ed]").forEach(b=>b.onclick=()=>{S.edit=b.dataset.ed;render();scrollTo({top:0,behavior:"smooth"})});
