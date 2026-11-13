@@ -438,6 +438,9 @@ table.xl thead th{position:sticky;top:calc(var(--toph,58px) + var(--sumh,70px) +
 .tile:active{transform:translateY(-8px);box-shadow:0 15px 30px rgba(0,0,0,.10)}
 .tile:focus-visible{outline:2px solid var(--accent);outline-offset:3px;transform:translateY(-8px);box-shadow:0 15px 30px rgba(0,0,0,.10)}
 @media (prefers-reduced-motion:reduce){.tile,.tile:hover,.tile:active,.tile:focus-visible{transition:none;transform:none}}
+/* 관리: 직원 추가 간소화 */
+.addrow{align-items:flex-end;gap:8px}.addrow label{gap:2px}.addrow input{padding:9px 11px;font-size:15px}.addrow select{padding:9px 10px;font-size:15px}.addrow .btn{padding:9px 16px}
+.bulkrow{display:flex;gap:8px;align-items:flex-start}.bulkrow textarea{flex:1;min-height:0;font-size:14px;padding:7px 10px;resize:vertical}.bulkrow .btn{white-space:nowrap;padding:9px 14px}
 </style>
 <div id="app"><div class="center"><div class="tdots" role="status" aria-label="불러오는 중"><i style="--i:0"></i><i style="--i:1"></i><i style="--i:2"></i></div></div></div>
 <div id="toast"></div>
@@ -1174,10 +1177,10 @@ function renderManage(){
   if(tab==="emp"){
     const TEAMS=["운영지원팀","문화기획팀","공연지원팀"],RKS=["4급","5급","6급","7급"],ix=(arr,v)=>{const k=arr.indexOf(v||"");return k<0?99:k};
     const ids=Object.keys(S.roster).sort((a,b)=>{const x=S.roster[a],y=S.roster[b];return ix(TEAMS,x.team)-ix(TEAMS,y.team)||ix(RKS,x.rank)-ix(RKS,y.rank)||(x.seq||999)-(y.seq||999)||String(x.name).localeCompare(String(y.name),"ko")});
-    body=`<div class="card"><h3>직원 추가</h3><div class="form"><label>사번<input id="ni" style="width:120px"></label><label>이름<input id="nn" style="width:120px"></label>
+    body=`<div class="card"><h3>직원 추가</h3><div class="form addrow"><label>사번<input id="ni" style="width:112px"></label><label>이름<input id="nn" style="width:100px"></label>
     <label>팀<select id="nt"><option value=""></option>${TEAMS.map(t=>`<option>${esc(t)}</option>`).join("")}</select></label><button class="btn" id="add">추가</button></div>
-    <div class="mute small" style="margin:12px 0 4px">여러 명 한꺼번에: 엑셀에서 사번·이름·팀 3열을 복사해 붙여넣으세요. 직원은 이 명단의 사번·이름으로 본인 확인을 합니다.</div>
-    <textarea id="bulk" rows="3" aria-label="일괄 추가" placeholder="1001&#9;홍길동&#9;문화기획팀"></textarea><button class="btn ghost" id="addb" style="margin-top:8px">일괄 추가</button></div>
+    <div class="mute small" style="margin:10px 0 6px">여러 명: 엑셀에서 사번·이름·팀을 복사해 붙여넣기</div>
+    <div class="bulkrow"><textarea id="bulk" rows="2" aria-label="일괄 추가" placeholder="1001&#9;홍길동&#9;문화기획팀"></textarea><button class="btn ghost" id="addb">일괄 추가</button></div></div>
     <div class="card"><div class="tw"><table class="t"><tr><th>사번</th><th>이름</th><th>팀</th><th>급수</th><th>연결된 계정</th><th></th></tr>${ids.map(id=>{const d=S.roster[id];return`<tr data-id="${esc(id)}"><td>${esc(id)}</td><td><input class="en" value="${esc(d.name)}" style="width:110px" aria-label="이름"></td>
     <td><select class="et" aria-label="팀"><option value=""></option>${TEAMS.map(t=>`<option ${t===d.team?"selected":""}>${esc(t)}</option>`).join("")}</select></td><td>${esc(d.rank||"")}</td>
     <td class="mute">${(linked[id]||[]).length?`${(linked[id]||[]).length}개 연결`:"아직 없음"}</td>
