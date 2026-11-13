@@ -1051,7 +1051,10 @@ function renderAdmin(){
   const{rows,missing}=rowsOf(p);
   const teams=[...new Set(rows.map(x=>x.emp.team))].filter(Boolean);
   const keep=app().querySelector("#fq")?{t:$("#ft").value,i:$("#fi").checked,q:$("#fq").value}:{t:"",i:false,q:""};
-  rows.sort((a,b)=>a.emp.team.localeCompare(b.emp.team,"ko")||a.emp.name.localeCompare(b.emp.name,"ko"));
+  const TEAM_ORDER=["운영지원팀","문화기획팀","공연지원팀"];
+  const tIdx=t=>{const k=TEAM_ORDER.indexOf(t);return k<0?99:k};
+  const rIdx=r=>{const k=RANKS.indexOf(r||"");return k<0?99:k};
+  rows.sort((a,b)=>tIdx(a.emp.team)-tIdx(b.emp.team)||(a.emp.team||"").localeCompare(b.emp.team||"","ko")||rIdx(a.emp.rank||a.emp.rk)-rIdx(b.emp.rank||b.emp.rk)||a.emp.name.localeCompare(b.emp.name,"ko"));
   const n=rows.length+missing.length,bad=rows.filter(x=>x.issue||x.dup).length,done=rows.filter(x=>x.conf===p.weeks).length,none=missing.length+rows.filter(x=>!x.started).length;
   app().innerHTML=shell(`
   <div class="head"><div><h1>전직원 탄력근무표</h1><p>${esc(p.name)} · 한도나 평균을 넘은 직원을 먼저 확인하세요</p></div><span class="sp"></span>${periodSelect()}</div>
@@ -1102,7 +1105,7 @@ function renderManage(){
     <div class="card"><div class="tw"><table class="t"><tr><th>사번</th><th>이름</th><th>팀</th><th>연결된 계정</th><th></th></tr>${ids.map(id=>{const d=S.roster[id];return`<tr data-id="${esc(id)}"><td>${esc(id)}</td><td><input class="en" value="${esc(d.name)}" style="width:110px" aria-label="이름"></td>
     <td><select class="et" aria-label="팀"><option value=""></option>${st.teams.map(t=>`<option ${t===d.team?"selected":""}>${esc(t)}</option>`).join("")}</select></td>
     <td class="mute">${(linked[id]||[]).length?`${(linked[id]||[]).length}개 연결`:"아직 없음"}</td>
-    <td><button class="btn sm ghost sv">저장</button> <button class="btn sm danger rm">삭제</button></td></tr>`}).join("")||'<tr><td colspan="5" class="mute">아직 등록된 직원이 없어요. 위에서 추가해 주세요.</td></tr>'}</table></div></div>`;
+    <td><button class="btn sm ghost sv">저장</button> <button class="btn sm ghost rm">삭제</button></td></tr>`}).join("")||'<tr><td colspan="5" class="mute">아직 등록된 직원이 없어요. 위에서 추가해 주세요.</td></tr>'}</table></div></div>`;
   }else if(tab==="period"){
     body=`<div class="card"><h3>단위기간 추가</h3><div class="form"><label>이름<input id="pn" placeholder="2027년 1분기"></label><label>시작일(일요일)<input id="ps" type="date"></label>
     <label>주 수<input id="pw" type="number" value="13" style="width:80px"></label><button class="btn" id="padd">추가</button></div></div>
