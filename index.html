@@ -588,10 +588,9 @@ function showLogin(){
     busy($("#lg_go"),true);
     try{
       LS.s("dsac_pw",pw);
-      await DA.get("config/main");
+      const [,r0,sh,o]=await Promise.all([DA.get("config/main"),DA.get("roster/"+id),DA.get("sheets/"+id),DA.get("ot/"+id)]);
       let adm=false;
       if($("#lg_ad").checked){try{LS.s("dsac_apw",$("#lg_apw").value);await DA.post({action:"adminAuth",admin:$("#lg_apw").value});adm=true}catch(e){adm=false;LS.d("dsac_apw")}if(!adm){$("#lg_go").disabled=false;shake("#lg_apw");return err("관리자 비밀번호가 맞지 않아요")}}
-      const [r0,sh,o]=await Promise.all([DA.get("roster/"+id),DA.get("sheets/"+id),DA.get("ot/"+id)]);
       let r=r0;
       if(!r&&adm){r={name:nm,team:"",active:true};await DA.post({action:"set",key:"roster/"+id,value:JSON.stringify(r)})}
       if(!r||r.active===false||String(r.name).replace(/\s/g,"")!==nm.replace(/\s/g,"")){LS.d("dsac_pw");$("#lg_go").disabled=false;return err("등록된 사번과 이름이 맞지 않아요. 담당자에게 문의해 주세요")}
