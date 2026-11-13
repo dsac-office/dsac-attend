@@ -1,5 +1,7 @@
 // 달서아트센터 근무관리 데이터 저장소 (Apps Script 웹앱)
 // 스크립트 속성: SHEET_ID, SHARED_PASSWORD, ADMIN_PASSWORD
+// 권한: 직원 비밀번호는 본인 기록(sheets/사번, ot/사번)만 읽고 쓸 수 있어요.
+//       관리자 비밀번호가 맞으면 전체를 읽고 쓸 수 있어요.
 
 function props_() { return PropertiesService.getScriptProperties(); }
 
@@ -18,19 +20,31 @@ function findRow_(sh, key) {
   return -1;
 }
 
-// 읽기: 잠금 없이 바로 실행
-function read_(p) {
-  var sh = store_();
+function isMine_(key, as) {
+  return !!as && (key === 'sheets/' + as || key === 'ot/' + as);
+}
+
+function canRead_(key, admin, as) {
+  if (admin) return true;
+  if (key === 'config/main' || key.indexOf('roster/') === 0) return true;
+  return isMine_(key, as);
+}
+
+function read_(p, admin, as) {
   if (p.action === 'get') {
+    if (!canRead_(p.key, admin, as)) return { ok: false, error: 'forbidden' };
+    var sh = store_();
     var r = findRow_(sh, p.key);
     return { ok: true, value: r < 0 ? null : JSON.parse(sh.getRange(r, 2).getValue()) };
   }
   if (p.action === 'list') {
     var prefix = p.prefix || '';
-    var last = sh.getLastRow();
+    if (!admin && prefix !== 'roster/') return { ok: false, error: 'forbidden' };
+    var sh2 = store_();
+    var last = sh2.getLastRow();
     var out = {};
     if (last > 1) {
-      var data = sh.getRange(2, 1, last - 1, 2).getValues();
+      var data = sh2.getRange(2, 1, last - 1, 2).getValues();
       for (var i = 0; i < data.length; i++) {
         if (String(data[i][0]).indexOf(prefix) === 0) out[data[i][0]] = JSON.parse(data[i][1]);
       }
@@ -40,8 +54,8 @@ function read_(p) {
   return { ok: false, error: 'bad_action' };
 }
 
-// 쓰기: 동시에 덮어쓰지 않도록 잠금 사용
-function write_(p) {
+function write_(p, admin, as) {
+  if (!admin && !isMine_(p.key, as)) return { ok: false, error: 'forbidden' };
   var lock = LockService.getScriptLock();
   lock.waitLock(30000);
   try {
@@ -68,8 +82,10 @@ function handle_(p) {
   if (p.action === 'adminAuth') {
     return { ok: p.admin === props_().getProperty('ADMIN_PASSWORD') };
   }
-  if (p.action === 'get' || p.action === 'list') return read_(p);
-  return write_(p);
+  var admin = !!p.apw && p.apw === props_().getProperty('ADMIN_PASSWORD');
+  var as = String(p.as || '');
+  if (p.action === 'get' || p.action === 'list') return read_(p, admin, as);
+  return write_(p, admin, as);
 }
 
 function doGet(e) { return out_(handle_(e.parameter)); }
