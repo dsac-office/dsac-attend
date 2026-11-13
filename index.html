@@ -537,7 +537,7 @@ window.claude={use:async n=>({db:dbShim,user:userShim,downloads:dlShim}[n]||null
 
 /* 로그아웃: 주소 끝에 ?logout 을 붙여 열면 이 기기의 로그인 정보를 지움 */
 document.addEventListener("click",e=>{if(e.target.closest("[data-logout]"))doLogout()});
-function doLogout(){LS.s("dsac_last",JSON.stringify({id:LS.g("dsac_uid")||"",name:LS.g("dsac_name")||""}));["dsac_pw","dsac_uid","dsac_name","dsac_adm","dsac_apw"].forEach(LS.d);location.replace(location.pathname)}
+function doLogout(){LS.s("dsac_last",JSON.stringify({id:LS.g("dsac_uid")||"",name:LS.g("dsac_name")||""}));["dsac_pw","dsac_uid","dsac_name","dsac_adm","dsac_apw","dsac_c_sheet","dsac_c_ot"].forEach(LS.d);location.replace(location.pathname)}
 if(/[?&]logout/.test(location.search))doLogout();
 
 /* 대기 표시: 버튼 안에 작은 스피너 (300ms 뒤에만 보임) */
@@ -1334,11 +1334,13 @@ async function boot(){
     if(!cfg.periods.find(p=>p.id===S.periodId))S.periodId=cfg.periods[cfg.periods.length-1].id;
     if(S.my!==undefined&&usable())render();
   },()=>{});
+  try{const c=JSON.parse(LS.g("dsac_c_sheet")||"null");if(c&&S.my===undefined)S.my=c}catch(e){}
+  try{const c=JSON.parse(LS.g("dsac_c_ot")||"null");if(c&&S.mine===undefined)S.mine=c}catch(e){}
   db.doc("sheets/"+uid).onSnapshot(s=>{
     const d=s.exists?structuredClone(s.data()):null,had=S.my;
     if(pending(uid)&&had)return;
     if(JSON.stringify(d)===JSON.stringify(had))return;
-    S.my=d;
+    S.my=d;try{LS.s("dsac_c_sheet",JSON.stringify(d))}catch(e){}
     if(usable()||had===undefined||(had===null&&d))render();
   },()=>{S.my=null;render()});
   window.__loadAdminFlex=()=>{if(!isAdmin||window.__adminFlexOn)return;window.__adminFlexOn=true;
@@ -1605,7 +1607,7 @@ async function boot(){
     clearTimeout(tm);
     const d=s.exists?structuredClone(s.data()):null,had=S.mine;
     if(JSON.stringify(d)===JSON.stringify(had))return;
-    S.mine=d;
+    S.mine=d;try{LS.s("dsac_c_ot",JSON.stringify(d))}catch(e){}
     if(usable()||had===undefined||!had||!had.name)render(window.MODE==="home");
   },()=>{clearTimeout(tm);S.mine=null;render()});
   window.__loadAdminOT=()=>{if(!isAdmin||window.__adminOTOn)return;window.__adminOTOn=true;db.collection("ot").onSnapshot(s=>{
