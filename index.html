@@ -448,6 +448,16 @@ table.xl thead th{position:sticky;top:calc(var(--toph,58px) + var(--sumh,70px) +
 @keyframes spinShow{from{opacity:0}to{opacity:1}}
 @media (prefers-reduced-motion:reduce){.spin{animation:none;opacity:1}}
 .spin-wrap{display:flex;justify-content:center;padding:56px 0}
+/* 토글 스위치 */
+.tgl{position:relative;display:inline-flex;align-items:center;gap:9px;cursor:pointer;font-size:14px;font-weight:600;color:var(--ink2);user-select:none;-webkit-tap-highlight-color:transparent}
+.tgl input{position:absolute;opacity:0;width:1px;height:1px;margin:0;pointer-events:none}
+.tgl .trk{position:relative;width:48px;height:28px;border-radius:999px;background:var(--track);flex:none;transition:background-color 400ms cubic-bezier(.34,1.56,.64,1)}
+.tgl .knob{position:absolute;top:3px;left:3px;width:22px;height:22px;border-radius:999px;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.22);transform:translateX(var(--tx,0px)) scaleX(var(--sx,1));transform-origin:center;transition:transform 400ms cubic-bezier(.34,1.56,.64,1);will-change:transform}
+.tgl input:checked+.trk{background:#58C0D0}
+.tgl input:checked+.trk .knob{--tx:18px}
+.tgl:active .knob{--sx:1.364}
+.tgl input:focus-visible+.trk{outline:2px solid var(--accent);outline-offset:3px}
+@media (prefers-reduced-motion:reduce){.tgl .trk,.tgl .knob{transition:none}}
 </style>
 <div id="app"><div class="center"><div class="tdots" role="status" aria-label="불러오는 중"><i style="--i:0"></i><i style="--i:1"></i><i style="--i:2"></i></div></div></div>
 <div id="toast"></div>
@@ -1454,7 +1464,8 @@ function renderAdmin(){
   const todayK=new Date(Date.now()+9*3600e3).toISOString().slice(0,10);
   const wkend=d=>{const w=pd(d).getUTCDay();return w===6?[d,addDays(d,1)]:w===0?[addDays(d,-1),d]:null};
   if(!S.from||!S.to){S.from=S.to=todayK;const we=wkend(todayK);if(we)[S.from,S.to]=we}
-  const rows=pend.filter(x=>S.from&&x.d>=S.from&&x.d<=S.to);
+  if(S.allOn&&pend.length){const ds=pend.map(x=>x.d).sort();S.from=ds[0];S.to=ds[ds.length-1]}
+  const rows=S.allOn?pend:pend.filter(x=>S.from&&x.d>=S.from&&x.d<=S.to);
   const title=S.from?titleOf(S.from,S.to):"";
   const done=allItems().filter(x=>x.st==="done");
   const groups={};for(const x of done)(groups[x.dt||"(제목 없음)"]??=[]).push(x);
@@ -1462,8 +1473,8 @@ function renderAdmin(){
   const cnt=d=>pend.filter(x=>x.d===d).length;
   app().innerHTML=shell(`<div class="head"><div><h1>시간외 신청현황</h1><p>기안 올리기 전 ${all.length}건</p></div></div>
   <div class="card">${!all.length?`<div class="empty">기안할 신청이 없어요</div>`:`
-  <div class="pick" style="margin-top:10px"><input type="date" id="af" value="${S.from}"><span class="mute">~</span><input type="date" id="at" value="${S.to}"><button class="btn ghost sm" id="allp">기안 전 전체 보기</button></div>
-  <div class="ttl"><span class="tt" id="tt">${esc(title)}</span><button class="btn ghost sm" id="ct">제목 복사</button></div>
+  <div class="pick" style="margin-top:10px"><input type="date" id="af" value="${S.from}"><span class="mute">~</span><input type="date" id="at" value="${S.to}"><label class="tgl"><input type="checkbox" role="switch" id="allp" ${S.allOn?"checked":""}><span class="trk"><span class="knob"></span></span><span class="tl">전체 보기</span></label></div>
+  <div class="ttl"><span class="tt" id="tt">${esc(title)}</span></div>
   <div class="otw"><table class="gi"><thead><tr><th>연번</th><th>일 자</th><th>구 분</th><th>성 명</th><th>출근시간</th><th>퇴근시간</th><th>수당시간</th><th>근무내역</th></tr></thead><tbody>
   ${rows.map((x,i)=>`<tr><td>${i+1}</td><td>${kdate(x.d)}</td><td>${kindLabel(x)}</td><td>${esc(x.name)}</td><td>${hm(x.s)}</td><td>${hm(x.e)}</td><td>${x.m}${x.r?`<small>(${esc(x.r)})</small>`:""}</td><td class="wk">${esc(x.w)}</td></tr>`).join("")||`<tr><td colspan="8" class="mute">이 기간에 신청이 없어요</td></tr>`}
   </tbody></table></div>
@@ -1478,9 +1489,8 @@ function renderAdmin(){
     render();
   });
   const af=$("#af"),at=$("#at");
-  const allp=$("#allp");if(allp)allp.onclick=()=>{if(!pend.length)return;const ds=pend.map(x=>x.d).sort();S.from=ds[0];S.to=ds[ds.length-1];render()};
-  if(af){af.onchange=()=>{if(af.value){S.from=af.value;const we=wkend(af.value);if(we)[S.from,S.to]=we;else if(S.to<S.from||wkend(S.to))S.to=S.from;render()}};at.onchange=()=>{if(at.value){S.to=at.value;if(S.to<S.from)S.from=S.to;render()}}}
-  const ct=$("#ct");if(ct)ct.onclick=()=>copyText(title,"제목을 복사했어요");
+  const allp=$("#allp");if(allp)allp.onchange=()=>{S.allOn=allp.checked;if(!S.allOn){S.from=S.to=null}render()};
+  if(af){af.onchange=()=>{S.allOn=false;if(af.value){S.from=af.value;const we=wkend(af.value);if(we)[S.from,S.to]=we;else if(S.to<S.from||wkend(S.to))S.to=S.from;render()}};at.onchange=()=>{S.allOn=false;if(at.value){S.to=at.value;if(S.to<S.from)S.from=S.to;render()}}}
   const cp=$("#cp");if(cp)cp.onclick=()=>copyTable(rows);
   const xl=$("#xl");if(xl)xl.onclick=()=>downloadXlsx(rows,title);
   const fin=$("#fin");if(fin)fin.onclick=()=>markDone(rows,title,fin);
