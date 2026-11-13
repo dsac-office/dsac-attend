@@ -466,7 +466,7 @@ function showImport(){
     const f=e.target.files[0];if(!f)return;const m=box.querySelector("#im_m");
     try{
       const j=JSON.parse(await f.text());const ents=Object.entries(j.docs||{});let n=0;
-      for(const[k,v] of ents){await DA.post({action:"set",key:k,value:JSON.stringify(v)});n++;m.textContent=`${n}/${ents.length} 저장 중…`}
+      for(const[k,v] of ents){if(v===null)await DA.post({action:"delete",key:k});else await DA.post({action:"set",key:k,value:JSON.stringify(v)});n++;m.textContent=`${n}/${ents.length} 저장 중…`}
       m.textContent=`${n}개를 저장했어요. 주소 끝의 ?import 를 빼고 다시 열어 주세요.`;
     }catch(err){m.textContent="가져오지 못했어요: "+(err.code||err.message)}
   };
