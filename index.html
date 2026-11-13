@@ -1037,7 +1037,7 @@ function bindSheet(){
 const rowsOf=p=>{
   const hol=holMap(),byEmp={},rows=[];
   for(const[u,doc]of Object.entries(S.all)){
-    if(!doc||!doc.emp)continue;const ro=S.roster&&S.roster[doc.emp.id];if(ro&&ro.active===false)continue;
+    if(!doc||!doc.emp)continue;const ro=S.roster&&S.roster[doc.emp.id];if(ro&&ro.active===false)continue;if(Object.keys(S.roster||{}).length&&!ro)continue;
     const emp={...doc.emp,team:(ro&&ro.team)||doc.emp.team||"",name:(ro&&ro.name)||doc.emp.name||""};
     const sd=sheetData(doc,p.id),r=calcSheet(p,sd.entries,hol,sd.months);
     const conf=Object.values(sd.weeks).filter(x=>x&&x.c).length,started=Object.keys(sd.entries).length>0||conf>0;
