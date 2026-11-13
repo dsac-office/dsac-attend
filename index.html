@@ -493,7 +493,7 @@ table.xl thead th{position:sticky;top:calc(var(--toph,58px) + var(--sumh,70px) +
 .pring{position:absolute;width:18px;height:18px;border-radius:50%;border:2px solid #58C0D0;left:0;top:0;will-change:transform,opacity}
 .ppart{position:absolute;left:0;top:0;width:5px;height:5px;border-radius:50%;background:#58C0D0;will-change:transform,opacity}
 @media (prefers-reduced-motion:reduce){.pburst{display:none}}
-</style><style>@media (max-width:699px){.top .in{flex-wrap:nowrap;gap:8px}.top .who{display:none}.top .lo2{padding:6px 12px;font-size:13px;white-space:nowrap}.inst-pill{left:max(16px,env(safe-area-inset-left,0px))!important;right:auto!important;width:48px!important;height:48px;padding:0!important;font-size:0!important;border-radius:50%!important;display:flex;align-items:center;justify-content:center}.inst-pill::before{content:"\2193";font-size:20px;font-weight:700;line-height:1}.of input[type=date]{-webkit-appearance:none;appearance:none;display:block;min-width:0;width:100%;max-width:100%;box-sizing:border-box}.of{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}table.xl{width:100%!important;min-width:0!important;table-layout:auto!important}.top .in{display:grid!important;grid-template-columns:1fr auto;align-items:center;gap:6px 8px!important;flex-wrap:nowrap!important}.top .in>.sp{display:none}.top .in>.who{display:none}.top .in>*:first-child{grid-column:1;grid-row:1}.top .lo2{grid-column:2;grid-row:1}.top nav{grid-column:1 / -1;grid-row:2;display:flex;flex-wrap:nowrap!important;overflow-x:auto;margin:0 -4px!important;padding:0 4px 2px;gap:4px!important;scrollbar-width:none}.top nav::-webkit-scrollbar{display:none}.top nav button{flex:none;white-space:nowrap}.wrap{padding-bottom:110px!important}table.xl th.gb{width:44px}table.xl th.tot{width:52px;font-size:11px}}</style>
+.moredet{display:inline-block;position:relative}.moredet>summary{list-style:none;cursor:pointer}.moredet>summary::-webkit-details-marker{display:none}.mdbox{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}</style><style>@media (max-width:699px){.top .in{flex-wrap:nowrap;gap:8px}.top .who{display:none}.top .lo2{padding:6px 12px;font-size:13px;white-space:nowrap}.inst-pill{left:max(16px,env(safe-area-inset-left,0px))!important;right:auto!important;width:48px!important;height:48px;padding:0!important;font-size:0!important;border-radius:50%!important;display:flex;align-items:center;justify-content:center}.inst-pill::before{content:"\2193";font-size:20px;font-weight:700;line-height:1}.of input[type=date]{-webkit-appearance:none;appearance:none;display:block;min-width:0;width:100%;max-width:100%;box-sizing:border-box}.of{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}table.xl{width:100%!important;min-width:0!important;table-layout:auto!important}.top .in{display:grid!important;grid-template-columns:1fr auto;align-items:center;gap:6px 8px!important;flex-wrap:nowrap!important}.top .in>.sp{display:none}.top .in>.who{display:none}.top .in>*:first-child{grid-column:1;grid-row:1}.top .lo2{grid-column:2;grid-row:1}.top nav{grid-column:1 / -1;grid-row:2;display:flex;flex-wrap:nowrap!important;overflow-x:auto;margin:0 -4px!important;padding:0 4px 2px;gap:4px!important;scrollbar-width:none}.top nav::-webkit-scrollbar{display:none}.top nav button{flex:none;white-space:nowrap}.wrap{padding-bottom:110px!important}table.xl th.gb{width:44px}table.xl th.tot{width:52px;font-size:11px}}</style>
 
 <div id="app"><div class="center"><div class="tdots" role="status" aria-label="불러오는 중"><i style="--i:0"></i><i style="--i:1"></i><i style="--i:2"></i></div></div></div>
 <div id="toast"></div>
@@ -573,9 +573,9 @@ function showLogin(){
   box.innerHTML=`<div style="width:100%;max-width:360px">
     <div class="lg-title" style="font-family:'Gill Sans','Gill Sans MT',sans-serif;font-size:clamp(20px,5.6vw,24px);font-weight:700;letter-spacing:.12em;color:var(--ink);line-height:1.4;margin-bottom:28px">DALSEO ARTS CENTER<br><span style="font-size:clamp(20px,5.6vw,24px);font-weight:700;letter-spacing:0;color:var(--muted)">근무 관리</span></div>
     <div style="display:grid;gap:10px">
-      <input id="lg_pw" type="password" placeholder="공유 비밀번호" style="${LG_IN}">
-      <input id="lg_id" inputmode="numeric" placeholder="사번" style="${LG_IN}">
-      <input id="lg_nm" placeholder="이름" style="${LG_IN}">
+      <input id="lg_id" inputmode="numeric" placeholder="사번" autocomplete="username" style="${LG_IN}">
+      <input id="lg_nm" placeholder="이름" autocomplete="name" style="${LG_IN}">
+      <input id="lg_pw" type="password" placeholder="공유 비밀번호" autocomplete="current-password" style="${LG_IN}">
       <label style="font-size:13px;color:var(--muted);display:flex;gap:6px;align-items:center;padding:0 4px"><input id="lg_ad" type="checkbox"> 관리자로 들어가요</label>
       <input id="lg_apw" type="password" placeholder="관리자 비밀번호" style="${LG_IN};display:none">
       <button id="lg_go" style="${LG_BTN}">들어가기</button>
@@ -837,7 +837,7 @@ function renderSheetPage(target,mode){
   ${canWrite===false?`<div class="notice">지금은 보기만 할 수 있어요. 입력하려면 담당자에게 작성 권한을 요청하세요.</div>`:p.locked?`<div class="notice">🔒 마감된 기간이에요.${T.ro?" 고칠 내용이 있으면 담당자에게 알려 주세요.":" 관리자는 수정할 수 있어요."}</div>`:""}
   <div class="card sumx" id="sum"></div>
   <div class="card calcard">
-    <div class="calhead"><span class="mute small">기본은 <b>시간</b>, 시간외는 <b>분</b>으로 입력 · 자동 저장</span><span class="sp"></span><span class="save" id="saved"></span><span class="xo"><button class="xin" id="sv">저장</button><button class="xin" data-ex="xlsx">엑셀 저장</button><button class="xin" data-ex="pdf">PDF</button><button class="xin" data-ex="print">인쇄</button>${T.ro?"":`<button class="xin" id="xin">엑셀 불러오기</button><input type="file" id="xfile" accept=".xlsx,.xls" hidden>`}</span></div>
+    <div class="calhead"><span class="mute small">기본은 <b>시간</b>, 시간외는 <b>분</b>으로 입력 · 자동 저장</span><span class="sp"></span><span class="save" id="saved"></span><span class="xo"><button class="xin" id="gotoday">오늘</button><button class="xin" id="sv">저장</button><details class="moredet"><summary class="xin">더보기</summary><span class="mdbox"><button class="xin" data-ex="xlsx">엑셀 저장</button><button class="xin" data-ex="pdf">PDF</button><button class="xin" data-ex="print">인쇄</button>${T.ro?"":`<button class="xin" id="xin">엑셀 불러오기</button><input type="file" id="xfile" accept=".xlsx,.xls" hidden>`}</span></details></span></div>
     <div class="tw"><table class="xl" id="cal"><thead><tr><th class="wk">주차</th><th class="gb">구분</th>${DOW.map((d,i)=>`<th class="${i===0?"hol":i===6?"sat":""}">${d}</th>`).join("")}<th class="tot">합계</th></tr></thead>
     ${Array.from({length:p.weeks},(_,w)=>foldRow(w)+weekBlock(w)+monthRow(w)).join("")}</table></div>
   </div>`,mode==="admin"?"admin":"me");
@@ -1688,4 +1688,7 @@ boot();OT.start();
     dp.prompt();try{await dp.userChoice}catch(e){}dp=null;ip.hidden=true;
   };
 })();
+</script>
+<script>
+document.addEventListener("click",e=>{if(!e.target.closest("#gotoday"))return;const k=new Date(Date.now()+9*3600e3),lab=(k.getUTCMonth()+1)+"/"+k.getUTCDate();const td=[...document.querySelectorAll("table.xl tr.r-date td,table.xl tr.r-date th")].find(x=>x.textContent.trim()===lab);if(!td){try{toast("이번 달 표에서 오늘 날짜를 찾지 못했어요. 월을 펼쳐 주세요",true)}catch(_){}return}td.scrollIntoView({behavior:"smooth",block:"center"});td.animate([{background:"#58C0D033"},{background:"transparent"}],{duration:1200})});
 </script>
