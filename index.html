@@ -1496,7 +1496,7 @@ function itemRow(it,mine){
 function renderMe(){
   const list=items(S.mine).sort((a,b)=>b.d.localeCompare(a.d)||b.ts-a.ts);
   const edit=S.edit&&list.find(x=>x.id===S.edit);
-  const wait=list,done=[];
+  const wait=list.filter(x=>Date.now()-(x.ts||0)<864e5),done=[];
   app().innerHTML=shell(`<div class="head"><div><h1>${esc(S.mine.name)} · 시간외근무 신청</h1></div></div>
   ${formHtml(edit)}
   <div class="card"><h3>신청내역 <span class="chip pri">${wait.length}</span></h3><div class="list">${wait.map(x=>itemRow(x,true)).join("")||`<div class="empty">아직 없어요</div>`}</div></div>
