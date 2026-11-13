@@ -735,6 +735,7 @@ adm:'<svg viewBox="0 0 120 120" fill="none" stroke="currentColor" stroke-width="
 const IC={flex:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M3 9h18M8 2v4M16 2v4M7 13h3M14 13h3M7 17h3"/></svg>',
  admin:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="4"/><path d="M2 21v-1a6 6 0 0 1 12 0v1M16 4a4 4 0 0 1 0 8M22 21v-1a6 6 0 0 0-4-5.6"/></svg>',
  ot:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 2.5M9 2h6"/></svg>'};
+function heroOnce(){if(window.__hp)return ' style="animation:none"';window.__hp=true;return ""}
 function renderHome(){
   {const lo=document.getElementById("lo");if(lo)lo.style.display="none"}
   const nm=flexName(),rk=OT.rank();
@@ -1389,7 +1390,6 @@ const mdk=ms=>{const n=new Date(ms+9*36e5);return `${n.getUTCMonth()+1}/${n.getU
 /* 화면 뼈대 */
 const app=()=>$("#app");
 /* 홈 제목 슬라이드 업은 첫 화면에서 한 번만 (이름 표시로 다시 그릴 때 반복 방지) */
-function heroOnce(){if(window.__hp)return ' style="animation:none"';window.__hp=true;return ""}
 function shell(inner){
   {const lo=document.getElementById("lo");if(lo)lo.style.display=""}
   const nav=isAdmin?[["me","신청하기"],["admin","신청현황"]]:[];
