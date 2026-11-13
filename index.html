@@ -1471,9 +1471,9 @@ function renderAdmin(){
   const groups={};for(const x of done)(groups[x.dt||"(제목 없음)"]??=[]).push(x);
   const gl=Object.entries(groups).sort((a,b)=>Math.max(...b[1].map(x=>x.da||0))-Math.max(...a[1].map(x=>x.da||0))).slice(0,S.showDone?100:6);
   const cnt=d=>pend.filter(x=>x.d===d).length;
-  app().innerHTML=shell(`<div class="head"><div><h1>시간외 신청현황</h1><p>기안 올리기 전 ${all.length}건</p></div></div>
+  app().innerHTML=shell(`<div class="head"><div><h1>시간외 신청현황</h1><p>기안 올리기 전 ${all.length}건</p></div><span class="sp"></span><label class="tgl"><input type="checkbox" role="switch" id="allp" ${S.allOn?"checked":""}><span class="trk"><span class="knob"></span></span><span class="tl">전체 보기</span></label></div>
   <div class="card">${!all.length?`<div class="empty">기안할 신청이 없어요</div>`:`
-  <div class="pick" style="margin-top:10px"><input type="date" id="af" value="${S.from}"><span class="mute">~</span><input type="date" id="at" value="${S.to}"><label class="tgl"><input type="checkbox" role="switch" id="allp" ${S.allOn?"checked":""}><span class="trk"><span class="knob"></span></span><span class="tl">전체 보기</span></label></div>
+  <div class="pick" style="margin-top:10px"><input type="date" id="af" value="${S.from}"><span class="mute">~</span><input type="date" id="at" value="${S.to}"></div>
   <div class="ttl"><span class="tt" id="tt">${esc(title)}</span></div>
   <div class="otw"><table class="gi"><thead><tr><th>연번</th><th>일 자</th><th>구 분</th><th>성 명</th><th>출근시간</th><th>퇴근시간</th><th>수당시간</th><th>근무내역</th></tr></thead><tbody>
   ${rows.map((x,i)=>`<tr><td>${i+1}</td><td>${kdate(x.d)}</td><td>${kindLabel(x)}</td><td>${esc(x.name)}</td><td>${hm(x.s)}</td><td>${hm(x.e)}</td><td>${x.m}${x.r?`<small>(${esc(x.r)})</small>`:""}</td><td class="wk">${esc(x.w)}</td></tr>`).join("")||`<tr><td colspan="8" class="mute">이 기간에 신청이 없어요</td></tr>`}
