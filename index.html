@@ -59,6 +59,7 @@ select.pill{appearance:none;-webkit-appearance:none;background-color:var(--surfa
 .center .logo{height:44px;margin:0 auto 24px}
 .center label{display:block;margin:14px 0 6px;font-weight:700}.center input{width:100%;font-size:18px;padding:12px 14px}
 .center .btn{width:100%;margin-top:20px;padding:14px;font-size:18px}
+#app>.center{min-height:calc(100dvh - 60px);display:flex;flex-direction:column;justify-content:center;margin:0 auto}
 .err{color:var(--warn);margin-top:12px;min-height:22px;font-weight:600}
 .notice{background:var(--notice);border-radius:14px;padding:12px 18px;font-weight:600}
 
@@ -576,6 +577,7 @@ function showLogin(){
   document.body.appendChild(box);
   const $=s=>box.querySelector(s);
   try{const last=JSON.parse(LS.g("dsac_last")||"null");if(last){$("#lg_id").value=last.id||"";$("#lg_nm").value=last.name||""}}catch(e){}
+  const lgSave=()=>{try{LS.s("dsac_last",JSON.stringify({id:$("#lg_id").value.trim(),name:$("#lg_nm").value.trim()}))}catch(e){}};$("#lg_id").addEventListener("input",lgSave);$("#lg_nm").addEventListener("input",lgSave);
   $("#lg_ad").onchange=e=>{$("#lg_apw").style.display=e.target.checked?"block":"none"};
   $("#lg_go").onclick=async()=>{
     const pw=$("#lg_pw").value,id=$("#lg_id").value.trim(),nm=$("#lg_nm").value.trim();
@@ -589,12 +591,15 @@ function showLogin(){
       await DA.get("config/main");
       let adm=false;
       if($("#lg_ad").checked){try{LS.s("dsac_apw",$("#lg_apw").value);await DA.post({action:"adminAuth",admin:$("#lg_apw").value});adm=true}catch(e){adm=false;LS.d("dsac_apw")}if(!adm){$("#lg_go").disabled=false;shake("#lg_apw");return err("관리자 비밀번호가 맞지 않아요")}}
-      let r=await DA.get("roster/"+id);
+      const [r0,sh,o]=await Promise.all([DA.get("roster/"+id),DA.get("sheets/"+id),DA.get("ot/"+id)]);
+      let r=r0;
       if(!r&&adm){r={name:nm,team:"",active:true};await DA.post({action:"set",key:"roster/"+id,value:JSON.stringify(r)})}
       if(!r||r.active===false||String(r.name).replace(/\s/g,"")!==nm.replace(/\s/g,"")){LS.d("dsac_pw");$("#lg_go").disabled=false;return err("등록된 사번과 이름이 맞지 않아요. 담당자에게 문의해 주세요")}
       LS.s("dsac_uid",id);
-      if(!(await DA.get("sheets/"+id)))await DA.post({action:"set",key:"sheets/"+id,value:JSON.stringify({emp:{id,name:r.name,team:r.team||""},p:{}})});
-      {const o=await DA.get("ot/"+id);await DA.post({action:"set",key:"ot/"+id,value:JSON.stringify({...(o||{items:{}}),name:r.name,rank:r.rank||""})})}
+      const wr=[];
+      if(!sh)wr.push(DA.post({action:"set",key:"sheets/"+id,value:JSON.stringify({emp:{id,name:r.name,team:r.team||""},p:{}})}));
+      wr.push(DA.post({action:"set",key:"ot/"+id,value:JSON.stringify({...(o||{items:{}}),name:r.name,rank:r.rank||""})}));
+      await Promise.all(wr);
       LS.s("dsac_uid",id);LS.s("dsac_name",r.name);LS.s("dsac_adm",adm?"1":"0");if(!adm)LS.d("dsac_apw");
       location.reload();
     }catch(e){LS.d("dsac_pw");$("#lg_go").disabled=false;if(e.code==="auth")shake("#lg_pw");err(e.code==="auth"?"공유 비밀번호가 맞지 않아요":"저장소에 연결하지 못했어요. 잠시 후 다시 해 주세요")}
