@@ -449,7 +449,7 @@ table.xl thead th{position:sticky;top:calc(var(--toph,58px) + var(--sumh,70px) +
 /* ===== 저장소 연결: Apps Script 웹앱 (Claude 아티팩트 대신 사용) ===== */
 const API_URL="https://script.google.com/macros/s/AKfycbwdy3mwoUb9NewF8RAnBp4267kbBLwVxhvj2PbPIgIgT3x_JxfWv4S1YLHDLBn0BRl50w/exec";
 const LS={g(k){try{return localStorage.getItem(k)}catch(e){return null}},s(k,v){try{localStorage.setItem(k,v)}catch(e){}},d(k){try{localStorage.removeItem(k)}catch(e){}}};
-const pollers=new Set();
+const pollers=new Set();let pollT=null;
 function ids_(){return `pw=${encodeURIComponent(LS.g("dsac_pw")||"")}&as=${encodeURIComponent(LS.g("dsac_uid")||"")}&apw=${encodeURIComponent(LS.g("dsac_apw")||"")}`}
 const isObj=v=>v&&typeof v==="object"&&!Array.isArray(v);
 function deepMerge(a,b){if(!isObj(b))return b;const out=isObj(a)?{...a}:{};for(const k of Object.keys(b))out[k]=isObj(b[k])&&isObj(out[k])?deepMerge(out[k],b[k]):b[k];return out}
@@ -457,7 +457,7 @@ function authErr(j){const e=new Error(j.error||"fail");e.code=j.error||"fail";re
 const DA={
   async get(key){const r=await fetch(`${API_URL}?action=get&key=${encodeURIComponent(key)}&${ids_()}`);const j=await r.json();if(!j.ok)throw authErr(j);return j.value},
   async list(prefix){const r=await fetch(`${API_URL}?action=list&prefix=${encodeURIComponent(prefix)}&${ids_()}`);const j=await r.json();if(!j.ok)throw authErr(j);return j.value||{}},
-  async post(body){const r=await fetch(API_URL,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify({...body,pw:LS.g("dsac_pw")||"",as:LS.g("dsac_uid")||"",apw:LS.g("dsac_apw")||""})});const j=await r.json();if(!j.ok)throw authErr(j);pollers.forEach(f=>f());return j}
+  async post(body){const r=await fetch(API_URL,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify({...body,pw:LS.g("dsac_pw")||"",as:LS.g("dsac_uid")||"",apw:LS.g("dsac_apw")||""})});const j=await r.json();if(!j.ok)throw authErr(j);clearTimeout(pollT);pollT=setTimeout(()=>pollers.forEach(f=>f()),600);return j}
 };
 function snap(path,v){return{id:path,exists:v!==null&&v!==undefined,data:()=>v}}
 function poll(fn,ok,err){let last=null,stop=false;const run=async()=>{if(stop)return;try{const s=await fn();const j=JSON.stringify(s.docs?s.docs.map(d=>[d.id,d.data()]):s.data());if(j!==last){last=j;ok(s)}}catch(e){if(err)err(e)}};pollers.add(run);run();const t=setInterval(run,15000);return()=>{stop=true;clearInterval(t);pollers.delete(run)}}
@@ -1344,12 +1344,10 @@ async function renderName(){
   app().innerHTML=`<div class="center"><img class="logo lt" src="${LOGO_LT}" alt="달서아트센터 DSAC"><div class="card"><h2>시간외근무 신청</h2>
   <div class="mute">기안문에 들어갈 이름을 적어 주세요. 처음 한 번만 하면 돼요.</div>
   <label for="nm">성명</label><input id="nm" autocomplete="off" value="${esc(S.mine&&S.mine.name||"")}" placeholder="${esc(pre)}">
-  <label for="rk">직급</label><select id="rk" style="width:100%;font-size:16px"><option value="">고르기</option>${RANKS.map(x=>`<option ${x===(S.mine&&S.mine.rank)?"selected":""}>${x}</option>`).join("")}</select>
   <button class="btn" id="go">시작하기</button><div class="err" id="er"></div></div></div>`;
   const go=async()=>{
     const n=$("#nm").value.trim();if(!n)return $("#er").textContent="이름을 입력해 주세요";
-    const rk=$("#rk").value;if(!rk)return $("#er").textContent="직급을 골라 주세요";
-    try{if(S.mine)await db.doc("ot/"+uid).update({name:n,rank:rk});else await db.doc("ot/"+uid).set({name:n,rank:rk,items:{}});}
+    try{if(S.mine)await db.doc("ot/"+uid).update({name:n});else await db.doc("ot/"+uid).set({name:n,items:{}});}
     catch{$("#er").textContent="저장하지 못했어요. 링크 공유 설정(작성 권한)을 확인해 주세요.";return}
     if(document.activeElement&&document.activeElement.blur)document.activeElement.blur();
     setTimeout(()=>render(true),60);
@@ -1412,7 +1410,7 @@ function renderMe(){
   const list=items(S.mine).sort((a,b)=>b.d.localeCompare(a.d)||b.ts-a.ts);
   const edit=S.edit&&list.find(x=>x.id===S.edit);
   const wait=list.filter(x=>x.st!=="done"),done=list.filter(x=>x.st==="done").slice(0,S.showDone?200:5);
-  app().innerHTML=shell(`<div class="head"><div><h1>${esc(S.mine.name)} ${esc(S.mine.rank||"")} · 시간외근무 신청</h1></div></div>
+  app().innerHTML=shell(`<div class="head"><div><h1>${esc(S.mine.name)} · 시간외근무 신청</h1></div></div>
   ${formHtml(edit)}
   <div class="card"><h3>기안 전 <span class="chip pri">${wait.length}</span></h3><div class="list">${wait.map(x=>itemRow(x,true)).join("")||`<div class="empty">아직 없어요</div>`}</div></div>
   ${done.length?`<div class="card"><h3>상신 완료</h3><div class="list">${done.map(x=>itemRow(x,true)).join("")}</div>${!S.showDone&&list.filter(x=>x.st==="done").length>5?`<button class="ol" id="more">더 보기</button>`:""}</div>`:""}`);
@@ -1450,10 +1448,10 @@ function renderAdmin(){
   const cnt=d=>pend.filter(x=>x.d===d).length;
   app().innerHTML=shell(`<div class="head"><div><h1>시간외 신청현황</h1><p>기안 올리기 전 ${all.length}건</p></div></div>
   <div class="card">${!all.length?`<div class="empty">기안할 신청이 없어요</div>`:`
-  <div class="pick" style="margin-top:10px"><input type="date" id="af" value="${S.from}"><span class="mute">~</span><input type="date" id="at" value="${S.to}"></div>
+  <div class="pick" style="margin-top:10px"><input type="date" id="af" value="${S.from}"><span class="mute">~</span><input type="date" id="at" value="${S.to}"><button class="btn ghost sm" id="allp">기안 전 전체 보기</button></div>
   <div class="ttl"><span class="tt" id="tt">${esc(title)}</span><button class="btn ghost sm" id="ct">제목 복사</button></div>
   <div class="otw"><table class="gi"><thead><tr><th>연번</th><th>일 자</th><th>구 분</th><th>성 명</th><th>출근시간</th><th>퇴근시간</th><th>수당시간</th><th>근무내역</th></tr></thead><tbody>
-  ${rows.map((x,i)=>`<tr><td>${i+1}</td><td>${kdate(x.d)}</td><td>${kindLabel(x)}</td><td>${esc(x.name)}${x.rk?` <small class="rk">${esc(x.rk)}</small>`:""}</td><td>${hm(x.s)}</td><td>${hm(x.e)}</td><td>${x.m}${x.r?`<small>(${esc(x.r)})</small>`:""}</td><td class="wk">${esc(x.w)}</td></tr>`).join("")||`<tr><td colspan="8" class="mute">이 기간에 신청이 없어요</td></tr>`}
+  ${rows.map((x,i)=>`<tr><td>${i+1}</td><td>${kdate(x.d)}</td><td>${kindLabel(x)}</td><td>${esc(x.name)}</td><td>${hm(x.s)}</td><td>${hm(x.e)}</td><td>${x.m}${x.r?`<small>(${esc(x.r)})</small>`:""}</td><td class="wk">${esc(x.w)}</td></tr>`).join("")||`<tr><td colspan="8" class="mute">이 기간에 신청이 없어요</td></tr>`}
   </tbody></table></div>
   ${rows.length?`<div class="acts"><button class="btn" id="cp">표 복사</button><button class="btn ghost" id="xl">엑셀 받기</button><span class="sp"></span><button class="btn ghost" id="fin">✓ 상신 완료</button></div>`:""}`}
   </div>
@@ -1466,6 +1464,7 @@ function renderAdmin(){
     render();
   });
   const af=$("#af"),at=$("#at");
+  const allp=$("#allp");if(allp)allp.onclick=()=>{if(!pend.length)return;const ds=pend.map(x=>x.d).sort();S.from=ds[0];S.to=ds[ds.length-1];render()};
   if(af){af.onchange=()=>{if(af.value){S.from=af.value;const we=wkend(af.value);if(we)[S.from,S.to]=we;else if(S.to<S.from||wkend(S.to))S.to=S.from;render()}};at.onchange=()=>{if(at.value){S.to=at.value;if(S.to<S.from)S.from=S.to;render()}}}
   const ct=$("#ct");if(ct)ct.onclick=()=>copyText(title,"제목을 복사했어요");
   const cp=$("#cp");if(cp)cp.onclick=()=>copyTable(rows);
