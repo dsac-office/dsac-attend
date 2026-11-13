@@ -1038,7 +1038,7 @@ const rowsOf=p=>{
   const hol=holMap(),byEmp={},rows=[];
   for(const[u,doc]of Object.entries(S.all)){
     if(!doc||!doc.emp)continue;const ro=S.roster&&S.roster[doc.emp.id];if(ro&&ro.active===false)continue;if(Object.keys(S.roster||{}).length&&!ro)continue;
-    const emp={...doc.emp,team:(ro&&ro.team)||doc.emp.team||"",name:(ro&&ro.name)||doc.emp.name||""};
+    const emp={...doc.emp,team:(ro&&ro.team)||doc.emp.team||"",name:(ro&&ro.name)||doc.emp.name||"",rank:(ro&&ro.rank)||doc.emp.rank||"",seq:(ro&&ro.seq)||999};
     const sd=sheetData(doc,p.id),r=calcSheet(p,sd.entries,hol,sd.months);
     const conf=Object.values(sd.weeks).filter(x=>x&&x.c).length,started=Object.keys(sd.entries).length>0||conf>0;
     (byEmp[doc.emp.id]??=[]).push(u);
@@ -1063,7 +1063,7 @@ function renderAdmin(){
   const TEAM_ORDER=["운영지원팀","문화기획팀","공연지원팀"];
   const tIdx=t=>{const k=TEAM_ORDER.indexOf(t);return k<0?99:k};
   const rIdx=r=>{const k=["4급","5급","6급","7급"].indexOf(r||"");return k<0?99:k};
-  rows.sort((a,b)=>tIdx(a.emp.team)-tIdx(b.emp.team)||(a.emp.team||"").localeCompare(b.emp.team||"","ko")||rIdx(a.emp.rank||a.emp.rk)-rIdx(b.emp.rank||b.emp.rk)||String(a.emp.name||"").localeCompare(String(b.emp.name||""),"ko"));
+  rows.sort((a,b)=>tIdx(a.emp.team)-tIdx(b.emp.team)||(a.emp.team||"").localeCompare(b.emp.team||"","ko")||rIdx(a.emp.rank||a.emp.rk)-rIdx(b.emp.rank||b.emp.rk)||(a.emp.seq||999)-(b.emp.seq||999)||String(a.emp.name||"").localeCompare(String(b.emp.name||""),"ko"));
   const n=rows.length+missing.length,bad=rows.filter(x=>x.issue||x.dup).length,done=rows.filter(x=>x.conf===p.weeks).length,none=missing.length+rows.filter(x=>!x.started).length;
   app().innerHTML=shell(`
   <div class="head"><div><h1>전직원 탄력근무표</h1><p>${esc(p.name)} · 한도나 평균을 넘은 직원을 먼저 확인하세요</p></div><span class="sp"></span>${periodSelect()}</div>
@@ -1139,8 +1139,8 @@ function renderManage(){
   if(tab==="emp"){
     $("#add").onclick=async()=>{const id=g("ni").trim(),nm=g("nn").trim();if(!idOk(id)||!nm)return toast("사번(영문·숫자)과 이름을 입력해 주세요",true);
       try{await db.doc("roster/"+id).set({name:nm,team:g("nt"),active:true});toast("추가했어요")}catch{toast("저장하지 못했어요",true)}};
-    $("#addb").onclick=async()=>{let add=0,upd=0,skip=0;for(const line of g("bulk").split(/\r?\n/)){if(!line.trim())continue;const[id,nm,team]=line.split(/[,\t]/).map(s=>s.trim());
-        if(!id||!nm||!idOk(id)){skip++;continue}const was=!!S.roster[id];try{await db.doc("roster/"+id).set({name:nm,team:team||(S.roster[id]&&S.roster[id].team)||"",active:true});was?upd++:add++}catch{skip++}}
+    $("#addb").onclick=async()=>{let add=0,upd=0,skip=0;for(const line of g("bulk").split(/\r?\n/)){if(!line.trim())continue;const[id,nm,team,rank,seq]=line.split(/[,\t]/).map(s=>s.trim());
+        if(!id||!nm||!idOk(id)){skip++;continue}const was=!!S.roster[id],old=S.roster[id]||{};try{await db.doc("roster/"+id).set({name:nm,team:team||old.team||"",rank:rank||old.rank||"",seq:Number(seq)||old.seq||999,active:true});was?upd++:add++}catch{skip++}}
       toast(`${add}명 추가, ${upd}명 수정${skip?`, ${skip}건 건너뜀(형식 오류)`:""}`,skip>0)};
     app().querySelectorAll("tr[data-id]").forEach(tr=>{const id=tr.dataset.id;
       tr.querySelector(".sv").onclick=async()=>{try{await db.doc("roster/"+id).set({name:tr.querySelector(".en").value.trim(),team:tr.querySelector(".et").value,active:true});toast("저장했어요")}catch{toast("저장하지 못했어요",true)}};
