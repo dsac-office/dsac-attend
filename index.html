@@ -444,9 +444,7 @@ function showLogin(){
   const box=document.createElement("div");box.id="lg";
   box.style.cssText="position:fixed;inset:0;z-index:9999;background:var(--bg);display:flex;align-items:center;justify-content:center;padding:24px 16px;overflow:auto";
   box.innerHTML=`<div style="width:100%;max-width:360px">
-    <div style="font-family:"Gill Sans","Gill Sans MT",sans-serif;font-size:11px;letter-spacing:.14em;color:var(--muted);font-weight:600">DALSEO ARTS CENTER</div>
-    <div style="font-family:"Gill Sans","Gill Sans MT",sans-serif;font-size:40px;font-weight:800;letter-spacing:-.02em;line-height:1.05;margin:10px 0 6px;color:var(--ink)">Sign in</div>
-    <div style="font-size:15px;color:var(--ink2);font-weight:600;margin-bottom:26px">근무 관리 · 사번과 이름을 입력해 주세요</div>
+    <div style="font-family:'Gill Sans','Gill Sans MT',sans-serif;font-size:18px;font-weight:700;letter-spacing:.12em;color:var(--ink);line-height:1.4;margin-bottom:28px">DALSEO ARTS CENTER<br><span style="font-size:17px;font-weight:700;letter-spacing:0;color:var(--muted)">근무 관리</span></div>
     <div style="display:grid;gap:10px">
       <input id="lg_pw" type="password" placeholder="공유 비밀번호" style="${LG_IN}">
       <input id="lg_id" inputmode="numeric" placeholder="사번" style="${LG_IN}">
@@ -610,9 +608,9 @@ const app=()=>$("#app");
 var MODE="home";
 const logoBtn=()=>`<button class="logob" data-home aria-label="홈"><img class="logo lt" src="${LOGO_LT}" alt="달서아트센터 DSAC"><img class="logo dk" src="${LOGO_DK}" alt="" aria-hidden="true"></button>`;
 function flexName(){return S.my&&S.my.emp&&S.my.emp.name||""}
-const ART={flex:'<svg viewBox="0 0 120 120" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><rect x="18" y="26" width="84" height="76" rx="6"/><path d="M18 46h84M40 16v18M80 16v18"/><rect x="30" y="58" width="14" height="12" rx="2"/><rect x="53" y="58" width="14" height="12" rx="2"/><rect x="76" y="58" width="14" height="12" rx="2" fill="currentColor"/><rect x="30" y="78" width="14" height="12" rx="2"/><rect x="53" y="78" width="14" height="12" rx="2"/></svg>',
-ot:'<svg viewBox="0 0 120 120" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><circle cx="60" cy="68" r="38"/><path d="M60 46v24l14 12M50 14h20M60 14v16M96 34l8-8M24 34l-8-8"/></svg>',
-adm:'<svg viewBox="0 0 120 120" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><circle cx="42" cy="40" r="14"/><path d="M18 100v-6a24 24 0 0 1 48 0v6"/><circle cx="82" cy="46" r="11"/><path d="M68 100v-4a18 18 0 0 1 36 0v4"/></svg>'};
+const ART={flex:'<svg viewBox="0 0 120 120" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><rect x="20" y="30" width="80" height="72" rx="10"/><path d="M20 52h80M42 20v18M78 20v18"/><circle cx="40" cy="68" r="2.5" fill="currentColor"/><circle cx="60" cy="68" r="2.5" fill="currentColor"/><circle cx="80" cy="68" r="2.5" fill="currentColor"/><circle cx="40" cy="86" r="2.5" fill="currentColor"/><path d="M68 86l6 6 12-12"/></svg>',
+ot:'<svg viewBox="0 0 120 120" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><circle cx="62" cy="70" r="34"/><path d="M62 70V48M62 70l13 10M52 22h20M62 22v14M96 38l8-8M8 60h14M12 78h12"/></svg>',
+adm:'<svg viewBox="0 0 120 120" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><circle cx="44" cy="42" r="15"/><path d="M18 100c0-16 11-26 26-26s26 10 26 26"/><circle cx="82" cy="50" r="11"/><path d="M72 84c3-7 7-10 11-10 10 0 16 8 16 20"/></svg>'};
 const IC={flex:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M3 9h18M8 2v4M16 2v4M7 13h3M14 13h3M7 17h3"/></svg>',
  admin:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="4"/><path d="M2 21v-1a6 6 0 0 1 12 0v1M16 4a4 4 0 0 1 0 8M22 21v-1a6 6 0 0 0-4-5.6"/></svg>',
  ot:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 2.5M9 2h6"/></svg>'};
