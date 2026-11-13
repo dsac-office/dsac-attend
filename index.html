@@ -634,7 +634,7 @@ if(/[?&]import/.test(location.search)&&LS.g("dsac_uid")&&LS.g("dsac_adm")==="1")
 
 /* 로그아웃 버튼: 로그인한 기기에서만 화면 왼쪽 아래에 작게 보임 */
 function addLogout(){
-  if(!LS.g("dsac_uid")||document.getElementById("lo"))return;
+  return; /* 화면 왼쪽 아래 로그아웃은 빼고, 상단 바의 로그아웃을 사용 */
   const b=document.createElement("button");b.id="lo";b.textContent="로그아웃";
   b.style.cssText="position:fixed;left:12px;bottom:12px;z-index:9000;font:inherit;font-size:12px;color:var(--muted);background:var(--surface);border:1px solid var(--line);border-radius:999px;padding:5px 10px;cursor:pointer";
   b.onclick=doLogout;
@@ -733,7 +733,7 @@ function shell(inner,active){
   const nav=isAdmin?[["me","내 근무표"],["admin","전직원 탄력근무표"],["manage","관리"]]:[];
   return`<div class="top"><div class="in">${logoBtn()}
   <nav><button data-home>홈</button>${nav.map(([k,l])=>`<button data-nav="${k}" class="${k===active?"on":""}">${l}</button>`).join("")}<button data-mode="ot">시간외 신청</button></nav><span class="sp"></span>
-  <span class="who">${S.my&&S.my.emp?`${esc(S.my.emp.team)} ${esc(S.my.emp.name)}`:""}${isAdmin?" · 관리자":""}</span></div></div><div class="wrap">${inner}</div>`;
+  <span class="who">${S.my&&S.my.emp?`${esc(S.my.emp.team)} ${esc(S.my.emp.name)}`:""}${isAdmin?" · 관리자":""}</span><button class="lo2" data-logout>로그아웃</button></div></div><div class="wrap">${inner}</div>`;
 }
 const app=()=>$("#app");
 var MODE="home";
@@ -1407,7 +1407,7 @@ function shell(inner){
   const nm=S.mine&&S.mine.name;
   return`<div class="top"><div class="in">${logoBtn()}
   <nav><button data-home>홈</button><button data-mode="flex">탄력근무표</button>${nav.map(([k,l])=>`<button data-onav="${k}" class="${k===S.view?"on":""}">${l}</button>`).join("")}</nav><span class="sp"></span>
-  <span class="who">${nm?esc(nm):""}${isAdmin?" · 수합자":""}</span></div></div><div class="wrap">${inner}</div>`;
+  <span class="who">${nm?esc(nm):""}${isAdmin?" · 수합자":""}</span><button class="lo2" data-logout>로그아웃</button></div></div><div class="wrap">${inner}</div>`;
 }
 function render(ext){
   if(window.MODE==="home"){if(typeof renderHome==="function"&&(!ext||usable()))renderHome();return}
