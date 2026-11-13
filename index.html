@@ -1330,9 +1330,12 @@ const isHol=d=>{const w=pd(d).getUTCDay();return w===0||w===6||HOL.has(d)};
 const kindOf=it=>it.k||(isHol(it.d)?"휴일":"평일");
 const kindLabel=it=>`${kindOf(it)}(${DOW[pd(it.d).getUTCDay()]})`;
 /* 수당시간 자동 계산: 평일은 기본근무 종료(기본 18시) 이후, 휴일은 근무시간에서 휴게 제외(4시간 이하 0분, 4시간 초과~8시간 29분 30분, 8시간 30분 이상 60분) */
-function autoMin(k,s,e,be){
+function autoMin(k,s,e,be,fr){
   const a=toMin(s),b=toMin(e);if(a==null||b==null||b<=a)return 0;
   if(k==="평일")return Math.max(0,b-Math.max(a,toMin(be||"18:00")));
+  // 휴일: 기본근무(사용 시) "9:00~15:00"의 끝 이후 시간이 초과. 그 구간에 휴게 표를 적용
+  const m=String(fr||"").match(/~\s*(\d{1,2})(?::(\d{2}))?/);
+  if(m){const ye=toMin(String(+m[1]).padStart(2,"0")+":"+(m[2]||"00"));if(ye!=null&&b>ye){const w=b-Math.max(a,ye);return w-(w>=510?60:w>240?30:0)}}
   const w=b-a;return w-(w>=510?60:w>240?30:0);
 }
 
@@ -1408,15 +1411,15 @@ function bindForm(it){
   const setK=x=>{k=x;$("#fk").querySelectorAll("button").forEach(b=>b.classList.toggle("on",b.dataset.k===k));$("#f .wd-only").hidden=k==="휴일";$("#f .hd-only").hidden=k!=="휴일";recalc()};
   const tv=id=>normT($(id).value);
   const updBk=()=>{const el=$("#fbk");if(!el)return;const a=toMin(tv("#fs")),e2=toMin(tv("#fe"));if(k!=="휴일"||a==null||e2==null||e2<=a){el.textContent="";return}const g=(e2-a)-(+$("#fm").value||0);el.textContent=g>0?`휴게 ${g}분 자동 차감`:""};
-  const recalc=()=>{if(!mTouched)$("#fm").value=tv("#fe")?autoMin(k,tv("#fs"),tv("#fe"),tv("#fb")):"";updBk()};
+  const recalc=()=>{if(!mTouched)$("#fm").value=tv("#fe")?autoMin(k,tv("#fs"),tv("#fe"),tv("#fb"),$("#fr")?.value):"";updBk()};
   $("#fk").onclick=e=>{const b=e.target.closest("button");if(b)setK(b.dataset.k)};
   $("#fd").onchange=()=>{const d=$("#fd").value;if(!d)return;$("#fk").querySelectorAll(".dw").forEach(x=>x.textContent=DOW[pd(d).getUTCDay()]);setK(isHol(d)?"휴일":"평일")};
-  ["#fs","#fe","#fb"].forEach(id=>{const el=$(id);el.oninput=()=>{mTouched=false;recalc()};el.onblur=()=>{const n=normT(el.value);if(n)el.value=n}});
+  ["#fs","#fe","#fb","#fr"].forEach(id=>{const el=$(id);el.oninput=()=>{mTouched=false;recalc()};el.onblur=()=>{const n=normT(el.value);if(n)el.value=n}});
   $("#fm").oninput=()=>{mTouched=$("#fm").value!=="";updBk()};
   recalc();
   if(it)$("#fc").onclick=()=>{S.edit=null;render()};
   $("#fo").onclick=async()=>{
-    const d=$("#fd").value,s=tv("#fs"),e=tv("#fe"),w=$("#fw").value.trim(),be=k==="평일"?(tv("#fb")||"18:00"):"",m=$("#fm").value===""?autoMin(k,s,e,be):Math.round(+$("#fm").value);
+    const d=$("#fd").value,s=tv("#fs"),e=tv("#fe"),w=$("#fw").value.trim(),be=k==="평일"?(tv("#fb")||"18:00"):"",m=$("#fm").value===""?autoMin(k,s,e,be,$("#fr")?.value):Math.round(+$("#fm").value);
     const r=k==="휴일"?$("#fr").value.trim():(be!=="18:00"?`${hm(be)}~${hm(e)}`:"");
     if(!d)return toast("일자를 골라 주세요",true);
     if(!s||!e)return toast("출근·퇴근 시간을 입력해 주세요",true);
