@@ -370,13 +370,13 @@ table.gi td small.rk{display:inline;font-size:12px;color:var(--accent-ink);margi
 .home .tiles{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
 .home .tile{position:relative;display:flex;flex-direction:column;align-items:flex-start;justify-content:space-between;gap:0;min-height:156px;padding:18px;border:1px solid var(--line);border-radius:22px;background:var(--surface);box-shadow:none;color:var(--ink)}
 .home .tile:hover{background:var(--surface);transform:none;box-shadow:none}
-.home .tile .ic{display:none}
-.home .tile .tt{flex:none;width:100%}
+.home .tile .ic{display:block;align-self:flex-end;width:96px;height:96px;margin:6px -6px -8px 0;color:currentColor;background:none;border-radius:0}.home .tile .ic svg{width:100%;height:100%}.home .tile[data-mode="ot"] .ic{color:var(--surface)}
+.home .tile .tt{flex:none;width:100%;order:-1}
 .home .tile b{font-size:19px;font-weight:700;letter-spacing:-.03em;line-height:1.3}
 .home .tile::after{position:absolute;right:18px;top:16px;bottom:auto;font-size:22px;color:var(--ink);line-height:1}
 .home .tile[data-mode="ot"]{background:var(--ink);color:var(--surface);border-color:var(--ink)}
 .home .tile[data-mode="ot"]::after{color:var(--surface)}
-.home .tile.adm{grid-column:1/-1;min-height:0;flex-direction:row;align-items:center;justify-content:space-between;padding:18px 20px}
+.home .tile.adm{grid-column:1/-1;min-height:0;flex-direction:row;align-items:center;justify-content:space-between;padding:18px 20px}.home .tile.adm .ic{width:64px;height:64px;margin:0}.home .tile.adm .tt{order:0}
 .home .tile.adm .tt{width:auto}
 .home .tile.adm::after{position:static}
 @media(min-width:720px){.home .tile{min-height:200px;padding:24px}.home .tile b{font-size:22px}.home .tile.adm{min-height:0}}
@@ -596,6 +596,9 @@ const app=()=>$("#app");
 var MODE="home";
 const logoBtn=()=>`<button class="logob" data-home aria-label="홈"><img class="logo lt" src="${LOGO_LT}" alt="달서아트센터 DSAC"><img class="logo dk" src="${LOGO_DK}" alt="" aria-hidden="true"></button>`;
 function flexName(){return S.my&&S.my.emp&&S.my.emp.name||""}
+const ART={flex:'<svg viewBox="0 0 120 120" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="18" y="26" width="84" height="76" rx="6"/><path d="M18 46h84M40 16v18M80 16v18"/><rect x="30" y="58" width="14" height="12" rx="2"/><rect x="53" y="58" width="14" height="12" rx="2"/><rect x="76" y="58" width="14" height="12" rx="2" fill="currentColor"/><rect x="30" y="78" width="14" height="12" rx="2"/><rect x="53" y="78" width="14" height="12" rx="2"/></svg>',
+ot:'<svg viewBox="0 0 120 120" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="60" cy="68" r="38"/><path d="M60 46v24l14 12M50 14h20M60 14v16M96 34l8-8M24 34l-8-8"/></svg>',
+adm:'<svg viewBox="0 0 120 120" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="42" cy="40" r="14"/><path d="M18 100v-6a24 24 0 0 1 48 0v6"/><circle cx="82" cy="46" r="11"/><path d="M68 100v-4a18 18 0 0 1 36 0v4"/></svg>'};
 const IC={flex:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M3 9h18M8 2v4M16 2v4M7 13h3M14 13h3M7 17h3"/></svg>',
  admin:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="4"/><path d="M2 21v-1a6 6 0 0 1 12 0v1M16 4a4 4 0 0 1 0 8M22 21v-1a6 6 0 0 0-4-5.6"/></svg>',
  ot:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 2.5M9 2h6"/></svg>'};
@@ -607,9 +610,9 @@ function renderHome(){
       <h1>달서아트센터 근무 관리</h1>
       ${nm?`<p class="home-p"><b>${esc(nm)}</b>${rk?` ${esc(rk)}`:""}</p>`:""}</div>
     <div class="tiles">
-      <button class="tile" data-mode="flex" data-mine><span class="ic">${IC.flex}</span><span class="tt"><b>탄력근무계획표</b></span></button>
-      <button class="tile" data-mode="ot"><span class="ic">${IC.ot}</span><span class="tt"><b>시간외근무 신청</b></span></button>
-      ${isAdmin?`<button class="tile adm" data-admin><span class="ic">${IC.admin}</span><span class="tt"><b>전직원 탄력근무표</b></span></button>`:""}
+      <button class="tile" data-mode="flex" data-mine><span class="ic">${ART.flex}</span><span class="tt"><b>탄력근무계획표</b></span></button>
+      <button class="tile" data-mode="ot"><span class="ic">${ART.ot}</span><span class="tt"><b>시간외근무 신청</b></span></button>
+      ${isAdmin?`<button class="tile adm" data-admin><span class="ic">${ART.adm}</span><span class="tt"><b>전직원 탄력근무표</b></span></button>`:""}
     </div></div></div>`;
 }
 document.addEventListener("click",e=>{
