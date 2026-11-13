@@ -1670,7 +1670,7 @@ boot();OT.start();
   const standalone=matchMedia("(display-mode: standalone)").matches||navigator.standalone===true;
   if(standalone)return;
   const ios=/iPhone|iPad|iPod/.test(navigator.userAgent);
-  const ip=document.createElement("button");ip.className="inst-pill";ip.textContent="바탕화면에 설치";ip.hidden=true;
+  const ip=document.createElement("button");ip.className="inst-pill";ip.textContent="바탕화면에 설치";
   document.body.append(ip);
   let dp=null;
   window.addEventListener("beforeinstallprompt",e=>{e.preventDefault();dp=e;ip.hidden=false});
@@ -1678,7 +1678,8 @@ boot();OT.start();
   if(ios){ip.textContent="홈 화면에 추가";ip.hidden=false}
   ip.onclick=async()=>{
     if(ios){try{toast("사파리 하단의 공유 버튼을 누르고 '홈 화면에 추가'를 선택하세요")}catch(e){}return}
-    if(!dp)return;dp.prompt();try{await dp.userChoice}catch(e){}dp=null;ip.hidden=true;
+    if(!dp){try{toast("주소창 오른쪽의 설치 아이콘이나 브라우저 메뉴의 '앱 설치'를 눌러 주세요. 안 뜨면 edge://apps 에서 예전 앱을 지운 뒤 다시 시도해 주세요")}catch(e){}return}
+    dp.prompt();try{await dp.userChoice}catch(e){}dp=null;ip.hidden=true;
   };
 })();
 </script>
