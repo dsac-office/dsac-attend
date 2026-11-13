@@ -409,8 +409,19 @@ table.gi td small.rk{display:inline;font-size:12px;color:var(--accent-ink);margi
 .sx .sst .ok{color:var(--ok)}.sx .sst .bad{color:var(--warn)}
 .sx .sst .lnk{border:0;background:var(--warn-soft);color:var(--warn);font-weight:700;border-radius:8px;padding:1px 7px;cursor:pointer;font-size:12px}
 @media(max-width:700px){#sum.sumx{padding:10px 12px;border-radius:14px}.sx{gap:8px 0}.sx .sc{padding:0 10px;gap:5px}.sx .sl{font-size:12px}.sx .sc b{font-size:19px}.sx .sc small{display:none}.sx .sm{flex-basis:100%;border-left:0;padding-left:0;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}.sx .sm>.sl{display:none}.sx .mm{justify-content:center;padding:6px 4px;min-width:0}.sx .mm b{font-size:17px}.sx .mm small{display:none}.sx .sst{margin-left:0;padding-left:0;flex-basis:100%;font-size:13px}}
+/* 로딩 점 (말풍선) */
+.tdots{--mint:#58C0D0;position:relative;display:inline-flex;gap:6px;align-items:center;padding:20px 18px 12px;background:var(--surface);border:1px solid var(--line);border-radius:18px 18px 18px 4px;box-shadow:0 2px 10px rgba(0,0,0,.05)}
+.tdots i{width:8px;height:8px;border-radius:50%;background:var(--mint);opacity:.35;will-change:transform,opacity;animation:tdot 1200ms ease-in-out infinite;animation-delay:calc(var(--i) * 160ms)}
+.tdots.sm{padding:15px 14px 8px;gap:5px}.tdots.sm i{width:6px;height:6px}
+@keyframes tdot{0%,60%,100%{transform:translateY(0);opacity:.35}30%{transform:translateY(-10px);opacity:1}}
+.center>.tdots{display:flex;width:max-content;margin:40px auto}
+/* 흔들림 */
+@keyframes shake{0%,100%{transform:translateX(0)}10%{transform:translateX(-4px)}22%{transform:translateX(4px)}34%{transform:translateX(-3px)}46%{transform:translateX(3px)}58%{transform:translateX(-2px)}70%{transform:translateX(2px)}82%{transform:translateX(-1px)}92%{transform:translateX(1px)}}
+.shake{animation:shake 650ms ease-out 1}
+.inval{border-color:#d93a3a!important}
+@media (prefers-reduced-motion:reduce){.tdots i{animation:none;opacity:1}.shake{animation:none}}
 </style>
-<div id="app"><div class="center"><div class="card mute">불러오는 중…</div></div></div>
+<div id="app"><div class="center"><div class="tdots" role="status" aria-label="불러오는 중"><i style="--i:0"></i><i style="--i:1"></i><i style="--i:2"></i></div></div></div>
 <div id="toast"></div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script>
@@ -480,14 +491,16 @@ function showLogin(){
   $("#lg_go").onclick=async()=>{
     const pw=$("#lg_pw").value,id=$("#lg_id").value.trim(),nm=$("#lg_nm").value.trim(),rk=$("#lg_rk").value;
     const err=m=>$("#lg_err").textContent=m;
+    const shake=id=>{const el=$(id);if(!el)return;el.classList.remove("shake");void el.offsetWidth;el.classList.add("shake","inval");el.setAttribute("aria-invalid","true");el.focus()};
+    box.querySelectorAll("#lg_pw,#lg_apw").forEach(el=>el.oninput=()=>{el.classList.remove("inval","shake");el.removeAttribute("aria-invalid")});
     if(!pw||!id||!nm)return err("비밀번호, 사번, 이름을 모두 입력해 주세요");
     if(!rk)return err("직급을 골라 주세요");
-    $("#lg_go").disabled=true;err("확인하는 중…");
+    $("#lg_go").disabled=true;$("#lg_err").innerHTML='<div class="tdots sm" role="status" aria-label="불러오는 중"><i style="--i:0"></i><i style="--i:1"></i><i style="--i:2"></i></div>';
     try{
       LS.s("dsac_pw",pw);
       await DA.get("config/main");
       let adm=false;
-      if($("#lg_ad").checked){try{LS.s("dsac_apw",$("#lg_apw").value);await DA.post({action:"adminAuth",admin:$("#lg_apw").value});adm=true}catch(e){adm=false;LS.d("dsac_apw")}if(!adm){$("#lg_go").disabled=false;return err("관리자 비밀번호가 맞지 않아요")}}
+      if($("#lg_ad").checked){try{LS.s("dsac_apw",$("#lg_apw").value);await DA.post({action:"adminAuth",admin:$("#lg_apw").value});adm=true}catch(e){adm=false;LS.d("dsac_apw")}if(!adm){$("#lg_go").disabled=false;shake("#lg_apw");return err("관리자 비밀번호가 맞지 않아요")}}
       let r=await DA.get("roster/"+id);
       if(!r&&adm){r={name:nm,team:"",active:true};await DA.post({action:"set",key:"roster/"+id,value:JSON.stringify(r)})}
       if(!r||r.active===false||String(r.name).replace(/\s/g,"")!==nm.replace(/\s/g,"")){LS.d("dsac_pw");$("#lg_go").disabled=false;return err("등록된 사번과 이름이 맞지 않아요. 담당자에게 문의해 주세요")}
@@ -496,7 +509,7 @@ function showLogin(){
       {const o=await DA.get("ot/"+id);await DA.post({action:"set",key:"ot/"+id,value:JSON.stringify({...(o||{items:{}}),name:r.name,rank:rk})})}
       LS.s("dsac_uid",id);LS.s("dsac_name",r.name);LS.s("dsac_adm",adm?"1":"0");if(!adm)LS.d("dsac_apw");
       location.reload();
-    }catch(e){LS.d("dsac_pw");$("#lg_go").disabled=false;err(e.code==="auth"?"공유 비밀번호가 맞지 않아요":"저장소에 연결하지 못했어요. 잠시 후 다시 해 주세요")}
+    }catch(e){LS.d("dsac_pw");$("#lg_go").disabled=false;if(e.code==="auth")shake("#lg_pw");err(e.code==="auth"?"공유 비밀번호가 맞지 않아요":"저장소에 연결하지 못했어요. 잠시 후 다시 해 주세요")}
   };
 }
 const LG_IN="font:inherit;font-size:16px;padding:14px 16px;border:1px solid var(--line);border-radius:16px;background:var(--surface);color:var(--ink);width:100%;box-sizing:border-box;outline:none";
@@ -1295,7 +1308,7 @@ function render(ext){
   if(ext&&!usable())return;
   if(!db||!uid){app().innerHTML=`<div class="center"><img class="logo lt" src="${LOGO_LT}" alt="달서아트센터 DSAC"><div class="card"><h2>로그인이 필요해요</h2><div class="mute">Claude에 로그인한 상태에서 이 링크를 열어 주세요.</div></div></div>`;return}
   if(S.mine===undefined)return;
-  if(!S.mine&&flexName()&&!S.autoNamed){S.autoNamed=true;db.doc("ot/"+uid).set({name:flexName(),items:{}}).catch(()=>{});app().innerHTML=shell('<div class="card mute">불러오는 중…</div>');return}
+  if(!S.mine&&flexName()&&!S.autoNamed){S.autoNamed=true;db.doc("ot/"+uid).set({name:flexName(),items:{}}).catch(()=>{});app().innerHTML=shell('<div class="center"><div class="tdots" role="status" aria-label="불러오는 중"><i style="--i:0"></i><i style="--i:1"></i><i style="--i:2"></i></div></div>');return}
   if(!S.mine||!S.mine.name)return renderName();
   if(S.view==="admin"&&isAdmin)return renderAdmin();
   S.view="me";renderMe();
