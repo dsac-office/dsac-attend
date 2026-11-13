@@ -394,7 +394,21 @@ table.gi td small.rk{display:inline;font-size:12px;color:var(--accent-ink);margi
 .home .tile.adm::after{position:static}
 @media(min-width:720px){.home .tile{min-height:200px;padding:24px}.home .tile b{font-size:22px}.home .tile.adm{min-height:0}}
 .wcf{display:flex;gap:4px;align-items:center;justify-content:center;margin-top:8px;font-size:11px;font-weight:400;color:var(--muted);cursor:pointer;white-space:nowrap}.wcf input{margin:0}
-.fold td{padding:0;border:0;background:transparent}.fbtn{font:inherit;font-size:15px;font-weight:700;color:var(--ink);background:none;border:0;padding:14px 6px 8px;cursor:pointer;display:flex;gap:6px;align-items:center}.fbtn .fi{font-size:12px;color:var(--muted);width:12px}.fbtn.closed{color:var(--muted)}table.xl tbody.wb.now th.wk .wn::after{content:"이번 주";display:block;margin-top:4px;font-size:11px;font-weight:700;color:#3a9fae}
+.fold td{padding:0;border:0;background:transparent}.fbar{display:flex;align-items:center;gap:10px;padding:12px 8px 10px;cursor:pointer}.fbar b{font-size:16px;color:var(--ink)}.fbar .fn{font-size:12px;color:var(--muted)}.fbar .sp{flex:1}.fbtn{font:inherit;font-size:13px;font-weight:600;color:var(--ink2);background:var(--surface);border:1px solid var(--line);border-radius:999px;padding:5px 14px;cursor:pointer}.fbar:hover .fbtn{background:var(--track)}.fbtn .fi{font-size:10px;color:var(--muted)}.fbar.closed{background:var(--off)}table.xl tbody.wb.now th.wk .wn::after{content:"이번 주";display:block;margin-top:4px;font-size:11px;font-weight:700;color:#3a9fae}
+.lo2{font:inherit;font-size:13px;font-weight:600;color:var(--ink2);background:var(--surface);border:1px solid var(--line);border-radius:999px;padding:6px 14px;cursor:pointer;margin-left:8px}.lo2:hover{background:var(--track)}
+#sum.sumx{display:block;position:sticky;top:var(--toph,58px);z-index:15;padding:10px 16px;margin-bottom:12px}
+.sx{display:flex;flex-wrap:wrap;align-items:center;gap:6px 0}
+.sx .sc{display:flex;align-items:baseline;gap:6px;padding:2px 16px;border-left:1px solid var(--line);white-space:nowrap;font-variant-numeric:tabular-nums}
+.sx .sc:first-child{border-left:0;padding-left:0}
+.sx .sl{font-size:12px;font-weight:700;color:var(--muted)}
+.sx .sc b{font-size:20px;font-weight:700;letter-spacing:-.02em;color:var(--ink)}
+.sx .sc small{font-size:12px;color:var(--muted)}
+.sx .sc.good b{color:var(--ok)}.sx .sc.bad b{color:var(--warn)}
+.sx .sm{gap:12px}.sx .mm{font-size:12px;font-weight:700;color:var(--accent-ink)}.sx .mm b{font-size:15px;color:var(--ink);margin-left:2px}
+.sx .sst{margin-left:auto;padding-left:16px;font-size:13px;font-weight:600;display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+.sx .sst .ok{color:var(--ok)}.sx .sst .bad{color:var(--warn)}
+.sx .sst .lnk{border:0;background:var(--warn-soft);color:var(--warn);font-weight:700;border-radius:8px;padding:1px 7px;cursor:pointer;font-size:12px}
+@media(max-width:700px){#sum.sumx{padding:8px 12px;border-radius:14px}.sx{gap:4px 0}.sx .sc{padding:0 8px;gap:4px}.sx .sl{font-size:11px}.sx .sc b{font-size:15px}.sx .sc small{display:none}.sx .sm{flex-basis:100%;border-left:0;padding-left:0;gap:10px}.sx .mm b{font-size:13px}.sx .sst{margin-left:0;padding-left:0;flex-basis:100%;font-size:12px}}
 </style>
 <div id="app"><div class="center"><div class="card mute">불러오는 중…</div></div></div>
 <div id="toast"></div>
@@ -437,6 +451,7 @@ const dlShim={async save({filename,data}){const url=URL.createObjectURL(data ins
 window.claude={use:async n=>({db:dbShim,user:userShim,downloads:dlShim}[n]||null)};
 
 /* 로그아웃: 주소 끝에 ?logout 을 붙여 열면 이 기기의 로그인 정보를 지움 */
+document.addEventListener("click",e=>{if(e.target.closest("[data-logout]"))doLogout()});
 function doLogout(){LS.s("dsac_last",JSON.stringify({id:LS.g("dsac_uid")||"",name:LS.g("dsac_name")||""}));["dsac_pw","dsac_uid","dsac_name","dsac_adm","dsac_apw"].forEach(LS.d);location.replace(location.pathname)}
 if(/[?&]logout/.test(location.search))doLogout();
 
@@ -602,6 +617,7 @@ function calcSheet(period,entries,hol,monthCnt){
 
 /* ===== 화면 뼈대 ===== */
 function shell(inner,active){
+  {const lo=document.getElementById("lo");if(lo)lo.style.display=""}
   const nav=isAdmin?[["me","내 근무표"],["admin","전직원 탄력근무표"],["manage","관리"]]:[];
   return`<div class="top"><div class="in">${logoBtn()}
   <nav><button data-home>홈</button>${nav.map(([k,l])=>`<button data-nav="${k}" class="${k===active?"on":""}">${l}</button>`).join("")}</nav><span class="sp"></span>
@@ -618,8 +634,9 @@ const IC={flex:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strok
  admin:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="4"/><path d="M2 21v-1a6 6 0 0 1 12 0v1M16 4a4 4 0 0 1 0 8M22 21v-1a6 6 0 0 0-4-5.6"/></svg>',
  ot:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 2.5M9 2h6"/></svg>'};
 function renderHome(){
+  {const lo=document.getElementById("lo");if(lo)lo.style.display="none"}
   const nm=flexName(),rk=OT.rank();
-  app().innerHTML=`<div class="top"><div class="in">${logoBtn()}<span class="sp"></span><span class="who">${isAdmin?"관리자":""}</span></div></div>
+  app().innerHTML=`<div class="top"><div class="in">${logoBtn()}<span class="sp"></span><span class="who">${isAdmin?"관리자":""}</span><button class="lo2" data-logout>로그아웃</button></div></div>
   <div class="wrap"><div class="home">
     <div class="card hero">
       <p class="eyebrow">DALSEO ARTS CENTER</p><h1>Work Plan</h1><p class="home-sub">근무 관리</p>
@@ -710,20 +727,23 @@ function renderSheetPage(target,mode){
   $("#psel").onchange=e=>{S.periodId=e.target.value;render()};
   $("#sum").onclick=e=>{const b=e.target.closest("[data-jr]");if(!b)return;const r=$("#wb"+b.dataset.jr);r.scrollIntoView({behavior:"smooth",block:"center"});r.classList.add("flash");setTimeout(()=>r.classList.remove("flash"),1600)};
   bindSheet();paint();applyFold();
+  setTopH();
   $("#cal").addEventListener("click",e=>{const b=e.target.closest("[data-fold]");if(!b)return;const k=b.dataset.fold,F=foldState();F[k]=F[k]?0:1;if(T.uid===uid&&S.my){S.my.ui={...(S.my.ui||{}),fold:{...F}};save(uid,{ui:{fold:{[k]:F[k]}}})}else LOCAL_FOLD[k]=F[k];applyFold()});
   {const now=new Date(Date.now()+9*36e5).toISOString().slice(0,10),wi=Math.floor((pd(now)-pd(p.start_date))/(7*864e5)),key=target+"|"+p.id;
-   if(wi>=0&&wi<p.weeks&&SCROLLED!==key){SCROLLED=key;const el=$("#wb"+wi);if(el){el.classList.add("now");requestAnimationFrame(()=>{el.scrollIntoView({block:"start"});scrollBy(0,-80)})}}else if(wi>=0&&wi<p.weeks){const el=$("#wb"+wi);if(el)el.classList.add("now")}}
+   if(wi>=0&&wi<p.weeks&&SCROLLED!==key){SCROLLED=key;const el=$("#wb"+wi);if(el){el.classList.add("now");requestAnimationFrame(()=>{el.scrollIntoView({block:"start"});const t=document.querySelector(".top"),sm=$("#sum");scrollBy(0,-((t?t.offsetHeight:0)+(sm?sm.offsetHeight:0)+50))})}}else if(wi>=0&&wi<p.weeks){const el=$("#wb"+wi);if(el)el.classList.add("now")}}
   app().querySelectorAll("[data-ex]").forEach(b=>b.onclick=()=>{const k=b.dataset.ex,u=T.uid;if(k==="xlsx")exportXlsx(u);else if(k==="pdf")exportPdf(u);else doPrint(u)});
   const xin=$("#xin");if(xin){xin.onclick=()=>$("#xfile").click();$("#xfile").onchange=e=>{const f=e.target.files[0];e.target.value="";if(f)importXlsx(f,T.uid)}}
 }
 /* 월별 접기: 주의 수요일이 속한 달 기준, 상태는 본인 근무표 문서(ui.fold)에 저장 */
-let SCROLLED=null;const LOCAL_FOLD={};
+let SCROLLED=null;
+function setTopH(){const t=document.querySelector(".top");if(t)document.documentElement.style.setProperty("--toph",t.offsetHeight+"px")}
+addEventListener("resize",setTopH);const LOCAL_FOLD={};
 const weekMonth=w=>{const P=curPeriod(),cnt={};for(let i=0;i<P.weeks*7;i++){const ym=addDays(P.start_date,i).slice(0,7);cnt[ym]=(cnt[ym]||0)+1}
   for(const d of [3,6,0]){const m=addDays(P.start_date,w*7+d).slice(0,7);if(cnt[m]>=15)return m}return addDays(P.start_date,w*7+3).slice(0,7)};
 function foldState(){return T.uid===uid?{...((S.my&&S.my.ui&&S.my.ui.fold)||{})}:LOCAL_FOLD}
-function foldRow(w){const m=weekMonth(w);if(w>0&&weekMonth(w-1)===m)return"";return`<tbody class="fold"><tr><td colspan="10"><button class="fbtn" data-fold="${m}"><span class="fi">▾</span> ${+m.slice(5)}월</button></td></tr></tbody>`}
+function foldRow(w){const m=weekMonth(w);if(w>0&&weekMonth(w-1)===m)return"";return`<tbody class="fold"><tr><td colspan="10"><div class="fbar" data-fold="${m}"><b>${+m.slice(5)}월</b><span class="fn"></span><span class="sp"></span><button class="fbtn"><span class="ft">접기</span> <span class="fi">▴</span></button></div></td></tr></tbody>`}
 function applyFold(){const F=foldState(),P=curPeriod();for(let w=0;w<P.weeks;w++){const tb=$("#wb"+w);if(tb)tb.style.display=F[weekMonth(w)]?"none":""}
-  document.querySelectorAll("#cal [data-fold]").forEach(b=>{const c=!!F[b.dataset.fold];b.querySelector(".fi").textContent=c?"▸":"▾";b.classList.toggle("closed",c)})}
+  document.querySelectorAll("#cal [data-fold]").forEach(b=>{const m=b.dataset.fold,c=!!F[m],n=Array.from({length:P.weeks},(_,w)=>w).filter(w=>weekMonth(w)===m).length;b.querySelector(".fi").textContent=c?"▾":"▴";b.querySelector(".ft").textContent=c?"펼치기":"접기";b.querySelector(".fn").textContent=c?`${n}주 접혀 있음`:"";b.classList.toggle("closed",c)})}
 function monthRow(w){
   const P=curPeriod(),cnt={};for(let i=0;i<P.weeks*7;i++){const ym=addDays(P.start_date,i).slice(0,7);cnt[ym]=(cnt[ym]||0)+1}
   for(let d=0;d<7;d++){const dt=addDays(P.start_date,w*7+d),nx=addDays(dt,1);if((nx.slice(5,7)!==dt.slice(5,7)||(w===P.weeks-1&&d===6))&&cnt[dt.slice(0,7)]>=15)
@@ -759,12 +779,12 @@ function paint(){
   if(r.avgBaseBad)issues.push(`기본 주평균이 ${st.avg_base}시간을 넘었어요`);
   if(r.avgOtBad)issues.push(`시간외 주평균이 ${st.avg_ot_max}시간을 넘었어요`);
   const bw=r.weeks.filter(wk=>wk.warn);
-  $("#sum").innerHTML=`<table class="sumt"><tr><th></th><th class="n">합계</th><th class="n">주평균</th><th>평균값 조건</th></tr>
-    <tr class="${r.avgBaseBad?"bad":""}"><th>기본</th><td class="n">${f1(baseSum)}</td><td class="n big">${f1(r.avgBase)}</td><td>${st.avg_base}시간일 것</td></tr>
-    <tr class="${r.avgOtBad?"bad":""}"><th>시간외</th><td class="n">${f1(r.otMin/60)}</td><td class="n big">${f1(r.avgOt)}</td><td>${st.avg_ot_max}시간 이하일 것</td></tr></table>
-    <div class="flex ${r.needLeave>EPS?"bad":""}"><div class="l">남은 휴무</div><div class="v">${f1(r.needLeave)}<small>시간</small></div></div>
-    ${(r.months.forEach(m=>{const e=$("#mr"+m.ym);if(e)e.textContent=f1(m.ot)+"시간"}),"")}<div class="mon"><span class="ml">월별 시간외</span>${r.months.filter(m=>m.days>=15).map(m=>`<div class="mt"><span>${+m.ym.slice(5)}월</span><b>${f1(m.ot)}<small>시간</small></b></div>`).join("")}</div>
-    <div class="status">${issues.length||bw.length?`<span class="bad">⚠ ${issues.join(" · ")}${issues.length&&bw.length?" · ":""}${bw.length?"한도를 넘은 주":""}</span>${bw.map(wk=>`<button class="lnk" data-jr="${wk.w}">${wk.w+1}주차</button>`).join("")}`:`<span class="ok">✓ 붉은 칸 없음</span>`}</div>`;
+  $("#sum").innerHTML=`<div class="sx">
+    <div class="sc ${r.avgBaseBad?"bad":""}"><span class="sl">기본 주평균</span><b>${f1(r.avgBase)}</b><small>/ ${st.avg_base} · 합 ${f1(baseSum)}</small></div>
+    <div class="sc ${r.avgOtBad?"bad":""}"><span class="sl">시간외 주평균</span><b>${f1(r.avgOt)}</b><small>/ ${st.avg_ot_max} · 합 ${f1(r.otMin/60)}</small></div>
+    <div class="sc ${r.needLeave>EPS?"bad":"good"}"><span class="sl">남은 휴무</span><b>${f1(r.needLeave)}</b><small>시간</small></div>
+    ${(r.months.forEach(m=>{const e=$("#mr"+m.ym);if(e)e.textContent=f1(m.ot)+"시간"}),"")}<div class="sc sm">${r.months.filter(m=>m.days>=15).map(m=>`<span class="mm">${+m.ym.slice(5)}월 <b>${f1(m.ot)}</b></span>`).join("")}</div>
+    <div class="sst">${issues.length||bw.length?`<span class="bad">⚠ ${issues.join(" · ")}${issues.length&&bw.length?" · ":""}${bw.length?"한도 초과":""}</span>${bw.map(wk=>`<button class="lnk" data-jr="${wk.w}">${wk.w+1}주</button>`).join("")}`:`<span class="ok">✓ 붉은 칸 없음</span>`}</div></div>`;
   r.weeks.forEach(wk=>{
     const w=wk.w,conf=!!(sd.weeks[w]&&sd.weeks[w].c),tb=$("#wb"+w);if(!tb)return;
     tb.classList.toggle("conf",conf);
@@ -1262,6 +1282,7 @@ const mdk=ms=>{const n=new Date(ms+9*36e5);return `${n.getUTCMonth()+1}/${n.getU
 /* 화면 뼈대 */
 const app=()=>$("#app");
 function shell(inner){
+  {const lo=document.getElementById("lo");if(lo)lo.style.display=""}
   const nav=isAdmin?[["me","신청하기"],["admin","신청현황"]]:[];
   const nm=S.mine&&S.mine.name;
   return`<div class="top"><div class="in">${logoBtn()}
