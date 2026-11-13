@@ -1456,8 +1456,8 @@ function formHtml(it){
   <div><label for="fs">출근시간</label><input class="tm" id="fs" inputmode="numeric" autocomplete="off" placeholder="09:00" maxlength="8" value="${esc(v.s)}"></div>
   <div class="wd-only" ${k==="휴일"?"hidden":""}><label for="fb">기본근무 끝</label><input class="tm" id="fb" inputmode="numeric" autocomplete="off" placeholder="18:00" maxlength="8" value="${esc(v.b||"18:00")}"></div>
   <div class="hd-only" ${k==="휴일"?"":"hidden"}><label for="fr">기본근무(사용 시)</label><input id="fr" value="${esc(k==="휴일"?v.r:"")}" placeholder="예: 9:00~18:00"></div>
-  <div><label for="fe">퇴근시간 (초과 끝)</label><input class="tm" id="fe" inputmode="numeric" autocomplete="off" placeholder="22:00" maxlength="8" value="${esc(v.e)}"></div>
-  <div><label for="fm">초과시간 (자동, 수정 가능)</label><div class="min"><input type="number" id="fm" inputmode="numeric" min="0" step="10" value="${esc(v.m)}"><span>분</span></div></div>
+  <div><label for="fe">퇴근시간</label><input class="tm" id="fe" inputmode="numeric" autocomplete="off" placeholder="22:00" maxlength="8" value="${esc(v.e)}"></div>
+  <div><label for="fm">시간외 (분) <span style="font-weight:600;color:var(--accent-ink)">자동 계산</span></label><div class="min"><input type="number" id="fm" inputmode="numeric" min="0" step="10" value="${esc(v.m)}"><span>분</span></div></div>
   <div class="w2" style="margin-top:-6px"><span id="fbk" style="font-size:12px;color:var(--muted)"></span> <span class="bk" id="fbr" hidden role="group" aria-label="휴게 공제 위치"><button type="button" data-v="ot" class="on" aria-pressed="true">초과에서</button><button type="button" data-v="base" aria-pressed="false">기본에서</button></span></div>
   <div class="w2"><label for="fw">근무내역</label><input id="fw" value="${esc(v.w)}" placeholder="예: 기획공연 준비"></div>
   <div class="fbar">${it?`<button class="btn ghost" id="fc">취소</button>`:""}<button class="btn" id="fo">${it?"수정":"신청"}</button></div>
