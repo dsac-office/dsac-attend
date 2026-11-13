@@ -493,6 +493,9 @@ document.addEventListener("click",e=>{if(e.target.closest("[data-logout]"))doLog
 function doLogout(){LS.s("dsac_last",JSON.stringify({id:LS.g("dsac_uid")||"",name:LS.g("dsac_name")||""}));["dsac_pw","dsac_uid","dsac_name","dsac_adm","dsac_apw"].forEach(LS.d);location.replace(location.pathname)}
 if(/[?&]logout/.test(location.search))doLogout();
 
+/* 대기 표시: 버튼 안에 작은 스피너 (300ms 뒤에만 보임) */
+function busy(el,on){if(!el)return;const old=el.querySelector(":scope>.spin.inl");if(on){el.disabled=true;if(!old){const s=document.createElement("span");s.className="spin inl";s.setAttribute("role","status");s.setAttribute("aria-label","로딩 중");el.appendChild(s)}}else{el.disabled=false;if(old)old.remove()}}
+
 /* 첫 접속 로그인: 공유 비밀번호 + 사번 + 이름 + 직급 (관리자는 관리자 비밀번호) */
 function showLogin(){
   if(document.getElementById("lg"))return;
