@@ -1179,11 +1179,11 @@ const HOL=new Set(["2026-01-01","2026-02-16","2026-02-17","2026-02-18","2026-03-
 const isHol=d=>{const w=pd(d).getUTCDay();return w===0||w===6||HOL.has(d)};
 const kindOf=it=>it.k||(isHol(it.d)?"휴일":"평일");
 const kindLabel=it=>`${kindOf(it)}(${DOW[pd(it.d).getUTCDay()]})`;
-/* 수당시간 자동 계산: 평일은 기본근무 종료(기본 18시) 이후, 휴일은 근무시간에서 휴게 제외(4시간 이상 60분, 4시간 미만 0분) */
+/* 수당시간 자동 계산: 평일은 기본근무 종료(기본 18시) 이후, 휴일은 근무시간에서 휴게 제외(4시간 이하 0분, 4시간 초과~8시간 29분 30분, 8시간 30분 이상 60분) */
 function autoMin(k,s,e,be){
   const a=toMin(s),b=toMin(e);if(a==null||b==null||b<=a)return 0;
   if(k==="평일")return Math.max(0,b-Math.max(a,toMin(be||"18:00")));
-  const w=b-a;return w-(w>=240?60:0);
+  const w=b-a;return w-(w>=510?60:w>240?30:0);
 }
 
 /* 상태 */
