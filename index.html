@@ -1047,6 +1047,7 @@ async function loadNames(uids){
   try{const ps=await userNS.profiles(need);for(const u of need)S.names[u]=ps[u]?.name||""}catch{}
 }
 function renderAdmin(){
+  if(window.__loadAdminFlex)window.__loadAdminFlex();
   const p=curPeriod();
   if(!p){app().innerHTML=shell('<div class="card">단위기간이 없어요.</div>',"admin");return}
   const{rows,missing}=rowsOf(p);
@@ -1093,6 +1094,7 @@ async function csv(name,rows){
 /* ===== 관리자: 관리 ===== */
 async function saveCfg(){try{await db.doc("config/main").set(cfg);toast("저장했어요");return true}catch(e){toast("저장하지 못했어요",true);return false}}
 function renderManage(){
+  if(window.__loadAdminFlex)window.__loadAdminFlex();
   const tab=S.tab,st=cfg.settings;
   const tabs=[["emp","직원 명단"],["period","단위기간"],["hol","공휴일"],["set","기준 설정"]];
   let body="";
@@ -1180,7 +1182,7 @@ async function boot(){
     S.my=d;
     if(usable()||had===undefined||(had===null&&d))render();
   },()=>{S.my=null;render()});
-  if(isAdmin){
+  window.__loadAdminFlex=()=>{if(!isAdmin||window.__adminFlexOn)return;window.__adminFlexOn=true;
     db.collection("sheets").onSnapshot(s=>{
       const all={};s.docs.forEach(x=>all[x.id]=structuredClone(x.data()));
       for(const u of Object.keys(all))if(pending(u)&&S.all[u])all[u]=S.all[u];
@@ -1191,7 +1193,7 @@ async function boot(){
       const r={};s.docs.forEach(x=>{const d=x.data();if(d&&typeof d==="object"){const t=String(d.team||"").replace("경영지원팀","운영지원팀");r[x.id]={...structuredClone(d),name:String(d.name||""),team:t}}});S.roster=r;
       if((S.view==="manage"||S.view==="admin")&&usable())render();
     },()=>{});
-  }
+  };
 }
 const OT=(()=>{
 const DOW=["일","월","화","수","목","금","토"];
@@ -1354,6 +1356,7 @@ const sortG=(a,b)=>a.d.localeCompare(b.d)||a.ts-b.ts;
 function titleOf(from,to){const y=from.slice(0,4);return`시간외근무 신청서(${y}. ${kdate(from)}${to&&to!==from?"~"+(to.slice(0,4)!==y?to.slice(0,4)+". ":"")+kdate(to):""})`}
 function minCell(x){return`${x.m}${x.r?`\n(${x.r})`:""}`}
 function renderAdmin(){
+  if(window.__loadAdminOT)window.__loadAdminOT();
   const all=pendingAll().sort(sortG);
   const pend=S.rk?all.filter(x=>x.rk===S.rk):all;
   const rkIdx=r=>{const k=RANKS.indexOf(r);return k<0?99:k};
@@ -1439,11 +1442,11 @@ async function boot(){
     S.mine=d;
     if(usable()||had===undefined||!had||!had.name)render(window.MODE==="home");
   },()=>{clearTimeout(tm);S.mine=null;render()});
-  if(isAdmin)db.collection("ot").onSnapshot(s=>{
+  window.__loadAdminOT=()=>{if(!isAdmin||window.__adminOTOn)return;window.__adminOTOn=true;db.collection("ot").onSnapshot(s=>{
     const all={};s.docs.forEach(x=>all[x.id]=structuredClone(x.data()));
     const ch=JSON.stringify(all)!==JSON.stringify(S.all);S.all=all;
     if(ch)render(true);
-  },()=>{});
+  },()=>{});};
 }
 
 return{start:boot,render,rank:()=>S.mine&&S.mine.rank||"",pending:()=>isAdmin?pendingAll().length:0,mine:()=>S.mine?items(S.mine).filter(x=>x.st!=="done").length:0};
