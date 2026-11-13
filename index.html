@@ -1139,9 +1139,9 @@ function renderManage(){
   if(tab==="emp"){
     $("#add").onclick=async()=>{const id=g("ni").trim(),nm=g("nn").trim();if(!idOk(id)||!nm)return toast("사번(영문·숫자)과 이름을 입력해 주세요",true);
       try{await db.doc("roster/"+id).set({name:nm,team:g("nt"),active:true});toast("추가했어요")}catch{toast("저장하지 못했어요",true)}};
-    $("#addb").onclick=async()=>{let add=0,skip=0;for(const line of g("bulk").split(/\r?\n/)){if(!line.trim())continue;const[id,nm,team]=line.split(/[,\t]/).map(s=>s.trim());
-        if(!id||!nm||!idOk(id)||S.roster[id]){skip++;continue}try{await db.doc("roster/"+id).set({name:nm,team:team||"",active:true});add++}catch{skip++}}
-      toast(`${add}명 추가${skip?`, ${skip}건 건너뜀(중복·형식 오류)`:""}`,skip>0)};
+    $("#addb").onclick=async()=>{let add=0,upd=0,skip=0;for(const line of g("bulk").split(/\r?\n/)){if(!line.trim())continue;const[id,nm,team]=line.split(/[,\t]/).map(s=>s.trim());
+        if(!id||!nm||!idOk(id)){skip++;continue}const was=!!S.roster[id];try{await db.doc("roster/"+id).set({name:nm,team:team||(S.roster[id]&&S.roster[id].team)||"",active:true});was?upd++:add++}catch{skip++}}
+      toast(`${add}명 추가, ${upd}명 수정${skip?`, ${skip}건 건너뜀(형식 오류)`:""}`,skip>0)};
     app().querySelectorAll("tr[data-id]").forEach(tr=>{const id=tr.dataset.id;
       tr.querySelector(".sv").onclick=async()=>{try{await db.doc("roster/"+id).set({name:tr.querySelector(".en").value.trim(),team:tr.querySelector(".et").value,active:true});toast("저장했어요")}catch{toast("저장하지 못했어요",true)}};
       tr.querySelector(".rm").onclick=async e=>{const b=e.target;if(b.dataset.sure!=="1"){b.dataset.sure="1";b.textContent="한 번 더 누르면 삭제";return}
