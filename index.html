@@ -1060,7 +1060,7 @@ function renderAdmin(){
   const keep=app().querySelector("#fq")?{t:$("#ft").value,i:$("#fi").checked,q:$("#fq").value}:{t:"",i:false,q:""};
   const TEAM_ORDER=["운영지원팀","문화기획팀","공연지원팀"];
   const tIdx=t=>{const k=TEAM_ORDER.indexOf(t);return k<0?99:k};
-  const rIdx=r=>{const k=RANKS.indexOf(r||"");return k<0?99:k};
+  const rIdx=r=>{const k=["4급","5급","6급","7급"].indexOf(r||"");return k<0?99:k};
   rows.sort((a,b)=>tIdx(a.emp.team)-tIdx(b.emp.team)||(a.emp.team||"").localeCompare(b.emp.team||"","ko")||rIdx(a.emp.rank||a.emp.rk)-rIdx(b.emp.rank||b.emp.rk)||String(a.emp.name||"").localeCompare(String(b.emp.name||""),"ko"));
   const n=rows.length+missing.length,bad=rows.filter(x=>x.issue||x.dup).length,done=rows.filter(x=>x.conf===p.weeks).length,none=missing.length+rows.filter(x=>!x.started).length;
   app().innerHTML=shell(`
