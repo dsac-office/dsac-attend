@@ -732,13 +732,14 @@ function shell(inner,active){
   {const lo=document.getElementById("lo");if(lo)lo.style.display=""}
   const nav=isAdmin?[["me","내 근무표"],["admin","전직원 탄력근무표"],["manage","관리"]]:[];
   return`<div class="top"><div class="in">${logoBtn()}
-  <nav><button data-home>홈</button>${nav.map(([k,l])=>`<button data-nav="${k}" class="${k===active?"on":""}">${l}</button>`).join("")}<button data-mode="ot">시간외 신청</button></nav><span class="sp"></span>
+  <nav><button data-home>홈</button>${nav.map(([k,l])=>`<button data-nav="${k}" class="${k===active?"on":""}">${l}</button>`).join("")}<button data-mode="ot">${NIC.clock}시간외 신청</button></nav><span class="sp"></span>
   <span class="who">${S.my&&S.my.emp?`${esc(S.my.emp.team)} ${esc(S.my.emp.name)}`:""}${isAdmin?" · 관리자":""}</span></div></div><div class="wrap">${inner}</div>`;
 }
 const app=()=>$("#app");
 var MODE="home";
 const logoBtn=()=>`<button class="logob" data-home aria-label="홈"><img class="logo lt" src="${LOGO_LT}" alt="달서아트센터 DSAC"><img class="logo dk" src="${LOGO_DK}" alt="" aria-hidden="true"></button>`;
 function flexName(){return S.my&&S.my.emp&&S.my.emp.name||""}
+const NIC={clock:'<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>',cal:'<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>'};
 const ART={flex:'<svg viewBox="0 0 120 120" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><rect x="20" y="30" width="80" height="72" rx="10"/><path d="M20 52h80M42 20v18M78 20v18"/><circle cx="40" cy="68" r="2.5" fill="currentColor"/><circle cx="60" cy="68" r="2.5" fill="currentColor"/><circle cx="80" cy="68" r="2.5" fill="currentColor"/><circle cx="40" cy="86" r="2.5" fill="currentColor"/><path d="M68 86l6 6 12-12"/></svg>',
 ot:'<svg viewBox="0 0 120 120" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><circle cx="62" cy="70" r="34"/><path d="M62 70V48M62 70l13 10M52 22h20M62 22v14M96 38l8-8M8 60h14M12 78h12"/></svg>',
 adm:'<svg viewBox="0 0 120 120" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><circle cx="44" cy="42" r="15"/><path d="M18 100c0-16 11-26 26-26s26 10 26 26"/><circle cx="82" cy="50" r="11"/><path d="M72 84c3-7 7-10 11-10 10 0 16 8 16 20"/></svg>',set:'<svg viewBox="0 0 120 120" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M92.6 55.1 L101.8 56.4 L101.8 63.6 L92.6 64.9 L86.5 79.6 L92.2 87.0 L87.0 92.2 L79.6 86.5 L64.9 92.6 L63.6 101.8 L56.4 101.8 L55.1 92.6 L40.4 86.5 L33.0 92.2 L27.8 87.0 L33.5 79.6 L27.4 64.9 L18.2 63.6 L18.2 56.4 L27.4 55.1 L33.5 40.4 L27.8 33.0 L33.0 27.8 L40.4 33.5 L55.1 27.4 L56.4 18.2 L63.6 18.2 L64.9 27.4 L79.6 33.5 L87.0 27.8 L92.2 33.0 L86.5 40.4 Z"/><circle cx="60" cy="60" r="14"/></svg>'};
@@ -1405,7 +1406,7 @@ function shell(inner){
   const nav=isAdmin?[["me","신청하기"],["admin","신청현황"]]:[];
   const nm=S.mine&&S.mine.name;
   return`<div class="top"><div class="in">${logoBtn()}
-  <nav><button data-home>홈</button><button data-mode="flex">탄력근무표</button>${nav.map(([k,l])=>`<button data-onav="${k}" class="${k===S.view?"on":""}">${l}</button>`).join("")}</nav><span class="sp"></span>
+  <nav><button data-home>홈</button><button data-mode="flex">${NIC.cal}탄력근무표</button>${nav.map(([k,l])=>`<button data-onav="${k}" class="${k===S.view?"on":""}">${l}</button>`).join("")}</nav><span class="sp"></span>
   <span class="who">${nm?esc(nm):""}${isAdmin?" · 수합자":""}</span></div></div><div class="wrap">${inner}</div>`;
 }
 function render(ext){
@@ -1634,7 +1635,7 @@ boot();OT.start();
   const b=document.createElement("button");b.className="fab";b.setAttribute("aria-label","바로가기 열기");
   b.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>';
   const p=document.createElement("div");p.className="fab-p";
-  p.innerHTML='<button class="q" data-go="flex">탄력근무표</button><button class="q" data-go="ot">시간외 신청</button><div class="fab-t"></div><label class="pin"><input type="checkbox" id="fabpin"> 고정</label>';
+  p.innerHTML='<button class="q" data-go="flex">'+NIC.cal+'탄력근무표</button><button class="q" data-go="ot">'+NIC.clock+'시간외 신청</button><div class="fab-t"></div><label class="pin"><input type="checkbox" id="fabpin"> 고정</label>';
   document.body.append(p,b);
   const pin=p.querySelector("#fabpin");pin.checked=pinned;
   const esc2=t=>String(t==null?"":t).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
@@ -1644,7 +1645,7 @@ boot();OT.start();
     if(!rows.length){box.innerHTML='<div class="fab-e">이번 달 근무표에 입력된 시간외가 없어요</div>';return}
     const max=Math.max(...rows.map(r=>r[1]),60),W=236,H=92,bw=Math.max(8,Math.min(28,(W-8)/rows.length-6));
     const bars=rows.map((r,k)=>{const h=Math.max(4,Math.round(r[1]/max*(H-22))),x=4+k*((W-8)/rows.length),y=H-18-h;return `<rect x="${x.toFixed(1)}" y="${y}" width="${bw.toFixed(1)}" height="${h}" rx="5" fill="var(--accent)" class="fab-bar" style="animation-delay:${k*60}ms"><title>${esc2(r[0].slice(5))} ${(r[1]/60).toFixed(1)}h</title></rect><text x="${(x+bw/2).toFixed(1)}" y="${H-4}" text-anchor="middle" font-size="10" fill="var(--muted)">${esc2(r[0].slice(8))}</text>`}).join("");
-    box.innerHTML=`<div class="fab-big"><b>${(tot/60).toFixed(1)}</b><span>시간</span></div><div class="fab-sub">이번 달 시간외 · ${rows.length}일</div><svg viewBox="0 0 ${W} ${H}" width="100%" role="img" aria-label="날짜별 시간외 막대그래프">${bars}</svg>`;};
+    box.innerHTML=`<div class="fab-big"><b>${(tot/60).toFixed(1)}</b><span>시간</span></div><div class="fab-sub">이번 달 전체 날짜 시간외 · ${rows.length}일</div><svg viewBox="0 0 ${W} ${H}" width="100%" role="img" aria-label="날짜별 시간외 막대그래프">${bars}</svg>`;};
   const show=on=>{p.classList.toggle("on",on);if(on)drawT()};
   show(pinned);
   b.onclick=()=>show(!p.classList.contains("on"));
