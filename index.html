@@ -1286,7 +1286,7 @@ function itemRow(it,mine){
   const hd=kindOf(it)==="휴일";
   return`<div class="it"><div class="d">${md(it.d)}<small class="${hd?"hd":""}">${kindLabel(it)}</small></div>
   <div class="t"><div><b>${hm(it.s)}~${hm(it.e)}</b> · <b>${it.m}분</b>${it.r?` <span class="m">(${esc(it.r)})</span>`:""}</div><div class="w">${esc(it.w)}</div></div>
-  <div class="a">${it.st==="done"?`<span class="chip ok">기안 올림${it.da?` ${mdk(it.da)}`:""}</span>`:mine?`<button class="ol" data-ed="${it.id}">고치기</button><button class="ol del" data-del="${it.id}">취소</button>`:""}</div></div>`;
+  <div class="a">${it.st==="done"?`<span class="chip ok">상신 완료 ${it.da?` ${mdk(it.da)}`:""}</span>`:mine?`<button class="ol" data-ed="${it.id}">고치기</button><button class="ol del" data-del="${it.id}">취소</button>`:""}</div></div>`;
 }
 function renderMe(){
   const list=items(S.mine).sort((a,b)=>b.d.localeCompare(a.d)||b.ts-a.ts);
@@ -1295,7 +1295,7 @@ function renderMe(){
   app().innerHTML=shell(`<div class="head"><div><h1>${esc(S.mine.name)} ${esc(S.mine.rank||"")} · 시간외근무 신청</h1></div><span class="sp"></span><button class="ol" id="rn">이름 바꾸기</button></div>
   ${formHtml(edit)}
   <div class="card"><h3>기안 전 <span class="chip pri">${wait.length}</span></h3><div class="list">${wait.map(x=>itemRow(x,true)).join("")||`<div class="empty">아직 없어요</div>`}</div></div>
-  ${done.length?`<div class="card"><h3>기안 완료</h3><div class="list">${done.map(x=>itemRow(x,true)).join("")}</div>${!S.showDone&&list.filter(x=>x.st==="done").length>5?`<button class="ol" id="more">더 보기</button>`:""}</div>`:""}`);
+  ${done.length?`<div class="card"><h3>상신 완료</h3><div class="list">${done.map(x=>itemRow(x,true)).join("")}</div>${!S.showDone&&list.filter(x=>x.st==="done").length>5?`<button class="ol" id="more">더 보기</button>`:""}</div>`:""}`);
   bindForm(edit);
   $("#rn").onclick=()=>{S.mine={...S.mine,name:""};renderName()};
   const mo=$("#more");if(mo)mo.onclick=()=>{S.showDone=true;render()};
@@ -1335,9 +1335,9 @@ function renderAdmin(){
   <div class="otw"><table class="gi"><thead><tr><th>연번</th><th>일 자</th><th>구 분</th><th>성 명</th><th>출근시간</th><th>퇴근시간</th><th>수당시간</th><th>근무내역</th></tr></thead><tbody>
   ${rows.map((x,i)=>`<tr><td>${i+1}</td><td>${kdate(x.d)}</td><td class="${kindOf(x)==="휴일"?"hd":""}">${kindLabel(x)}</td><td>${esc(x.name)}${x.rk?` <small class="rk">${esc(x.rk)}</small>`:""}</td><td>${hm(x.s)}</td><td>${hm(x.e)}</td><td>${x.m}${x.r?`<small>(${esc(x.r)})</small>`:""}</td><td class="wk">${esc(x.w)}</td></tr>`).join("")||`<tr><td colspan="8" class="mute">이 기간에 신청이 없어요</td></tr>`}
   </tbody></table></div>
-  ${rows.length?`<div class="acts"><button class="btn" id="cp">표 복사</button><button class="btn ghost" id="xl">엑셀 받기</button><span class="sp"></span><button class="btn ghost" id="fin">✓ 기안 올렸어요 (${rows.length}건)</button></div>`:""}`}
+  ${rows.length?`<div class="acts"><button class="btn" id="cp">표 복사</button><button class="btn ghost" id="xl">엑셀 받기</button><span class="sp"></span><button class="btn ghost" id="fin">✓ 상신 완료 (${rows.length}건)</button></div>`:""}`}
   </div>
-  ${gl.length?`<div class="card"><h3>기안 완료</h3>${gl.map(([t,xs])=>`<div class="grp"><b>${esc(t)}</b><span class="chip">${xs.length}건</span><button class="ol" data-cpg="${esc(t)}">표 복사</button><button class="ol del" data-undo="${esc(t)}">되돌리기</button></div>`).join("")}${!S.showDone&&Object.keys(groups).length>6?`<button class="ol" id="more">더 보기</button>`:""}</div>`:""}`);
+  ${gl.length?`<div class="card"><h3>상신 완료</h3>${gl.map(([t,xs])=>`<div class="grp"><b>${esc(t)}</b><span class="chip">${xs.length}건</span><button class="ol" data-cpg="${esc(t)}">표 복사</button><button class="ol del" data-undo="${esc(t)}">되돌리기</button></div>`).join("")}${!S.showDone&&Object.keys(groups).length>6?`<button class="ol" id="more">더 보기</button>`:""}</div>`:""}`);
   app().querySelectorAll("[data-rk]").forEach(b=>b.onclick=()=>{S.rk=b.dataset.rk;S.from=S.to=null;render()});
   app().querySelectorAll("[data-day]").forEach(b=>b.onclick=()=>{
     const d=b.dataset.day;
@@ -1360,7 +1360,7 @@ async function setStatus(rows,patch,msg){
   try{for(const[u,its]of Object.entries(by))await db.doc("ot/"+u).update({items:its});toast(msg);S.from=S.to=null}
   catch{toast("저장하지 못했어요. 잠시 뒤 다시 시도해 주세요",true)}
 }
-function markDone(rows,title,btn){btn.disabled=true;setStatus(rows,{st:"done",dt:title,da:Date.now()},`${rows.length}건을 기안 완료로 표시했어요`)}
+function markDone(rows,title,btn){btn.disabled=true;setStatus(rows,{st:"done",dt:title,da:Date.now()},`${rows.length}건을 상신 취소로 표시했어요`)}
 async function copyText(t,msg){try{await navigator.clipboard.writeText(t);toast(msg)}catch{toast("복사하지 못했어요",true)}}
 async function copyTable(rows){
   const head=["연번","일 자","구 분","성 명","출근시간","퇴근시간","수당시간","근무내역"];
