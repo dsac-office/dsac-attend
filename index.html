@@ -597,18 +597,21 @@ function showLogin(){
     try{
       LS.s("dsac_pw",pw);
       LS.s("dsac_uid",id);
+      const wantAdm=$("#lg_ad").checked;
+      const adminP=wantAdm?DA.post({action:"adminAuth",admin:$("#lg_apw").value}).then(()=>true,()=>false):Promise.resolve(false);
       const __m=await DA.getMany(["config/main","roster/"+id,"sheets/"+id,"ot/"+id]);const r0=__m["roster/"+id],sh=__m["sheets/"+id],o=__m["ot/"+id];
       let adm=false;
-      if($("#lg_ad").checked){try{LS.s("dsac_apw",$("#lg_apw").value);await DA.post({action:"adminAuth",admin:$("#lg_apw").value});adm=true}catch(e){adm=false;LS.d("dsac_apw")}if(!adm){$("#lg_go").disabled=false;shake("#lg_apw");return err("관리자 비밀번호가 맞지 않아요")}}
+      if(wantAdm){LS.s("dsac_apw",$("#lg_apw").value);adm=await adminP;if(!adm){LS.d("dsac_apw");$("#lg_go").disabled=false;shake("#lg_apw");return err("관리자 비밀번호가 맞지 않아요")}}
       let r=r0;
       if(!r&&adm){r={name:nm,team:"",active:true};await DA.post({action:"set",key:"roster/"+id,value:JSON.stringify(r)})}
       if(!r||r.active===false||String(r.name).replace(/\s/g,"")!==nm.replace(/\s/g,"")){LS.d("dsac_pw");$("#lg_go").disabled=false;return err("등록된 사번과 이름이 맞지 않아요. 담당자에게 문의해 주세요")}
       LS.s("dsac_uid",id);
       const wr=[];
       if(!sh)wr.push(DA.post({action:"set",key:"sheets/"+id,value:JSON.stringify({emp:{id,name:r.name,team:r.team||""},p:{}})}));
-      wr.push(DA.post({action:"set",key:"ot/"+id,value:JSON.stringify({...(o||{items:{}}),name:r.name,rank:r.rank||""})}));
+      if(!o||o.name!==r.name||(o.rank||"")!==(r.rank||""))wr.push(DA.post({action:"set",key:"ot/"+id,value:JSON.stringify({...(o||{items:{}}),name:r.name,rank:r.rank||""})}));
       await Promise.all(wr);
       LS.s("dsac_uid",id);LS.s("dsac_name",r.name);LS.s("dsac_adm",adm?"1":"0");if(!adm)LS.d("dsac_apw");
+      try{sessionStorage.removeItem("dsac_nav")}catch(e){}
       location.reload();
     }catch(e){LS.d("dsac_pw");$("#lg_go").disabled=false;if(e.code==="auth")shake("#lg_pw");err(e.code==="auth"?"공유 비밀번호가 맞지 않아요":"저장소에 연결하지 못했어요. 잠시 후 다시 해 주세요")}
   };
