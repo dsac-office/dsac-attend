@@ -1716,3 +1716,7 @@ boot();OT.start();
 <script>
 document.addEventListener("click",e=>{if(!e.target.closest("#gotoday"))return;const k=new Date(Date.now()+9*3600e3),lab=(k.getUTCMonth()+1)+"/"+k.getUTCDate();const td=[...document.querySelectorAll("table.xl tr.r-date td,table.xl tr.r-date th")].find(x=>x.textContent.trim()===lab);if(!td){try{toast("이번 달 표에서 오늘 날짜를 찾지 못했어요. 월을 펼쳐 주세요",true)}catch(_){}return}td.scrollIntoView({behavior:"smooth",block:"center"});td.animate([{background:"#58C0D033"},{background:"transparent"}],{duration:1200})});
 </script>
+<style>@media (min-width:700px){.moredet>summary{display:none}.moredet{display:inline-flex;align-items:center;gap:8px}.moredet>.mdbox{margin-top:0;display:inline-flex;align-items:center;gap:8px}}</style>
+<script>
+(function(){const mq=matchMedia("(min-width:700px)");const fix=()=>{if(!mq.matches)return;document.querySelectorAll("details.moredet").forEach(d=>{if(!d.open)d.open=true})};new MutationObserver(fix).observe(document.body,{childList:true,subtree:true});if(mq.addEventListener)mq.addEventListener("change",fix);fix()})();
+</script>
