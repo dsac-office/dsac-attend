@@ -1403,19 +1403,19 @@ const kindLabel=it=>`${kindOf(it)}(${DOW[pd(it.d).getUTCDay()]})`;
 /* 수당시간 자동 계산: 평일은 기본근무 종료(기본 18시) 이후, 휴일은 근무시간에서 휴게 제외(4시간 이하 0분, 4시간 초과~8시간 29분 30분, 8시간 30분 이상 60분) */
 function winOf(fr){const m=String(fr||"").match(/(\d{1,2})(?::(\d{2}))?\s*~\s*(\d{1,2})(?::(\d{2}))?/);if(!m)return null;const ws=toMin(String(+m[1]).padStart(2,"0")+":"+(m[2]||"00")),we=toMin(String(+m[3]).padStart(2,"0")+":"+(m[4]||"00"));return ws==null||we==null?null:{ws,we}}
 function hhmm(x){return String(Math.floor(x/60)).padStart(2,"0")+":"+String(x%60).padStart(2,"0")}
-function splitDay(k,a,b,be,fr,brk){
-  // 기본/시간외 나누기 (순서 무관). 휴게는 총 근무 기준으로 정하고, 고른 쪽에서 먼저 뺀다
-  const tot=b-a,d=tot>=510?60:tot>240?30:0;
+function splitDay(k,a,b,be,fr,brk,fo){
   if(k==="평일"){const ye=toMin(be||"18:00");return{base:Math.max(0,Math.min(b,ye)-a),ot:Math.max(0,b-Math.max(a,ye)),brk:0}}
-  let B=0;const w=winOf(fr);if(w)B=Math.max(0,Math.min(b,w.we)-Math.max(a,w.ws));
-  let O=tot-B,left=d;
+  const wr=winOf(fr),wo=winOf(fo);
+  let B=wr?Math.max(0,wr.we-wr.ws):0,O=wo?Math.max(0,wo.we-wo.ws):0;
+  const tot=B+O,d=tot>=510?60:tot>240?30:0;let left=d;
   if(brk==="base"){const t=Math.min(B,left);B-=t;left-=t;O-=Math.min(O,left)}
   else{const t=Math.min(O,left);O-=t;left-=t;B-=Math.min(B,left)}
   return{base:B,ot:O,brk:d}
 }
-function autoMin(k,s,e,be,fr,brk){
-  const a=toMin(s),b=toMin(e);if(a==null||b==null||b<=a)return 0;
-  return splitDay(k,a,b,be,fr,brk).ot;
+function holEnd(fr,fo){const o=winOf(fo);if(o)return hhmm(o.we);const w=winOf(fr);return w?hhmm(w.we):""}
+function autoMin(k,s,e,be,fr,brk,fo){
+  const a=toMin(s),b=toMin(e);if(k!=="휴일"&&(a==null||b==null||b<=a))return 0;
+  return splitDay(k,a,b,be,fr,brk,fo).ot;
 }
 
 
@@ -1478,8 +1478,8 @@ function formHtml(it){
   <div><label>구분</label><div class="kind" id="fk">${["평일","휴일"].map(x=>`<button type="button" data-k="${x}" class="${x===k?"on":""} ${x==="휴일"?"hd":""}">${x}(<span class="dw">${DOW[pd(v.d).getUTCDay()]}</span>)</button>`).join("")}</div></div>
   <div><label for="fs">출근시간</label><input class="tm" id="fs" inputmode="numeric" autocomplete="off" placeholder="09:00" maxlength="8" value="${esc(v.s)}"></div>
   <div class="wd-only" ${k==="휴일"?"hidden":""}><label for="fb">기본근무 끝 <span style="font-weight:600;color:var(--muted)">탄력 근무, 기본은 18:00</span></label><input class="tm" id="fb" inputmode="numeric" autocomplete="off" placeholder="18:00" maxlength="8" value="${esc(v.b||"18:00")}"></div>
-  <div class="hd-only" ${k==="휴일"?"":"hidden"}><label for="fr">기본근무 구간 <span style="font-weight:600;color:var(--muted)">비우면 전부 시간외</span></label><input id="fr" value="${esc(k==="휴일"?v.r:"")}" placeholder="예: 9:00~18:00"></div>
-  <div><label for="fe">퇴근시간 <span style="font-weight:600;color:var(--muted)">시간외 끝</span></label><input class="tm" id="fe" inputmode="numeric" autocomplete="off" placeholder="22:00" maxlength="8" value="${esc(v.e)}"></div>
+  <div class="hd-only" ${k==="휴일"?"":"hidden"}><label for="fr">기본근무 구간 <span style="font-weight:600;color:var(--muted)">비우면 전부 시간외</span></label><input id="fr" value="${esc(k==="휴일"?v.r:"")}" placeholder="예: 9:00~15:00"></div><div class="hd-only" ${k==="휴일"?"":"hidden"}><label for="fo">시간외 구간</label><input id="fo" value="${esc(k==="휴일"?(v.o||""):"")}" placeholder="예: 15:00~19:00"></div>
+  <div class="wd-only" ${k==="휴일"?"hidden":""}><label for="fe">퇴근시간 <span style="font-weight:600;color:var(--muted)">시간외 끝</span></label><input class="tm" id="fe" inputmode="numeric" autocomplete="off" placeholder="22:00" maxlength="8" value="${esc(v.e)}"></div>
   <div><label for="fm">시간외 (분) <span style="font-weight:600;color:var(--accent-ink)">자동 계산</span></label><div class="min"><input type="number" id="fm" readonly inputmode="numeric" min="0" step="10" value="${esc(v.m)}"><span>분</span></div></div>
   <div class="w2" style="margin-top:-6px"><span id="fbk" style="font-size:12px;color:var(--muted)"></span> <span class="bk" id="fbr" hidden role="group" aria-label="휴게 공제 위치"><button type="button" data-v="ot" class="on" aria-pressed="true">초과에서</button><button type="button" data-v="base" aria-pressed="false">기본에서</button></span></div>
   <div class="w2"><label for="fw">근무내역</label><input id="fw" value="${esc(v.w)}" placeholder="예: 기획공연 준비"></div>
@@ -1491,25 +1491,26 @@ function bindForm(it){
   let k=it&&it.k||(isHol($("#fd").value)?"휴일":"평일"),mTouched=false;
   const setK=x=>{k=x;$("#fk").querySelectorAll("button").forEach(b=>b.classList.toggle("on",b.dataset.k===k));$("#f .wd-only").hidden=k==="휴일";$("#f .hd-only").hidden=k!=="휴일";recalc()};
   const tv=id=>normT($(id).value);
-  const updBk=()=>{const el=$("#fbk"),sel=$("#fbr");if(!el)return;const a=toMin(tv("#fs")),e2=toMin(tv("#fe"));if(a==null||e2==null||e2<=a){if(sel)sel.hidden=true;el.textContent="";return}const r=splitDay(k,a,e2,tv("#fb"),$("#fr")?.value,brkOf());if(sel)sel.hidden=!(k==="휴일"&&r.brk>0);const w=k==="휴일"?winOf($("#fr")?.value):null;const hm2=x=>`${Math.floor(x/60)}시간${x%60}분`;const warn="";if(k!=="휴일"||!r.brk){el.innerHTML=warn;return}el.innerHTML=`휴게 ${r.brk}분 · 기본 ${hm2(r.base)} + 시간외 ${hm2(r.ot)} = 총 ${hm2(r.base+r.ot)}`+warn};
-  const recalc=()=>{if(!mTouched)$("#fm").value=tv("#fe")?autoMin(k,tv("#fs"),tv("#fe"),tv("#fb"),$("#fr")?.value,brkOf()):"";updBk()};
+  const updBk=()=>{const el=$("#fbk"),sel=$("#fbr");if(!el)return;const a=toMin(tv("#fs")),e2=toMin(tv("#fe"));const fr_=$("#fr")?.value||"",fo_=$("#fo")?.value||"";if(k==="평일"&&(a==null||e2==null)){el.textContent="";return}const r=splitDay(k,a,e2,tv("#fb"),fr_,brkOf(),fo_);if(sel)sel.hidden=!(k==="휴일"&&r.brk>0);if(k!=="휴일"||!r.brk){el.textContent="";return}const hm2=x=>`${Math.floor(x/60)}시간${x%60}분`;el.textContent=`휴게 ${r.brk}분 · 기본 ${hm2(r.base)} + 시간외 ${hm2(r.ot)} = 총 ${hm2(r.base+r.ot)}`};
+  const recalc=()=>{const fr_=$("#fr")?.value||"",fo_=$("#fo")?.value||"";if(k==="휴일")$("#fe").value=holEnd(fr_,fo_);const e_=tv("#fe");if(!mTouched)$("#fm").value=(e_||k==="휴일")?autoMin(k,tv("#fs"),e_,tv("#fb"),fr_,brkOf(),fo_):"";updBk()};
   $("#fk").onclick=e=>{const b=e.target.closest("button");if(b)setK(b.dataset.k)};
   $("#fd").onchange=()=>{const d=$("#fd").value;if(!d)return;$("#fk").querySelectorAll(".dw").forEach(x=>x.textContent=DOW[pd(d).getUTCDay()]);setK(isHol(d)?"휴일":"평일")};
-  ["#fs","#fe","#fb","#fr"].forEach(id=>{const el=$(id);el.oninput=()=>{mTouched=false;recalc()};el.onblur=()=>{const n=normT(el.value);if(n)el.value=n}});
+  ["#fs","#fe","#fb","#fr","#fo"].forEach(id=>{const el=$(id);el.oninput=()=>{mTouched=false;recalc()};el.onblur=()=>{const n=normT(el.value);if(n)el.value=n}});
   $("#fm").oninput=()=>{mTouched=$("#fm").value!=="";updBk()};
   $("#fbr").onclick=e=>{const b=e.target.closest("button");if(!b)return;$("#fbr").querySelectorAll("button").forEach(x=>{const on=x===b;x.classList.toggle("on",on);x.setAttribute("aria-pressed",on)});mTouched=false;recalc()};
   recalc();
   if(it)$("#fc").onclick=()=>{S.edit=null;render()};
   $("#fo").onclick=async()=>{if(OT_CLOSED){toast("시간외 신청이 마감되었어요",true);return}
-    const d=$("#fd").value,s=tv("#fs"),e=tv("#fe"),w=$("#fw").value.trim(),be=k==="평일"?(tv("#fb")||"18:00"):"",m=$("#fm").value===""?autoMin(k,s,e,be,$("#fr")?.value,brkOf()):Math.round(+$("#fm").value);
+    const d=$("#fd").value,s=tv("#fs"),e=k==="휴일"?holEnd($("#fr").value,$("#fo").value):tv("#fe"),w=$("#fw").value.trim(),be=k==="평일"?(tv("#fb")||"18:00"):"",m=$("#fm").value===""?autoMin(k,s,e,be,$("#fr")?.value,brkOf(),$("#fo")?.value):Math.round(+$("#fm").value);
     const r=k==="휴일"?$("#fr").value.trim():(be!=="18:00"?`${hm(be)}~${hm(e)}`:"");
     if(!d)return toast("일자를 골라 주세요",true);
+    if(k==="휴일"&&!$("#fr").value.trim()&&!$("#fo").value.trim())return toast("기본근무 구간이나 시간외 구간을 적어 주세요",true);
     if(!s||!e)return toast("출근·퇴근 시간을 입력해 주세요",true);
     if(toMin(e)<=toMin(s))return toast("퇴근시간이 출근시간보다 늦어야 해요",true);
     if(!(m>0))return toast("수당시간(분)을 확인해 주세요",true);
     if(!w)return toast("근무내역을 적어 주세요",true);
     const id=it?it.id:Date.now().toString(36)+Math.random().toString(36).slice(2,6);
-    const rec={d,k,s,e,b:be,m,r,w,st:it&&it.st||"",ts:it&&it.ts||Date.now()};
+    const rec={d,k,s,e,b:be,m,r,o:k==="휴일"?$("#fo").value.trim():"",w,st:it&&it.st||"",ts:it&&it.ts||Date.now()};
     busy($("#fo"),true);
     try{await db.doc("ot/"+uid).update({items:{[id]:rec}});S.edit=null;toast(it?"고쳤어요":"신청했어요");render()}
     catch{toast("저장하지 못했어요. 잠시 뒤 다시 시도해 주세요",true);busy($("#fo"),false)}
