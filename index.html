@@ -1479,7 +1479,7 @@ function formHtml(it){
   <div><label for="fd">일자</label><input type="date" id="fd" value="${esc(v.d)}"></div>
   <div><label>구분</label><div class="kind" id="fk">${(isWk(v.d)?["휴일"]:["평일","휴일"]).map(x=>`<button type="button" data-k="${x}" class="${x===k?"on":""} ${x==="휴일"?"hd":""}">${x}(<span class="dw">${DOW[pd(v.d).getUTCDay()]}</span>)</button>`).join("")}</div></div>
   <div class="w2 hd-only" ${k==="휴일"?"":"hidden"}><label>휴일 근무 방식</label><div class="kind" id="fhm">${[["all","전부 시간외"],["split","나눠서 (기본 + 시간외)"]].map(([m,t])=>`<button type="button" data-m="${m}" class="${m===hm?"on":""}">${t}</button>`).join("")}</div></div>
-  <div><label for="fs">출근시간</label><input class="tm" id="fs" inputmode="numeric" autocomplete="off" placeholder="09:00" maxlength="8" value="${esc(v.s)}"></div>
+  <div class="wd-only" ${k==="휴일"?"hidden":""}><label for="fs">출근시간</label><input class="tm" id="fs" inputmode="numeric" autocomplete="off" placeholder="09:00" maxlength="8" value="${esc(v.s)}"></div>
   <div class="wd-only" ${k==="휴일"?"hidden":""}><label for="fb">기본근무 구간(사용 시)</label><input class="tm" id="fb" inputmode="numeric" autocomplete="off" placeholder="18:00" maxlength="8" value="${esc(v.b||"18:00")}"></div>
   <div class="hd-only" ${k==="휴일"?"":"hidden"}><label for="fr">기본근무 구간(사용 시)</label><input id="fr" value="${esc(k==="휴일"?v.r:"")}" placeholder=""></div><div class="hd-only" ${k==="휴일"?"":"hidden"}><label for="fov">시간외 구간</label><input id="fov" value="${esc(k==="휴일"?(v.o||""):"")}" placeholder=""></div>
   <div class="wd-only" ${k==="휴일"?"hidden":""}><label for="fe">퇴근시간 <span style="font-weight:600;color:var(--muted)">시간외 끝</span></label><input class="tm" id="fe" inputmode="numeric" autocomplete="off" placeholder="22:00" maxlength="8" value="${esc(v.e)}"></div>
@@ -1495,7 +1495,7 @@ function bindForm(it){
   const setK=x=>{k=x;$("#fk").querySelectorAll("button").forEach(b=>b.classList.toggle("on",b.dataset.k===k));$("#f .wd-only").hidden=k==="휴일";$("#f .hd-only").hidden=k!=="휴일";applyHM()};
   const tv=id=>normT($(id).value);
   let hm=it?(it.hm||(it.r?"split":"all")):"split";
-  const applyHM=()=>{const fr=$("#fr"),fo=$("#fov");if(!fr||!fo)return;const frw=fr.closest(".hd-only"),fow=fo.closest(".hd-only");const lb=fow.querySelector("label");$("#fhm")?.querySelectorAll("button").forEach(b=>b.classList.toggle("on",b.dataset.m===hm));if(hm==="all"){frw.hidden=true;fr.value="";lb.textContent="퇴근시간 (시간외 끝)"}else{frw.hidden=k!=="휴일";lb.textContent="시간외 구간"}recalc()};
+  const applyHM=()=>{const fr=$("#fr"),fo=$("#fov");if(!fr||!fo)return;const frw=fr.closest(".hd-only"),fow=fo.closest(".hd-only");const lb=fow.querySelector("label");$("#fhm")?.querySelectorAll("button").forEach(b=>b.classList.toggle("on",b.dataset.m===hm));if(hm==="all"){frw.hidden=true;fr.value="";lb.textContent="출근~퇴근 (시간외)"}else{frw.hidden=k!=="휴일";lb.textContent="시간외 구간"}recalc()};
   const foVal=()=>{const t=($("#fov")?.value||"").trim();const st=normT(tv("#fs")||"")||"";if(/^\d{1,2}(:\d{2})?$/.test(t))return st+"~"+normT(t);return t.startsWith("~")?(st+t):t};
   const updBk=()=>{const el=$("#fbk"),sel=$("#fbr");if(!el)return;const a=toMin(tv("#fs")),e2=toMin(tv("#fe"));const fr_=$("#fr")?.value||"",fo_=foVal();if(k==="평일"&&(a==null||e2==null)){el.textContent="";return}const r=splitDay(k,a,e2,tv("#fb"),fr_,brkOf(),fo_);if(sel)sel.hidden=!(k==="휴일"&&r.brk>0);if(k!=="휴일"||!r.brk){el.textContent="";return}const hm2=x=>`${Math.floor(x/60)}시간${x%60}분`;el.textContent=`휴게 ${r.brk}분 · 기본 ${hm2(r.base)} + 시간외 ${hm2(r.ot)} = 총 ${hm2(r.base+r.ot)}`};
   const recalc=()=>{const fr_=$("#fr")?.value||"",fo_=foVal();if(k==="휴일")$("#fe").value=holEnd(fr_,fo_);const e_=tv("#fe");if(!mTouched)$("#fm").value=(e_||k==="휴일")?autoMin(k,tv("#fs"),e_,tv("#fb"),fr_,brkOf(),fo_):"";updBk()};
@@ -1517,7 +1517,8 @@ function bindForm(it){
     if(!(m>0))return toast("수당시간(분)을 확인해 주세요",true);
     if(!w)return toast("근무내역을 적어 주세요",true);
     const id=it?it.id:Date.now().toString(36)+Math.random().toString(36).slice(2,6);
-    const rec={d,k,s,e,b:be,m,r,hm:k==="휴일"?hm:"",o:k==="휴일"?foVal():"",w,st:it&&it.st||"",ts:it&&it.ts||Date.now()};
+    const hw=winOf(hm==="all"?foVal():(winOf($("#fr").value)?$("#fr").value:foVal()));const sHol=hw?hhmm(hw.ws):"";
+    const rec={d,k,s:k==="휴일"?sHol:s,e,b:be,m,r,hm:k==="휴일"?hm:"",o:k==="휴일"?foVal():"",w,st:it&&it.st||"",ts:it&&it.ts||Date.now()};
     busy($("#fo"),true);
     try{await db.doc("ot/"+uid).update({items:{[id]:rec}});S.edit=null;toast(it?"고쳤어요":"신청했어요");render()}
     catch{toast("저장하지 못했어요. 잠시 뒤 다시 시도해 주세요",true);busy($("#fo"),false)}
