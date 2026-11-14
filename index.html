@@ -1281,8 +1281,8 @@ function renderManage(){
   }else if(tab==="period"){
     body=`<div class="card"><h3>단위기간 추가</h3><div class="form"><label>이름<input id="pn" placeholder="2027년 1분기"></label><label>시작일(일요일)<input id="ps" type="date"></label>
     <label>주 수<input id="pw" type="number" value="13" style="width:80px"></label><button class="btn" id="padd">추가</button></div></div>
-    <div class="card"><div class="tw"><table class="t"><tr><th>이름</th><th>시작일</th><th>주 수</th><th>마감</th><th></th></tr>${cfg.periods.map(p=>`<tr data-id="${esc(p.id)}"><td><input class="pn" value="${esc(p.name)}" aria-label="이름"></td><td><input class="ps" type="date" value="${p.start_date}" aria-label="시작일"></td>
-    <td><input class="pw" type="number" value="${p.weeks}" style="width:80px" aria-label="주 수"></td><td><label><input type="checkbox" class="pl" ${p.locked?"checked":""}> 마감(직원 수정 막기)</label></td><td><button class="btn sm ghost psv">저장</button></td></tr>`).join("")}</table></div></div>`;
+    <div class="card"><div class="tw"><table class="t"><tr><th>이름</th><th>시작일</th><th>종료일</th><th>마감</th><th></th></tr>${cfg.periods.map(p=>`<tr data-id="${esc(p.id)}"><td><input class="pn" value="${esc(p.name)}" aria-label="이름"></td><td><input class="ps" type="date" value="${p.start_date}" aria-label="시작일"></td>
+    <td><input class="pe" type="date" value="${addDays(p.start_date,p.weeks*7-1)}" aria-label="종료일"></td><td><label><input type="checkbox" class="pl" ${p.locked?"checked":""}> 마감(직원 수정 막기)</label></td><td><button class="btn sm ghost psv">저장</button></td></tr>`).join("")}</table></div></div>`;
   }else if(tab==="hol"){
     body=`<div class="card"><h3>공휴일 추가</h3><div class="form"><label>날짜<input id="hd" type="date"></label><label>이름<input id="hn"></label><button class="btn" id="hadd">추가</button></div>
     <div class="mute small" style="margin-top:10px">평일 공휴일은 기본근무 0시간으로 시작하고 ${st.holiday_credit}시간이 간주돼요. 정부 발표(임시공휴일 등)에 맞춰 확인해 주세요.</div></div>
@@ -1311,11 +1311,10 @@ function renderManage(){
   }
   if(tab==="period"){
     $("#padd").onclick=async()=>{const nm=g("pn").trim(),s=g("ps"),w=parseInt(g("pw"));if(!nm||!s||!(w>=1&&w<=20))return toast("이름·시작일·주 수를 확인해 주세요",true);
-      if(new Date(pd(s)).getUTCDay()!==0)return toast("시작일은 일요일이어야 해요",true);
       cfg.periods.push({id:"p"+Date.now().toString(36),name:nm,start_date:s,weeks:w,locked:false});if(await saveCfg())renderManage()};
     app().querySelectorAll("tr[data-id]").forEach(tr=>tr.querySelector(".psv").onclick=async()=>{const p=cfg.periods.find(x=>x.id===tr.dataset.id),s=tr.querySelector(".ps").value;
-      if(new Date(pd(s)).getUTCDay()!==0)return toast("시작일은 일요일이어야 해요",true);
-      p.name=tr.querySelector(".pn").value.trim()||p.name;p.start_date=s;p.weeks=Math.max(1,Math.min(20,parseInt(tr.querySelector(".pw").value)||p.weeks));p.locked=tr.querySelector(".pl").checked;await saveCfg()});
+      const e=tr.querySelector(".pe").value;if(!e||pd(e)<pd(s))return toast("종료일을 시작일 이후로 입력해 주세요",true);
+      p.name=tr.querySelector(".pn").value.trim()||p.name;p.start_date=s;p.weeks=Math.max(1,Math.min(60,Math.ceil((pd(e)-pd(s))/864e5/7+1/7)));p.locked=tr.querySelector(".pl").checked;await saveCfg()});
   }
   if(tab==="hol"){
     $("#hadd").onclick=async()=>{const d=g("hd"),n=g("hn").trim();if(!d||!n)return toast("날짜와 이름을 입력해 주세요",true);cfg.holidays=cfg.holidays.filter(h=>h.date!==d).concat({date:d,name:n});if(await saveCfg())renderManage()};
