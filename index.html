@@ -1402,7 +1402,7 @@ function autoMin(k,s,e,be,fr,brk){
   if(k==="평일")return Math.max(0,b-Math.max(a,toMin(be||"18:00")));
   // 휴일: 기본근무(사용 시) "9:00~15:00"의 끝 이후 시간이 초과. 그 구간에 휴게 표를 적용
   const m=String(fr||"").match(/~\s*(\d{1,2})(?::(\d{2}))?/);
-  const tot=b-a,d=tot>=240?60:0;if(m){const ye=toMin(String(+m[1]).padStart(2,"0")+":"+(m[2]||"00"));if(ye!=null&&b>ye){const w=b-Math.max(a,ye);return brk==="base"&&d===60?w:Math.max(0,w-d)}}
+  const tot=b-a,d=tot>=510?60:tot>240?30:0;if(m){const ye=toMin(String(+m[1]).padStart(2,"0")+":"+(m[2]||"00"));if(ye!=null&&b>ye){const w=b-Math.max(a,ye);return brk==="base"&&d===60?w:Math.max(0,w-d)}}
   return Math.max(0,tot-d);
 }
 
@@ -1479,7 +1479,7 @@ function bindForm(it){
   let k=it&&it.k||(isHol($("#fd").value)?"휴일":"평일"),mTouched=!!(it&&it.m!=="");
   const setK=x=>{k=x;$("#fk").querySelectorAll("button").forEach(b=>b.classList.toggle("on",b.dataset.k===k));$("#f .wd-only").hidden=k==="휴일";$("#f .hd-only").hidden=k!=="휴일";recalc()};
   const tv=id=>normT($(id).value);
-  const updBk=()=>{const el=$("#fbk"),sel=$("#fbr");if(!el)return;const a=toMin(tv("#fs")),e2=toMin(tv("#fe"));const tot=(a!=null&&e2!=null)?e2-a:0;const d=tot>=240?60:0;const big=k==="휴일"&&d>0;if(sel)sel.hidden=!(k==="휴일"&&d===60);if(!big){el.textContent="";return}let txt=`휴게 ${d}분 자동 차감`;const fr=$("#fr")?.value||"",mm=fr.match(/~\s*(\d{1,2})(?::(\d{2}))?/);if(mm&&a!=null&&e2!=null){const ye=toMin(String(+mm[1]).padStart(2,"0")+":"+(mm[2]||"00"));const bas=Math.max(0,Math.min(e2,ye)-a);const ot=parseInt($("#fm")?.value)||0;const hm2=x=>`${Math.floor(x/60)}시간${x%60}분`;txt+=` · 기본 ${hm2(bas)} + 시간외 ${hm2(ot)} = 총 ${hm2(bas+ot)}`}el.textContent=txt};
+  const updBk=()=>{const el=$("#fbk"),sel=$("#fbr");if(!el)return;const a=toMin(tv("#fs")),e2=toMin(tv("#fe"));const tot=(a!=null&&e2!=null)?e2-a:0;const d=tot>=510?60:tot>240?30:0;const big=k==="휴일"&&d>0;if(sel)sel.hidden=!(k==="휴일"&&d===60);if(!big){el.textContent="";return}let txt=`휴게 ${d}분 자동 차감`;const fr=$("#fr")?.value||"",mm=fr.match(/~\s*(\d{1,2})(?::(\d{2}))?/);if(mm&&a!=null&&e2!=null){const ye=toMin(String(+mm[1]).padStart(2,"0")+":"+(mm[2]||"00"));const bas=Math.max(0,Math.min(e2,ye)-a);const ot=parseInt($("#fm")?.value)||0;const hm2=x=>`${Math.floor(x/60)}시간${x%60}분`;txt+=` · 기본 ${hm2(bas)} + 시간외 ${hm2(ot)} = 총 ${hm2(bas+ot)}`}el.textContent=txt};
   const recalc=()=>{if(!mTouched)$("#fm").value=tv("#fe")?autoMin(k,tv("#fs"),tv("#fe"),tv("#fb"),$("#fr")?.value,brkOf()):"";updBk()};
   $("#fk").onclick=e=>{const b=e.target.closest("button");if(b)setK(b.dataset.k)};
   $("#fd").onchange=()=>{const d=$("#fd").value;if(!d)return;$("#fk").querySelectorAll(".dw").forEach(x=>x.textContent=DOW[pd(d).getUTCDay()]);setK(isHol(d)?"휴일":"평일")};
