@@ -834,7 +834,7 @@ function renderClaim(){
 
 /* ===== 근무표 (엑셀 근무계획표와 같은 줄 구성) ===== */
 let T={uid:null,pid:null,ro:false};
-function periodSelect(){return`<select id="psel" class="pill" aria-label="단위기간 선택">${cfg.periods.map(p=>`<option value="${esc(p.id)}" ${p.id===S.periodId?"selected":""}>${esc(p.name)} (${md(p.start_date)}~${md(addDays(p.start_date,p.weeks*7-1))})${p.locked?" 🔒":""}</option>`).join("")}</select>`}
+function periodSelect(){return`<select id="psel" class="pill" aria-label="단위기간 선택">${cfg.periods.map(p=>`<option value="${esc(p.id)}" ${p.id===S.periodId?"selected":""}>${esc(p.name)} (${md(p.start_date)}~${md((p.end_date||addDays(p.start_date,p.weeks*7-1)))})${p.locked?" 🔒":""}</option>`).join("")}</select>`}
 function renderSheetPage(target,mode){
   const p=curPeriod(),doc=getDoc(target);
   if(!p){app().innerHTML=shell('<div class="card">등록된 단위기간이 없어요. 관리 메뉴에서 추가해 주세요.</div>',mode==="admin"?"admin":"me");return}
@@ -843,7 +843,7 @@ function renderSheetPage(target,mode){
   const st=cfg.settings,emp=doc.emp||{name:"",team:""};
   const back=mode==="admin"?`<button class="btn ghost sm" data-nav="admin" style="align-self:flex-start">← 전직원 탄력근무표</button>`:"";
   app().innerHTML=shell(`${back}
-  <div class="head"><div><h1>${mode==="admin"?`${esc(emp.team)} ${esc(emp.name)} 님`:`${esc(emp.name)} 님의 탄력근무계획표`}</h1><p>${esc(p.name)} · ${md(p.start_date)} ~ ${md(addDays(p.start_date,p.weeks*7-1))} · 단위기간 ${p.weeks}주</p></div><span class="sp"></span>${periodSelect()}</div>
+  <div class="head"><div><h1>${mode==="admin"?`${esc(emp.team)} ${esc(emp.name)} 님`:`${esc(emp.name)} 님의 탄력근무계획표`}</h1><p>${esc(p.name)} · ${md(p.start_date)} ~ ${md((p.end_date||addDays(p.start_date,p.weeks*7-1)))} · 단위기간 ${p.weeks}주</p></div><span class="sp"></span>${periodSelect()}</div>
   ${canWrite===false?`<div class="notice">지금은 보기만 할 수 있어요. 입력하려면 담당자에게 작성 권한을 요청하세요.</div>`:p.locked?`<div class="notice">🔒 마감된 기간이에요.${T.ro?" 고칠 내용이 있으면 담당자에게 알려 주세요.":" 관리자는 수정할 수 있어요."}</div>`:""}
   <div class="card sumx" id="sum"></div>
   <div class="card calcard">
@@ -880,14 +880,15 @@ function monthRow(w){
 function weekBlock(w){
   const P=curPeriod(),st=cfg.settings,hol=holMap(),sd=sheetData(getDoc(T.uid),T.pid),ws=sd.weeks[w]||{c:0,m:""},dis=T.ro?"disabled":"";
   const s=addDays(P.start_date,w*7),e=addDays(P.start_date,w*7+6);
-  const D=Array.from({length:7},(_,d)=>{const date=addDays(P.start_date,w*7+d),holiday=hol[date];return{d,date,holiday,x:dayOf(date,d,sd.entries,hol,st),off:d===0||d===6||!!holiday}});
+  const endD=P.end_date||(P.end_date||addDays(P.start_date,P.weeks*7-1));
+  const D=Array.from({length:7},(_,d)=>{const date=addDays(P.start_date,w*7+d),holiday=hol[date],out=date>endD;return{d,date,holiday,out,x:dayOf(date,d,sd.entries,hol,st),off:d===0||d===6||!!holiday||out}});
   const td=(o,html,cls="")=>`<td class="${o.off?"off ":""}${cls}">${html}</td>`;
-  const dateRow=D.map(o=>`<td title="${esc(o.holiday||"")}" class="dn${o.off?" off":""}${o.d===0||o.holiday?" hol":o.d===6?" sat":""}">${md(o.date)}${o.holiday?`<span class="hn">${esc(o.holiday.replace(/\s*대체\s*공휴일$/,"(대체)").replace(/\s*연휴$/,""))}</span>`:""}</td>`).join("");
-  const baseRow=D.map(o=>td(o,`<input type="number" min="0" max="24" step="0.5" data-k="base" data-d="${o.date}" aria-label="${md(o.date)} 기본근무 시간" value="${o.x.base}" ${dis}>`)).join("");
-  const otRow=D.map(o=>td(o,`<input type="number" min="0" max="1440" step="10" data-k="ot" data-d="${o.date}" aria-label="${md(o.date)} 시간외 분" value="${o.x.ot||""}" ${dis}>`)).join("");
-  const dayRow=D.map(o=>`<td class="calc${o.off?" off":""}" id="t${o.date}"></td>`).join("");
-  const txtRow=D.map(o=>td(o,`<input type="text" class="tt" maxlength="24" placeholder="${(o.d>=1&&o.d<=5&&!o.holiday)?"09시~18시":""}" data-k="hours_text" data-d="${o.date}" aria-label="${md(o.date)} 기본근무시간" value="${esc(o.x.hours_text)}" ${dis}>`)).join("");
-  const lvRow=D.map(o=>td(o,`<select data-k="leave" data-d="${o.date}" aria-label="${md(o.date)} 근태구분" class="${o.x.leave?"has":""}" ${dis}><option value=""></option>${st.leave_types.map(l=>`<option ${l.name===o.x.leave?"selected":""}>${esc(l.name)}</option>`).join("")}</select>`)).join("");
+  const dateRow=D.map(o=>o.out?'<td class="off out"></td>':`<td title="${esc(o.holiday||"")}" class="dn${o.off?" off":""}${o.d===0||o.holiday?" hol":o.d===6?" sat":""}">${md(o.date)}${o.holiday?`<span class="hn">${esc(o.holiday.replace(/\s*대체\s*공휴일$/,"(대체)").replace(/\s*연휴$/,""))}</span>`:""}</td>`).join("");
+  const baseRow=D.map(o=>o.out?'<td class="off out"></td>':td(o,`<input type="number" min="0" max="24" step="0.5" data-k="base" data-d="${o.date}" aria-label="${md(o.date)} 기본근무 시간" value="${o.x.base}" ${dis}>`)).join("");
+  const otRow=D.map(o=>o.out?'<td class="off out"></td>':td(o,`<input type="number" min="0" max="1440" step="10" data-k="ot" data-d="${o.date}" aria-label="${md(o.date)} 시간외 분" value="${o.x.ot||""}" ${dis}>`)).join("");
+  const dayRow=D.map(o=>o.out?'<td class="off out"></td>':`<td class="calc${o.off?" off":""}" id="t${o.date}"></td>`).join("");
+  const txtRow=D.map(o=>o.out?'<td class="off out"></td>':td(o,`<input type="text" class="tt" maxlength="24" placeholder="${(o.d>=1&&o.d<=5&&!o.holiday)?"09시~18시":""}" data-k="hours_text" data-d="${o.date}" aria-label="${md(o.date)} 기본근무시간" value="${esc(o.x.hours_text)}" ${dis}>`)).join("");
+  const lvRow=D.map(o=>o.out?'<td class="off out"></td>':td(o,`<select data-k="leave" data-d="${o.date}" aria-label="${md(o.date)} 근태구분" class="${o.x.leave?"has":""}" ${dis}><option value=""></option>${st.leave_types.map(l=>`<option ${l.name===o.x.leave?"selected":""}>${esc(l.name)}</option>`).join("")}</select>`)).join("");
   const rows=6;
   return`<tbody class="wb" id="wb${w}"><tr class="r-date"><th class="wk" rowspan="${rows}"><div class="wn">${w+1}주차</div><div class="wd">${md(s)} ~ ${md(e)}</div><label class="wcf"><input type="checkbox" id="cf${w}" data-wc="${w}" ${ws.c?"checked":""} ${dis}> 작성 완료</label></th>
     <th class="gb"><span class="lf">날짜</span><span class="ls">${w+1}주</span></th>${dateRow}<td class="tot"></td></tr>
@@ -1058,7 +1059,7 @@ const pdDate=s=>new Date(pd(s));
 function printPages(target){
   const P=curPeriod(),X=exportData(target,P),r=X.r,st=X.st;
   const baseSum=r.weeks.reduce((a,wk)=>a+wk.base,0);
-  const head=`<div class="pp-h"><div><div class="pp-t">근무계획표</div><div class="pp-s">${esc(P.name)} · ${md(P.start_date)} ~ ${md(addDays(P.start_date,P.weeks*7-1))} · 단위기간 ${P.weeks}주</div></div><div class="pp-n">${esc(X.emp.team||"")} <b>${esc(X.emp.name||"")}</b></div></div>
+  const head=`<div class="pp-h"><div><div class="pp-t">근무계획표</div><div class="pp-s">${esc(P.name)} · ${md(P.start_date)} ~ ${md((P.end_date||addDays(P.start_date,P.weeks*7-1)))} · 단위기간 ${P.weeks}주</div></div><div class="pp-n">${esc(X.emp.team||"")} <b>${esc(X.emp.name||"")}</b></div></div>
   <table class="pp-sum"><tr><th></th><th>합계</th><th>주평균</th><th>평균값 조건</th></tr>
   <tr><th>기본</th><td>${f1(baseSum)}</td><td class="${r.avgBaseBad?"bad":""}"><b>${f1(r.avgBase)}</b></td><td>${st.avg_base}시간일 것</td></tr>
   <tr><th>시간외</th><td>${f1(r.otMin/60)}</td><td class="${r.avgOtBad?"bad":""}"><b>${f1(r.avgOt)}</b></td><td>${st.avg_ot_max}시간 이하일 것</td></tr></table>
@@ -1282,7 +1283,7 @@ function renderManage(){
     body=`<div class="card"><h3>단위기간 추가</h3><div class="form"><label>이름<input id="pn" placeholder="2027년 1분기"></label><label>시작일(일요일)<input id="ps" type="date"></label>
     <label>주 수<input id="pw" type="number" value="13" style="width:80px"></label><button class="btn" id="padd">추가</button></div></div>
     <div class="card"><div class="tw"><table class="t"><tr><th>이름</th><th>시작일</th><th>종료일</th><th>마감</th><th></th></tr>${cfg.periods.map(p=>`<tr data-id="${esc(p.id)}"><td><input class="pn" value="${esc(p.name)}" aria-label="이름"></td><td><input class="ps" type="date" value="${p.start_date}" aria-label="시작일"></td>
-    <td><input class="pe" type="date" value="${addDays(p.start_date,p.weeks*7-1)}" aria-label="종료일"></td><td><label><input type="checkbox" class="pl" ${p.locked?"checked":""}> 마감(직원 수정 막기)</label></td><td><button class="btn sm ghost psv">저장</button></td></tr>`).join("")}</table></div></div>`;
+    <td><input class="pe" type="date" value="${(p.end_date||addDays(p.start_date,p.weeks*7-1))}" aria-label="종료일"></td><td><label><input type="checkbox" class="pl" ${p.locked?"checked":""}> 마감(직원 수정 막기)</label></td><td><button class="btn sm ghost psv">저장</button></td></tr>`).join("")}</table></div></div>`;
   }else if(tab==="hol"){
     body=`<div class="card"><h3>공휴일 추가</h3><div class="form"><label>날짜<input id="hd" type="date"></label><label>이름<input id="hn"></label><button class="btn" id="hadd">추가</button></div>
     <div class="mute small" style="margin-top:10px">평일 공휴일은 기본근무 0시간으로 시작하고 ${st.holiday_credit}시간이 간주돼요. 정부 발표(임시공휴일 등)에 맞춰 확인해 주세요.</div></div>
@@ -1314,7 +1315,7 @@ function renderManage(){
       cfg.periods.push({id:"p"+Date.now().toString(36),name:nm,start_date:s,weeks:w,locked:false});if(await saveCfg())renderManage()};
     app().querySelectorAll("tr[data-id]").forEach(tr=>tr.querySelector(".psv").onclick=async()=>{const p=cfg.periods.find(x=>x.id===tr.dataset.id),s=tr.querySelector(".ps").value;
       const e=tr.querySelector(".pe").value;if(!e||pd(e)<pd(s))return toast("종료일을 시작일 이후로 입력해 주세요",true);
-      p.name=tr.querySelector(".pn").value.trim()||p.name;p.start_date=s;p.weeks=Math.max(1,Math.min(60,Math.ceil((pd(e)-pd(s))/864e5/7+1/7)));p.locked=tr.querySelector(".pl").checked;await saveCfg()});
+      p.name=tr.querySelector(".pn").value.trim()||p.name;p.start_date=s;p.weeks=Math.max(1,Math.min(60,Math.ceil((pd(e)-pd(s))/864e5/7+1/7)));p.end_date=e;p.locked=tr.querySelector(".pl").checked;await saveCfg()});
   }
   if(tab==="hol"){
     $("#hadd").onclick=async()=>{const d=g("hd"),n=g("hn").trim();if(!d||!n)return toast("날짜와 이름을 입력해 주세요",true);cfg.holidays=cfg.holidays.filter(h=>h.date!==d).concat({date:d,name:n});if(await saveCfg())renderManage()};
