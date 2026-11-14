@@ -886,7 +886,7 @@ function weekBlock(w){
   const dateRow=D.map(o=>o.out?'<td class="off out"></td>':`<td title="${esc(o.holiday||"")}" class="dn${o.off?" off":""}${o.d===0||o.holiday?" hol":o.d===6?" sat":""}">${md(o.date)}${o.holiday?`<span class="hn">${esc(o.holiday.replace(/\s*대체\s*공휴일$/,"(대체)").replace(/\s*연휴$/,""))}</span>`:""}</td>`).join("");
   const baseRow=D.map(o=>o.out?'<td class="off out"></td>':td(o,`<input type="number" min="0" max="24" step="0.5" data-k="base" data-d="${o.date}" aria-label="${md(o.date)} 기본근무 시간" value="${o.x.base}" ${dis}>`)).join("");
   const otRow=D.map(o=>o.out?'<td class="off out"></td>':td(o,`<input type="number" min="0" max="1440" step="10" data-k="ot" data-d="${o.date}" aria-label="${md(o.date)} 시간외 분" value="${o.x.ot||""}" ${dis}>`)).join("");
-  const dayRow=D.map(o=>o.out?'<td class="off out"></td>':`<td class="calc${o.off?" off":""}" id="t${o.date}"></td>`).join("");
+  const dayRow=D.map(o=>o.out?`<td class="off out" id="t${o.date}"></td>`:`<td class="calc${o.off?" off":""}" id="t${o.date}"></td>`).join("");
   const txtRow=D.map(o=>o.out?'<td class="off out"></td>':td(o,`<input type="text" class="tt" maxlength="24" placeholder="${(o.d>=1&&o.d<=5&&!o.holiday)?"09시~18시":""}" data-k="hours_text" data-d="${o.date}" aria-label="${md(o.date)} 기본근무시간" value="${esc(o.x.hours_text)}" ${dis}>`)).join("");
   const lvRow=D.map(o=>o.out?'<td class="off out"></td>':td(o,`<select data-k="leave" data-d="${o.date}" aria-label="${md(o.date)} 근태구분" class="${o.x.leave?"has":""}" ${dis}><option value=""></option>${st.leave_types.map(l=>`<option ${l.name===o.x.leave?"selected":""}>${esc(l.name)}</option>`).join("")}</select>`)).join("");
   const rows=6;
@@ -920,7 +920,7 @@ function paint(){
     set("sb"+w,f1(wk.base),wk.f.base);set("so"+w,f1(wk.ot/60),wk.f.ot);set("st"+w,f1(wk.total),wk.f.total);
     $("#sb"+w).title=`최대 ${st.base_week_max}시간`;$("#so"+w).title=`최대 ${st.ot_week_max}시간 (${wk.ot}분)`;$("#st"+w).title=`최대 ${st.total_week_max}시간`;
     wk.days.forEach(dy=>{
-      const c=$("#t"+dy.date);c.textContent=dy.actual>0?String(Math.round(dy.actual)):"";c.classList.toggle("bad",dy.dayWarn);c.title=dy.actual>0?`${f1(dy.actual)}시간${dy.dayWarn?` (하루 최대 ${st.day_max}시간)`:""}`:"";
+      const c=$("#t"+dy.date);if(c)c.textContent=dy.actual>0?String(Math.round(dy.actual)):"";c.classList.toggle("bad",dy.dayWarn);c.title=dy.actual>0?`${f1(dy.actual)}시간${dy.dayWarn?` (하루 최대 ${st.day_max}시간)`:""}`:"";
       const sl=tb.querySelector(`select[data-d="${dy.date}"]`);if(sl)sl.classList.toggle("has",!!dy.e.leave);
     });
   });
