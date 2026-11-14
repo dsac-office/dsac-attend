@@ -509,11 +509,12 @@ function deepMerge(a,b){if(!isObj(b))return b;const out=isObj(a)?{...a}:{};for(c
 function authErr(j){const e=new Error(j.error||"fail");e.code=j.error||"fail";return e}
 const DA={
   async get(key){const r=await fetch(`${API_URL}?action=get&key=${encodeURIComponent(key)}&${ids_()}`);const j=await r.json();if(!j.ok)throw authErr(j);return j.value},
+  async getMany(keys){try{const r=await fetch(`${API_URL}?action=getMany&keys=${encodeURIComponent(JSON.stringify(keys))}&${ids_()}`);const j=await r.json();if(j.ok)return j.value||{}}catch(e){}const vals=await Promise.all(keys.map(k=>DA.get(k)));const out={};keys.forEach((k,i)=>out[k]=vals[i]);return out},
   async list(prefix){const r=await fetch(`${API_URL}?action=list&prefix=${encodeURIComponent(prefix)}&${ids_()}`);const j=await r.json();if(!j.ok)throw authErr(j);return j.value||{}},
   async post(body){const r=await fetch(API_URL,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify({...body,pw:LS.g("dsac_pw")||"",as:LS.g("dsac_uid")||"",apw:LS.g("dsac_apw")||""})});const j=await r.json();if(!j.ok)throw authErr(j);clearTimeout(pollT);pollT=setTimeout(()=>pollers.forEach(f=>f()),600);return j}
 };
 function snap(path,v){return{id:path,exists:v!==null&&v!==undefined,data:()=>v}}
-function poll(fn,ok,err){let last=null,stop=false;const run=async()=>{if(stop)return;try{const s=await fn();const j=JSON.stringify(s.docs?s.docs.map(d=>[d.id,d.data()]):s.data());if(j!==last){last=j;ok(s)}}catch(e){if(err)err(e)}};pollers.add(run);run();const t=setInterval(()=>{if(!document.hidden)run()},15000);document.addEventListener("visibilitychange",()=>{if(!document.hidden&&!stop)run()});return()=>{stop=true;clearInterval(t);pollers.delete(run)}}
+function poll(fn,ok,err){let last=null,stop=false;const run=async()=>{if(stop)return;try{const s=await fn();const j=JSON.stringify(s.docs?s.docs.map(d=>[d.id,d.data()]):s.data());if(j!==last){last=j;ok(s)}}catch(e){if(err)err(e)}};pollers.add(run);run();const t=setInterval(()=>{if(!document.hidden)run()},30000);document.addEventListener("visibilitychange",()=>{if(!document.hidden&&!stop)run()});return()=>{stop=true;clearInterval(t);pollers.delete(run)}}
 function docRef(path){return{
   async get(){return snap(path,await DA.get(path))},
   async set(v){await DA.post({action:"set",key:path,value:JSON.stringify(v)})},
@@ -596,7 +597,7 @@ function showLogin(){
     try{
       LS.s("dsac_pw",pw);
       LS.s("dsac_uid",id);
-      const [,r0,sh,o]=await Promise.all([DA.get("config/main"),DA.get("roster/"+id),DA.get("sheets/"+id),DA.get("ot/"+id)]);
+      const __m=await DA.getMany(["config/main","roster/"+id,"sheets/"+id,"ot/"+id]);const r0=__m["roster/"+id],sh=__m["sheets/"+id],o=__m["ot/"+id];
       let adm=false;
       if($("#lg_ad").checked){try{LS.s("dsac_apw",$("#lg_apw").value);await DA.post({action:"adminAuth",admin:$("#lg_apw").value});adm=true}catch(e){adm=false;LS.d("dsac_apw")}if(!adm){$("#lg_go").disabled=false;shake("#lg_apw");return err("관리자 비밀번호가 맞지 않아요")}}
       let r=r0;
