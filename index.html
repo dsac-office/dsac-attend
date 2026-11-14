@@ -1398,7 +1398,8 @@ function toast(msg,bad){const t=$("#toast");t.textContent=msg;t.className="on"+(
 const HOL=new Set(["2026-01-01","2026-02-16","2026-02-17","2026-02-18","2026-03-02","2026-05-01","2026-05-05","2026-05-25","2026-06-03","2026-07-17","2026-08-17","2026-09-24","2026-09-25","2026-10-05","2026-10-09","2026-12-25",
  "2027-01-01","2027-02-05","2027-02-06","2027-02-07","2027-02-08","2027-03-01","2027-05-01","2027-05-05","2027-05-13","2027-06-06","2027-07-17","2027-08-15","2027-08-16","2027-09-14","2027-09-15","2027-09-16","2027-10-03","2027-10-04","2027-10-09","2027-10-11","2027-12-25","2027-12-27","2028-01-01"]);
 const isHol=d=>{const w=pd(d).getUTCDay();return w===0||w===6||HOL.has(d)};
-const kindOf=it=>it.k||(isHol(it.d)?"휴일":"평일");
+const isWk=d=>{const w=pd(d).getUTCDay();return w===0||w===6};
+const kindOf=it=>isWk(it.d)?"휴일":(it.k||(isHol(it.d)?"휴일":"평일"));
 const kindLabel=it=>`${kindOf(it)}(${DOW[pd(it.d).getUTCDay()]})`;
 /* 수당시간 자동 계산: 평일은 기본근무 종료(기본 18시) 이후, 휴일은 근무시간에서 휴게 제외(4시간 이하 0분, 4시간 초과~8시간 29분 30분, 8시간 30분 이상 60분) */
 function winOf(fr){const m=String(fr||"").match(/(\d{1,2})(?::(\d{2}))?\s*~\s*(\d{1,2})(?::(\d{2}))?/);if(!m)return null;const ws=toMin(String(+m[1]).padStart(2,"0")+":"+(m[2]||"00")),we=toMin(String(+m[3]).padStart(2,"0")+":"+(m[4]||"00"));return ws==null||we==null?null:{ws,we}}
@@ -1472,10 +1473,10 @@ async function renderName(){
 const items=doc=>Object.entries(doc&&doc.items||{}).map(([id,v])=>({id,...v}));
 function formHtml(it){
   const v=it||{d:today(),s:"09:00",e:"",k:"",m:"",r:"",w:"",b:"18:00"};
-  const k=v.k||(isHol(v.d)?"휴일":"평일");
+  const k=isWk(v.d)?"휴일":(v.k||(isHol(v.d)?"휴일":"평일"));
   return`<div class="card"><h2>${it?"신청 수정":"시간외근무 신청"}</h2><div class="of" id="f">
   <div><label for="fd">일자</label><input type="date" id="fd" value="${esc(v.d)}"></div>
-  <div><label>구분</label><div class="kind" id="fk">${["평일","휴일"].map(x=>`<button type="button" data-k="${x}" class="${x===k?"on":""} ${x==="휴일"?"hd":""}">${x}(<span class="dw">${DOW[pd(v.d).getUTCDay()]}</span>)</button>`).join("")}</div></div>
+  <div><label>구분</label><div class="kind" id="fk">${(isWk(v.d)?["휴일"]:["평일","휴일"]).map(x=>`<button type="button" data-k="${x}" class="${x===k?"on":""} ${x==="휴일"?"hd":""}">${x}(<span class="dw">${DOW[pd(v.d).getUTCDay()]}</span>)</button>`).join("")}</div></div>
   <div><label for="fs">출근시간</label><input class="tm" id="fs" inputmode="numeric" autocomplete="off" placeholder="09:00" maxlength="8" value="${esc(v.s)}"></div>
   <div class="wd-only" ${k==="휴일"?"hidden":""}><label for="fb">기본근무 구간(사용 시)</label><input class="tm" id="fb" inputmode="numeric" autocomplete="off" placeholder="18:00" maxlength="8" value="${esc(v.b||"18:00")}"></div>
   <div class="hd-only" ${k==="휴일"?"":"hidden"}><label for="fr">기본근무 구간(사용 시)</label><input id="fr" value="${esc(k==="휴일"?v.r:"")}" placeholder="예: 9:00~15:00"></div><div class="hd-only" ${k==="휴일"?"":"hidden"}><label for="fov">시간외 구간</label><input id="fov" value="${esc(k==="휴일"?(v.o||""):"")}" placeholder="예: 15:00~19:00"></div>
@@ -1488,7 +1489,7 @@ function formHtml(it){
 }
 function brkOf(){return document.querySelector("#fbr .on")?.dataset.v||"ot"}
 function bindForm(it){
-  let k=it&&it.k||(isHol($("#fd").value)?"휴일":"평일"),mTouched=false;
+  let k=isWk($("#fd").value)?"휴일":(it&&it.k||(isHol($("#fd").value)?"휴일":"평일")),mTouched=false;
   const setK=x=>{k=x;$("#fk").querySelectorAll("button").forEach(b=>b.classList.toggle("on",b.dataset.k===k));$("#f .wd-only").hidden=k==="휴일";$("#f .hd-only").hidden=k!=="휴일";recalc()};
   const tv=id=>normT($(id).value);
   const updBk=()=>{const el=$("#fbk"),sel=$("#fbr");if(!el)return;const a=toMin(tv("#fs")),e2=toMin(tv("#fe"));const fr_=$("#fr")?.value||"",fo_=$("#fov")?.value||"";if(k==="평일"&&(a==null||e2==null)){el.textContent="";return}const r=splitDay(k,a,e2,tv("#fb"),fr_,brkOf(),fo_);if(sel)sel.hidden=!(k==="휴일"&&r.brk>0);if(k!=="휴일"||!r.brk){el.textContent="";return}const hm2=x=>`${Math.floor(x/60)}시간${x%60}분`;el.textContent=`휴게 ${r.brk}분 · 기본 ${hm2(r.base)} + 시간외 ${hm2(r.ot)} = 총 ${hm2(r.base+r.ot)}`};
