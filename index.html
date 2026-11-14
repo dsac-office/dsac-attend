@@ -920,7 +920,7 @@ function paint(){
     set("sb"+w,f1(wk.base),wk.f.base);set("so"+w,f1(wk.ot/60),wk.f.ot);set("st"+w,f1(wk.total),wk.f.total);
     $("#sb"+w).title=`최대 ${st.base_week_max}시간`;$("#so"+w).title=`최대 ${st.ot_week_max}시간 (${wk.ot}분)`;$("#st"+w).title=`최대 ${st.total_week_max}시간`;
     wk.days.forEach(dy=>{
-      const c=$("#t"+dy.date);if(c)c.textContent=dy.actual>0?String(Math.round(dy.actual)):"";c.classList.toggle("bad",dy.dayWarn);c.title=dy.actual>0?`${f1(dy.actual)}시간${dy.dayWarn?` (하루 최대 ${st.day_max}시간)`:""}`:"";
+      const c=$("#t"+dy.date);if(!c)return;c.textContent=dy.actual>0?String(Math.round(dy.actual)):"";c.classList.toggle("bad",dy.dayWarn);c.title=dy.actual>0?`${f1(dy.actual)}시간${dy.dayWarn?` (하루 최대 ${st.day_max}시간)`:""}`:"";
       const sl=tb.querySelector(`select[data-d="${dy.date}"]`);if(sl)sl.classList.toggle("has",!!dy.e.leave);
     });
   });
