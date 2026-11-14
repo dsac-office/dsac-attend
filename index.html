@@ -1495,7 +1495,7 @@ function bindForm(it){
   const updBk=()=>{const el=$("#fbk"),sel=$("#fbr");if(!el)return;const a=toMin(tv("#fs")),e2=toMin(tv("#fe"));const fr_=$("#fr")?.value||"",fo_=$("#fov")?.value||"";if(k==="평일"&&(a==null||e2==null)){el.textContent="";return}const r=splitDay(k,a,e2,tv("#fb"),fr_,brkOf(),fo_);if(sel)sel.hidden=!(k==="휴일"&&r.brk>0);if(k!=="휴일"||!r.brk){el.textContent="";return}const hm2=x=>`${Math.floor(x/60)}시간${x%60}분`;el.textContent=`휴게 ${r.brk}분 · 기본 ${hm2(r.base)} + 시간외 ${hm2(r.ot)} = 총 ${hm2(r.base+r.ot)}`};
   const recalc=()=>{const fr_=$("#fr")?.value||"",fo_=$("#fov")?.value||"";if(k==="휴일")$("#fe").value=holEnd(fr_,fo_);const e_=tv("#fe");if(!mTouched)$("#fm").value=(e_||k==="휴일")?autoMin(k,tv("#fs"),e_,tv("#fb"),fr_,brkOf(),fo_):"";updBk()};
   $("#fk").onclick=e=>{const b=e.target.closest("button");if(b)setK(b.dataset.k)};
-  $("#fd").onchange=()=>{const d=$("#fd").value;if(!d)return;$("#fk").querySelectorAll(".dw").forEach(x=>x.textContent=DOW[pd(d).getUTCDay()]);setK(isHol(d)?"휴일":"평일")};
+  $("#fd").onchange=()=>{const d=$("#fd").value;if(!d)return;const ks=isWk(d)?["휴일"]:["평일","휴일"];$("#fk").innerHTML=ks.map(x=>`<button type="button" data-k="${x}" class="${x==="휴일"?"hd":""}">${x}(<span class="dw">${DOW[pd(d).getUTCDay()]}</span>)</button>`).join("");setK(isHol(d)?"휴일":"평일")};
   ["#fs","#fe","#fb","#fr","#fov"].forEach(id=>{const el=$(id);el.oninput=()=>{mTouched=false;recalc()};el.onblur=()=>{const n=normT(el.value);if(n)el.value=n}});
   $("#fm").oninput=()=>{mTouched=$("#fm").value!=="";updBk()};
   $("#fbr").onclick=e=>{const b=e.target.closest("button");if(!b)return;$("#fbr").querySelectorAll("button").forEach(x=>{const on=x===b;x.classList.toggle("on",on);x.setAttribute("aria-pressed",on)});mTouched=false;recalc()};
