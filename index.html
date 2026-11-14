@@ -785,7 +785,7 @@ document.addEventListener("click",e=>{if(e.target&&e.target.id==="sv"){const ks=
 var __nav="";
 function render(){
   try{const key=JSON.stringify({m:MODE,v:S.view});if(key!==__nav){__nav=key;try{history.pushState({nav:key},"")}catch(e){}}}catch(e){}
-  try{const r=renderInner();try{const w=document.querySelector(".wrap");if(w&&MODE!=="home"&&!w.querySelector(".backb"))w.insertAdjacentHTML("beforeend",'<button class="backb" type="button" aria-label="뒤로">‹</button>');}catch(e){}return r}catch(e){console.error(e);try{toast("화면을 열지 못했어요: "+(e.message||e),true)}catch(_){}}
+  try{const r=renderInner();try{const w=document.querySelector(".wrap");if(w&&MODE!=="home"&&!w.querySelector(".backb"))w.insertAdjacentHTML("beforeend",'<button class="backb" type="button" aria-label="뒤로"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg></button>');}catch(e){}return r}catch(e){console.error(e);try{toast("화면을 열지 못했어요: "+(e.message||e),true)}catch(_){}}
 }
 function renderInner(){
   if(!S.ready)return;
@@ -1647,7 +1647,7 @@ boot();OT.start();
 (function(){
   let pinned=false;try{pinned=localStorage.getItem("dsac_fab_pin")==="1"}catch(e){}
   const b=document.createElement("button");b.className="fab";b.setAttribute("aria-label","바로가기 열기");
-  b.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>';
+  b.innerHTML='<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>';
   const p=document.createElement("div");p.className="fab-p";
   p.innerHTML='<button class="q" data-go="flex">'+NIC.cal+'탄력근무표</button><button class="q" data-go="ot">'+NIC.clock+'시간외 신청</button><div class="fab-t"></div><label class="pin"><input type="checkbox" id="fabpin"> 고정</label>';
   document.body.append(p,b);
