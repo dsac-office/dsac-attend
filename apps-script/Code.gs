@@ -54,8 +54,17 @@ function read_(p, admin, as) {
   return { ok: false, error: 'bad_action' };
 }
 
+function isClosed_() {
+  var sh = store_();
+  var r = findRow_(sh, 'config/main');
+  if (r < 0) return false;
+  var cfg = JSON.parse(sh.getRange(r, 2).getValue() || '{}');
+  return !!cfg.otClosed;
+}
+
 function write_(p, admin, as) {
   if (!admin && !isMine_(p.key, as)) return { ok: false, error: 'forbidden' };
+  if (!admin && String(p.key).indexOf('ot/') === 0 && isClosed_()) return { ok: false, error: 'closed' };
   var lock = LockService.getScriptLock();
   lock.waitLock(30000);
   try {

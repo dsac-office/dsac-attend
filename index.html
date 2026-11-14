@@ -675,6 +675,7 @@ const DEFAULT_CFG={
 /* ===== 상태 ===== */
 let db=null,userNS=null,dl=null,uid=null,isAdmin=false,canWrite=null;
 let cfg=structuredClone(DEFAULT_CFG);
+let OT_CLOSED=false;
 const S={view:"me",periodId:null,my:undefined,all:{},roster:{},target:null,tab:"emp",names:{},ready:false,showLeave:false};
 const holMap=()=>Object.fromEntries(cfg.holidays.map(h=>[h.date,h.name]));
 const curPeriod=()=>cfg.periods.find(p=>p.id===S.periodId);
@@ -1339,6 +1340,7 @@ async function boot(){
   if(!db||!uid){render();return}
   S.view=isAdmin?"admin":"me";
   db.doc("config/main").onSnapshot(s=>{
+    OT_CLOSED=!!(s.exists&&s.data().otClosed);
     if(s.exists){const d=structuredClone(s.data());cfg={settings:{...DEFAULT_CFG.settings,...(d.settings||{})},periods:d.periods||DEFAULT_CFG.periods,holidays:d.holidays||DEFAULT_CFG.holidays}}
     if(!cfg.periods.find(p=>p.id===S.periodId))S.periodId=cfg.periods[cfg.periods.length-1].id;
     if(S.my!==undefined&&usable())render();
@@ -1486,7 +1488,7 @@ function bindForm(it){
   $("#fbr").onclick=e=>{const b=e.target.closest("button");if(!b)return;$("#fbr").querySelectorAll("button").forEach(x=>{const on=x===b;x.classList.toggle("on",on);x.setAttribute("aria-pressed",on)});mTouched=false;recalc()};
   recalc();
   if(it)$("#fc").onclick=()=>{S.edit=null;render()};
-  $("#fo").onclick=async()=>{
+  $("#fo").onclick=async()=>{if(OT_CLOSED){toast("시간외 신청이 마감되었어요",true);return}
     const d=$("#fd").value,s=tv("#fs"),e=tv("#fe"),w=$("#fw").value.trim(),be=k==="평일"?(tv("#fb")||"18:00"):"",m=$("#fm").value===""?autoMin(k,s,e,be,$("#fr")?.value,brkOf()):Math.round(+$("#fm").value);
     const r=k==="휴일"?$("#fr").value.trim():(be!=="18:00"?`${hm(be)}~${hm(e)}`:"");
     if(!d)return toast("일자를 골라 주세요",true);
@@ -1512,10 +1514,10 @@ function renderMe(){
   const edit=S.edit&&list.find(x=>x.id===S.edit);
   const wait=list.filter(x=>Date.now()-(x.ts||0)<864e5),done=[];
   app().innerHTML=shell(`<div class="head"><div><h1>${esc(S.mine.name)} · 시간외근무 신청</h1></div></div>
-  ${formHtml(edit)}
-  <div class="card"><h3>신청내역 <span class="chip pri">${wait.length}</span></h3><div class="list">${wait.map(x=>itemRow(x,true)).join("")||`<div class="empty">아직 없어요</div>`}</div></div>
-  ${done.length?`<div class="card"><h3>마감</h3><div class="list">${done.map(x=>itemRow(x,true)).join("")}</div>${!S.showDone&&list.filter(x=>x.st==="done").length>5?`<button class="ol" id="more">더 보기</button>`:""}</div>`:""}`);
-  bindForm(edit);
+  ${OT_CLOSED?'<div class="card"><div class="mute">시간외 신청이 마감되었어요. 새로 신청하거나 수정할 수 없어요.</div></div>':formHtml(edit)}
+  <div class="card"><h3>신청내역 <span class="chip pri">${wait.length}</span></h3><div class="list">${wait.map(x=>itemRow(x,!OT_CLOSED)).join("")||`<div class="empty">아직 없어요</div>`}</div></div>
+  ${done.length?`<div class="card"><h3>마감</h3><div class="list">${done.map(x=>itemRow(x,!OT_CLOSED)).join("")}</div>${!S.showDone&&list.filter(x=>x.st==="done").length>5?`<button class="ol" id="more">더 보기</button>`:""}</div>`:""}`);
+  if(!OT_CLOSED)bindForm(edit);
   const mo=$("#more");if(mo)mo.onclick=()=>{S.showDone=true;render()};
   app().querySelectorAll("[data-ed]").forEach(b=>b.onclick=()=>{S.edit=b.dataset.ed;render();scrollTo({top:0,behavior:"smooth"})});
   app().querySelectorAll("[data-del]").forEach(b=>b.onclick=async()=>{
@@ -1549,7 +1551,7 @@ function renderAdmin(){
   const groups={};for(const x of done)(groups[x.dt||"(제목 없음)"]??=[]).push(x);
   const gl=Object.entries(groups).sort((a,b)=>Math.max(...b[1].map(x=>x.da||0))-Math.max(...a[1].map(x=>x.da||0))).slice(0,S.showDone?100:6);
   const cnt=d=>pend.filter(x=>x.d===d).length;
-  app().innerHTML=shell(`<div class="head"><div><h1>시간외 신청현황</h1><p>기안 올리기 전 ${all.length}건</p></div><span class="sp"></span><label class="tgl"><input type="checkbox" role="switch" id="allp" ${S.allOn?"checked":""}><span class="trk"><span class="knob"></span></span><span class="tl">전체 보기</span></label></div>
+  app().innerHTML=shell(`<div class="head"><div><h1>시간외 신청현황</h1><p>기안 올리기 전 ${all.length}건</p></div><span class="sp"></span><label class="tgl"><input type="checkbox" role="switch" id="otc" ${OT_CLOSED?"checked":""}><span class="trk"><span class="knob"></span></span><span class="tl">마감</span></label><label class="tgl"><input type="checkbox" role="switch" id="allp" ${S.allOn?"checked":""}><span class="trk"><span class="knob"></span></span><span class="tl">전체 보기</span></label></div>
   <div class="card">${!all.length?`<div class="empty">기안할 신청이 없어요</div>`:`
   <div class="pick" style="margin-top:10px"><input type="date" id="af" value="${S.from}"><span class="mute">~</span><input type="date" id="at" value="${S.to}"></div>
   <div class="ttl"><span class="tt" id="tt">${esc(title)}</span></div>
@@ -1567,7 +1569,7 @@ function renderAdmin(){
     render();
   });
   const af=$("#af"),at=$("#at");
-  const allp=$("#allp");if(allp)allp.onchange=()=>{S.allOn=allp.checked;if(!S.allOn){S.from=S.to=null}render()};
+  const otc=$("#otc");if(otc)otc.onchange=async()=>{const v=otc.checked;try{await db.doc("config/main").update({otClosed:v});OT_CLOSED=v;toast(v?"시간외 신청을 마감했어요":"마감을 풀었어요");render()}catch{otc.checked=!v;toast("저장하지 못했어요",true)}};const allp=$("#allp");if(allp)allp.onchange=()=>{S.allOn=allp.checked;if(!S.allOn){S.from=S.to=null}render()};
   if(af){af.onchange=()=>{S.allOn=false;if(af.value){S.from=af.value;const we=wkend(af.value);if(we)[S.from,S.to]=we;else if(S.to<S.from||wkend(S.to))S.to=S.from;render()}};at.onchange=()=>{S.allOn=false;if(at.value){S.to=at.value;if(S.to<S.from)S.from=S.to;render()}}}
   const cp=$("#cp");if(cp)cp.onclick=()=>copyTable(rows);
   const xl=$("#xl");if(xl)xl.onclick=()=>downloadXlsx(rows,title);
