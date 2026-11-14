@@ -287,14 +287,15 @@ textarea{width:100%}
 .of{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px 14px}
 .of label{display:block;font-size:13px;font-weight:700;color:var(--muted);margin-bottom:5px}
 .of input,.of select{width:100%;font-size:16px}
-.of .w2{grid-column:span 2}.of .w4{grid-column:1/-1}
+.of .w2{grid-column:span 2}.of .w2:has(#fbk:empty){display:none}.of .w4{grid-column:1/-1}
 .of>div{min-width:0}.of input{min-width:0;width:100%;max-width:100%;box-sizing:border-box}
 .of .kind{display:flex;gap:6px}
 .of .kind button{flex:1;padding:9px 0;border-radius:12px;border:1px solid var(--line);background:var(--surface);font-weight:700;color:var(--muted);cursor:pointer}
 .of .kind button.on{background:var(--accent-soft);border-color:var(--accent);color:var(--accent-ink)}
 .of .kind button.on.hd{background:var(--warn-soft);border-color:var(--warn-line);color:var(--warn)}
 .of input.tm{font-variant-numeric:tabular-nums;font-weight:600}.of input::placeholder{color:var(--muted);opacity:.55;font-weight:400}
-.min{display:flex;align-items:center;gap:6px}.min input{text-align:right;font-weight:700}.min span{color:var(--muted);font-weight:600;white-space:nowrap}
+.min{display:flex;align-items:center;gap:6px}.min input{text-align:right;font-weight:700;flex:1;width:auto;min-width:0}.min span{color:var(--muted);font-weight:600;white-space:nowrap}
+@media (max-width:699px){.noph{display:none!important}}
 .fbar{grid-column:1/-1;display:flex;gap:10px;align-items:center;justify-content:flex-end;flex-wrap:wrap}
 @media(max-width:700px){.of{grid-template-columns:repeat(2,minmax(0,1fr))}.of .w2{grid-column:1/-1}.fbar .btn{flex:1}}
 .list{display:flex;flex-direction:column}
@@ -851,7 +852,7 @@ function renderSheetPage(target,mode){
   ${canWrite===false?`<div class="notice">지금은 보기만 할 수 있어요. 입력하려면 담당자에게 작성 권한을 요청하세요.</div>`:p.locked?`<div class="notice">🔒 마감된 기간이에요.${T.ro?" 고칠 내용이 있으면 담당자에게 알려 주세요.":" 관리자는 수정할 수 있어요."}</div>`:""}
   <div class="card sumx" id="sum"></div>
   <div class="card calcard">
-    <div class="calhead"><span class="mute small">기본은 <b>시간</b>, 시간외는 <b>분</b>으로 입력 · 자동 저장</span><span class="sp"></span><span class="save" id="saved"></span><span class="xo"><button class="xin" id="gotoday">오늘</button><button class="xin" id="sv">저장</button><details class="moredet"><summary class="xin">더보기</summary><span class="mdbox"><button class="xin" data-ex="xlsx">엑셀 저장</button><button class="xin" data-ex="pdf">PDF</button><button class="xin" data-ex="print">인쇄</button>${T.ro?"":`<button class="xin" id="xin">엑셀 불러오기</button><input type="file" id="xfile" accept=".xlsx,.xls" hidden>`}</span></details></span></div>
+    <div class="calhead"><span class="mute small">기본은 <b>시간</b>, 시간외는 <b>분</b>으로 입력 · 자동 저장</span><span class="sp"></span><span class="save" id="saved"></span><span class="xo"><button class="xin" id="gotoday">오늘</button><button class="xin" id="sv">저장</button><details class="moredet"><summary class="xin">더보기</summary><span class="mdbox"><button class="xin" data-ex="xlsx">엑셀 저장</button><button class="xin" data-ex="pdf">PDF</button><button class="xin noph" data-ex="print">인쇄</button>${T.ro?"":`<button class="xin" id="xin">엑셀 불러오기</button><input type="file" id="xfile" accept=".xlsx,.xls" hidden>`}</span></details></span></div>
     <div class="tw"><table class="xl" id="cal"><thead><tr><th class="wk">주차</th><th class="gb">구분</th>${DOW.map((d,i)=>`<th class="${i===0?"hol":i===6?"sat":""}">${d}</th>`).join("")}<th class="tot">합계</th></tr></thead>
     ${Array.from({length:p.weeks},(_,w)=>foldRow(w)+weekBlock(w)+monthRow(w)).join("")}</table></div>
   </div>`,mode==="admin"?"admin":"me");
@@ -1481,8 +1482,8 @@ function formHtml(it){
   <div class="hd-only" ${k==="휴일"?"":"hidden"}><label for="fr">기본근무 구간(사용 시)</label><input id="fr" value="${esc(k==="휴일"?v.r:"")}" placeholder="예: 9:00~15:00"></div><div class="hd-only" ${k==="휴일"?"":"hidden"}><label for="fov">시간외 구간</label><input id="fov" value="${esc(k==="휴일"?(v.o||""):"")}" placeholder="예: 15:00~19:00"></div>
   <div class="wd-only" ${k==="휴일"?"hidden":""}><label for="fe">퇴근시간 <span style="font-weight:600;color:var(--muted)">시간외 끝</span></label><input class="tm" id="fe" inputmode="numeric" autocomplete="off" placeholder="22:00" maxlength="8" value="${esc(v.e)}"></div>
   <div><label for="fm">시간외 (분) <span style="font-weight:600;color:var(--accent-ink)">자동 계산</span></label><div class="min"><input type="number" id="fm" readonly inputmode="numeric" min="0" step="10" value="${esc(v.m)}"><span>분</span></div></div>
-  <div class="w2" style="margin-top:-6px"><span id="fbk" style="font-size:12px;color:var(--muted)"></span> <span class="bk" id="fbr" hidden role="group" aria-label="휴게 공제 위치"><button type="button" data-v="ot" class="on" aria-pressed="true">초과에서</button><button type="button" data-v="base" aria-pressed="false">기본에서</button></span></div>
   <div class="w2"><label for="fw">근무내역</label><input id="fw" value="${esc(v.w)}" placeholder="예: 기획공연 준비"></div>
+  <div class="w2"><span id="fbk" style="font-size:12px;color:var(--muted)"></span> <span class="bk" id="fbr" hidden role="group" aria-label="휴게 공제 위치"><button type="button" data-v="ot" class="on" aria-pressed="true">초과에서</button><button type="button" data-v="base" aria-pressed="false">기본에서</button></span></div>
   <div class="fbar">${it?`<button class="btn ghost" id="fc">취소</button>`:""}<button class="btn" id="fo">${it?"수정":"신청"}</button></div>
   </div></div>`;
 }
