@@ -1406,7 +1406,7 @@ function hhmm(x){return String(Math.floor(x/60)).padStart(2,"0")+":"+String(x%60
 function splitDay(k,a,b,be,fr,brk){
   // 기본/시간외 나누기 (순서 무관). 휴게는 총 근무 기준으로 정하고, 고른 쪽에서 먼저 뺀다
   const tot=b-a,d=tot>=510?60:tot>240?30:0;
-  if(k==="평일"){const ye=toMin("18:00");return{base:Math.max(0,Math.min(b,ye)-a),ot:Math.max(0,b-Math.max(a,ye)),brk:0}}
+  if(k==="평일"){const ye=toMin(be||"18:00");return{base:Math.max(0,Math.min(b,ye)-a),ot:Math.max(0,b-Math.max(a,ye)),brk:0}}
   let B=0;const w=winOf(fr);if(w)B=Math.max(0,Math.min(b,w.we)-Math.max(a,w.ws));
   let O=tot-B,left=d;
   if(brk==="base"){const t=Math.min(B,left);B-=t;left-=t;O-=Math.min(O,left)}
@@ -1477,7 +1477,7 @@ function formHtml(it){
   <div><label for="fd">일자</label><input type="date" id="fd" value="${esc(v.d)}"></div>
   <div><label>구분</label><div class="kind" id="fk">${["평일","휴일"].map(x=>`<button type="button" data-k="${x}" class="${x===k?"on":""} ${x==="휴일"?"hd":""}">${x}(<span class="dw">${DOW[pd(v.d).getUTCDay()]}</span>)</button>`).join("")}</div></div>
   <div><label for="fs">출근시간</label><input class="tm" id="fs" inputmode="numeric" autocomplete="off" placeholder="09:00" maxlength="8" value="${esc(v.s)}"></div>
-  <div class="wd-only" ${k==="휴일"?"hidden":""}><label for="fb">기본근무 끝</label><input class="tm" id="fb" readonly inputmode="numeric" autocomplete="off" placeholder="18:00" maxlength="8" value="${esc(v.b||"18:00")}"></div>
+  <div class="wd-only" ${k==="휴일"?"hidden":""}><label for="fb">기본근무 끝 <span style="font-weight:600;color:var(--muted)">탄력 근무, 기본은 18:00</span></label><input class="tm" id="fb" inputmode="numeric" autocomplete="off" placeholder="18:00" maxlength="8" value="${esc(v.b||"18:00")}"></div>
   <div class="hd-only" ${k==="휴일"?"":"hidden"}><label for="fr">기본근무 구간 <span style="font-weight:600;color:var(--muted)">비우면 전부 시간외</span></label><input id="fr" value="${esc(k==="휴일"?v.r:"")}" placeholder="예: 9:00~18:00"></div>
   <div><label for="fe">퇴근시간</label><input class="tm" id="fe" inputmode="numeric" autocomplete="off" placeholder="22:00" maxlength="8" value="${esc(v.e)}"></div>
   <div><label for="fm">시간외 (분) <span style="font-weight:600;color:var(--accent-ink)">자동 계산</span></label><div class="min"><input type="number" id="fm" readonly inputmode="numeric" min="0" step="10" value="${esc(v.m)}"><span>분</span></div></div>
