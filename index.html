@@ -1273,10 +1273,15 @@ async function csv(name,rows){
 
 /* ===== 관리자: 관리 ===== */
 async function saveCfg(){try{await db.doc("config/main").set(cfg);toast("저장했어요");return true}catch(e){toast("저장하지 못했어요",true);return false}}
+function actualBody(){return `<div class="card"><h3>실제 시간외 올리기</h3><p class="mute small">초과근무내역 엑셀을 고르면, 직원별 하반기 총시간과 7~11월 실제 시간외를 저장해요. 직원은 '+' 패널에서 본인 잔여만 봐요.</p><div class="form"><label>엑셀 파일<input type="file" id="actf" accept=".xlsx,.xls"></label></div><div id="actmsg" class="mute small" style="margin-top:10px"></div></div>`}
+let __xl=null;
+const loadXL=()=>__xl?Promise.resolve(__xl):new Promise((res,rej)=>{const s=document.createElement("script");s.src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js";s.onload=()=>res(__xl=window.XLSX);s.onerror=()=>rej(new Error("xlsx"));document.head.append(s)});
+function parseActual(XL,wb){const ws=wb.Sheets[wb.SheetNames[0]];const rows=XL.utils.sheet_to_json(ws,{header:1,defval:null});const out=[];for(const r of rows){const nm=typeof r[2]==="string"?r[2].trim():"";if(!/^[가-힣]{2,4}$/.test(nm)||!/급$/.test(String(r[1]||"")))continue;const h={};[[7,22],[8,23],[9,24],[10,25]].forEach(([m,c])=>{h[m]=+r[c]||0});h[11]=+r[4]||0;out.push({name:nm,total:+r[21]||0,h})}return out}
+function bindActual(){const f=$("#actf");if(!f)return;f.onchange=async()=>{const file=f.files[0];if(!file)return;const msg=$("#actmsg");msg.textContent="읽는 중이에요…";try{const XL=await loadXL();const wb=XL.read(await file.arrayBuffer(),{type:"array"});const list=parseActual(XL,wb);const byName={};for(const [id,r] of Object.entries(S.roster||{}))if(r&&r.name)byName[r.name]=id;let ok=0;const miss=[];for(const it of list){const id=byName[it.name];if(!id){miss.push(it.name);continue}await DA.post({action:"set",key:"actual/"+id,value:JSON.stringify({name:it.name,total:it.total,h:it.h})});ok++}msg.textContent=`${ok}명 저장했어요${miss.length?` · 명단에 없는 이름: ${miss.join(", ")}`:""}`;toast("실제 시간외를 저장했어요")}catch(e){msg.textContent="저장하지 못했어요. 파일을 다시 확인해 주세요"}}}
 function renderManage(){
   if(window.__loadAdminFlex)window.__loadAdminFlex();
   const tab=S.tab,st=cfg.settings;
-  const tabs=[["emp","직원 명단"],["period","단위기간"],["hol","공휴일"],["set","기준 설정"]];
+  const tabs=[["emp","직원 명단"],["period","단위기간"],["hol","공휴일"],["actual","실제 시간외"],["set","기준 설정"]];
   let body="";
   const linked={};for(const[u,d]of Object.entries(S.all))if(d&&d.emp)(linked[d.emp.id]??=[]).push(u);
   if(tab==="emp"){
@@ -1306,8 +1311,10 @@ function renderManage(){
     <div class="tw"><table class="t" id="lt"><tr><th>이름</th><th>간주시간(h)</th><th>기본근무 자동입력(h)</th></tr>${st.leave_types.map(l=>`<tr><td><input value="${esc(l.name)}"></td><td><input type="number" step="0.5" value="${l.credit}" style="width:90px"></td><td><input type="number" step="0.5" value="${l.base??""}" style="width:90px"></td></tr>`).join("")}
     ${[0,1].map(()=>`<tr><td><input placeholder="추가"></td><td><input type="number" step="0.5" style="width:90px"></td><td><input type="number" step="0.5" style="width:90px"></td></tr>`).join("")}</table></div></div><button class="btn" id="ssave">설정 저장</button>`;
   }
+  if(tab==="actual")body=actualBody();
   app().innerHTML=shell(`<div class="head"><div><h1>관리</h1><p>직원 · 단위기간 · 공휴일 · 기준</p></div></div><div class="tabs">${tabs.map(([k,l])=>`<button data-tab="${k}" class="${k===tab?"on":""}">${l}</button>`).join("")}</div>${body}`,"manage");
   app().querySelectorAll("[data-tab]").forEach(b=>b.onclick=()=>{S.tab=b.dataset.tab;renderManage()});
+  if(tab==="actual")bindActual();
   const g=id=>$("#"+id)?.value;
   const idOk=s=>/^[A-Za-z0-9_\-.~:@+]{1,40}$/.test(s);
   if(tab==="emp"){
@@ -1683,7 +1690,7 @@ boot();OT.start();
   const b=document.createElement("button");b.className="fab";b.setAttribute("aria-label","바로가기 열기");
   b.innerHTML='<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>';
   const p=document.createElement("div");p.className="fab-p";
-  p.innerHTML='<button class="q" data-go="flex">'+NIC.cal+'탄력근무표</button><button class="q" data-go="ot">'+NIC.clock+'시간외 신청</button><div class="fab-t"></div><label class="pin"><input type="checkbox" id="fabpin"> 고정</label>';
+  p.innerHTML='<button class="q" data-go="flex">'+NIC.cal+'탄력근무표</button><button class="q" data-go="ot">'+NIC.clock+'시간외 신청</button><div class="fab-t"></div><div class="fab-r"></div><label class="pin"><input type="checkbox" id="fabpin"> 고정</label>';
   document.body.append(p,b);
   const pin=p.querySelector("#fabpin");pin.checked=pinned;
   const esc2=t=>String(t==null?"":t).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
@@ -1694,7 +1701,8 @@ boot();OT.start();
     const max=Math.max(...rows.map(r=>r[1]),60),W=236,H=92,bw=Math.max(8,Math.min(28,(W-8)/rows.length-6));
     const bars=rows.map((r,k)=>{const h=Math.max(4,Math.round(r[1]/max*(H-22))),x=4+k*((W-8)/rows.length),y=H-18-h;return `<rect x="${x.toFixed(1)}" y="${y}" width="${bw.toFixed(1)}" height="${h}" rx="5" fill="var(--accent)" class="fab-bar" style="animation-delay:${Math.min(k*20,300)}ms"><title>${esc2(r[0].slice(5))} ${(r[1]/60).toFixed(1)}h</title></rect><text x="${(x+bw/2).toFixed(1)}" y="${H-4}" text-anchor="middle" font-size="10" fill="var(--muted)">${esc2(r[0].slice(8))}</text>`}).join("");
     box.innerHTML=`<div class="fab-big"><b>${(tot/60).toFixed(1)}</b><span>시간</span></div><div class="fab-sub">어제까지 시간외 · ${rows.length}일</div><svg viewBox="0 0 ${W} ${H}" width="100%" role="img" aria-label="날짜별 시간외 막대그래프">${bars}</svg>`;};
-  const show=on=>{p.classList.toggle("on",on);if(on)drawT()};
+  const drawR=async()=>{const box=p.querySelector(".fab-r");const uid=LS.g("dsac_uid");if(!box||!uid)return;try{const v=await DA.get("actual/"+uid);if(!v){box.innerHTML='<div class="fab-e">하반기 실제 시간외 기록이 아직 없어요</div>';return}const d=typeof v==="string"?JSON.parse(v):v;const H=d.h||{};const ms=Object.keys(H).map(Number).sort((a,b)=>a-b);const used=ms.reduce((a,m)=>a+(+H[m]||0),0);const tot=+d.total||0;const rem=tot-used;const W=236,HH=92,max=Math.max(...ms.map(m=>+H[m]||0),10),bw=Math.max(14,Math.min(28,(W-8)/Math.max(ms.length,1)-8));const bars=ms.map((m,k)=>{const val=+H[m]||0,h=Math.max(4,Math.round(val/max*(HH-22))),x=4+k*((W-8)/ms.length),y=HH-18-h;return `<rect x="${x.toFixed(1)}" y="${y}" width="${bw.toFixed(1)}" height="${h}" rx="5" fill="var(--accent)" class="fab-bar"><title>${m}월 ${val}h</title></rect><text x="${(x+bw/2).toFixed(1)}" y="${HH-4}" text-anchor="middle" font-size="10" fill="var(--muted)">${m}월</text>`}).join("");box.innerHTML=`<div class="fab-big"><b>${rem}</b><span>시간 잔여</span></div><div class="fab-sub">하반기 ${tot}시간 중 ${used}시간 사용</div><svg viewBox="0 0 ${W} ${HH}" width="100%" role="img" aria-label="월별 실제 시간외">${bars}</svg>`}catch(e){box.innerHTML=""}};
+  const show=on=>{p.classList.toggle("on",on);if(on){drawT();drawR()}};
   show(pinned);
   b.onclick=()=>show(!p.classList.contains("on"));
   pin.onchange=()=>{try{localStorage.setItem("dsac_fab_pin",pin.checked?"1":"0")}catch(e){}};

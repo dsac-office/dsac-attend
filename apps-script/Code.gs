@@ -68,7 +68,7 @@ function isMine_(key, as) {
 function canRead_(key, admin, as) {
   if (admin) return true;
   if (key === 'config/main' || String(key).indexOf('roster/') === 0) return true;
-  return isMine_(key, as);
+  return isMine_(key, as) || key === 'actual/' + as;
 }
 
 function read_(p, admin, as) {
