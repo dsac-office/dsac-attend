@@ -287,7 +287,7 @@ textarea{width:100%}
 .of{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px 14px}
 .of label{display:block;font-size:13px;font-weight:700;color:var(--muted);margin-bottom:5px}
 .of input,.of select{width:100%;font-size:16px}
-.of .w2{grid-column:span 2}.of .w2:has(#fbk:empty){display:none}.of .w4{grid-column:1/-1}
+.of .w2{grid-column:span 2}.of .w4{grid-column:1/-1}
 .of>div{min-width:0}.of input{min-width:0;width:100%;max-width:100%;box-sizing:border-box}
 .of .kind{display:flex;gap:6px}
 .of .kind button{flex:1;padding:9px 0;border-radius:12px;border:1px solid var(--line);background:var(--surface);font-weight:700;color:var(--muted);cursor:pointer}
@@ -1487,7 +1487,7 @@ function formHtml(it){
   <div class="wd-only" ${k==="휴일"?"hidden":""}><label for="fe">퇴근시간</label><input class="tm" id="fe" inputmode="numeric" autocomplete="off" placeholder="22:00" maxlength="8" value="${esc(v.e)}"></div>
   <div><label for="fm">시간외 (분) <span style="font-weight:600;color:var(--accent-ink)">자동 계산</span></label><div class="min"><input type="number" id="fm" readonly inputmode="numeric" min="0" step="10" value="${esc(v.m)}"><span>분</span></div></div>
   <div class="w2"><label for="fw">근무내역</label><input id="fw" value="${esc(v.w)}" placeholder="예: 기획공연 준비"></div>
-  <div class="w2"><span id="fbk" style="font-size:12px;color:var(--muted)"></span> <span class="bk" id="fbr" hidden role="group" aria-label="휴게 공제 위치"><button type="button" data-v="ot" class="on" aria-pressed="true">초과에서</button><button type="button" data-v="base" aria-pressed="false">기본에서</button></span></div>
+  <div class="w2 hd-only" ${k==="휴일"?"":"hidden"}><label>휴게시간 차감</label><span class="bk" id="fbr" role="group" aria-label="휴게 공제 위치"><button type="button" data-v="ot" class="on" aria-pressed="true">초과에서</button><button type="button" data-v="base" aria-pressed="false">기본에서</button></span><span id="fbk" style="display:block;font-size:12px;color:var(--muted);margin-top:6px"></span></div>
   <div class="fbar">${it?`<button class="btn ghost" id="fc">취소</button>`:""}<button class="btn" id="fo">${it?"수정":"신청"}</button></div>
   </div></div>`;
 }
@@ -1499,7 +1499,7 @@ function bindForm(it){
   let hm=it?(it.hm||(it.r?"split":"all")):"split";
   const applyHM=()=>{const fr=$("#fr"),fo=$("#fov"),fs=$("#fs");if(!fr||!fo||!fs)return;const frw=fr.closest(".hd-only"),fow=fo.closest(".hd-only"),sw=fs.closest("div");const lb=fow.querySelector("label");$("#fhm")?.querySelectorAll("button").forEach(b=>b.classList.toggle("on",b.dataset.m===hm));const all=hm==="all";sw.hidden=k==="휴일"?!all:false;frw.hidden=all||k!=="휴일";if(all){fr.value="";lb.textContent="퇴근시간"}else{lb.textContent="시간외 구간"}recalc()};
   const foVal=()=>{const t=($("#fov")?.value||"").trim();const st=normT(tv("#fs")||"")||"";if(/^\d{1,2}(:\d{2})?$/.test(t))return st+"~"+normT(t);return t.startsWith("~")?(st+t):t};
-  const updBk=()=>{const el=$("#fbk"),sel=$("#fbr");if(!el)return;const a=toMin(tv("#fs")),e2=toMin(tv("#fe"));const fr_=$("#fr")?.value||"",fo_=foVal();if(k==="평일"&&(a==null||e2==null)){el.textContent="";return}const r=splitDay(k,a,e2,tv("#fb"),fr_,brkOf(),fo_);if(sel)sel.hidden=!(k==="휴일"&&r.brk>0);if(k!=="휴일"||!r.brk){el.textContent="";return}const hm2=x=>`${Math.floor(x/60)}시간${x%60}분`;el.textContent=`휴게 ${r.brk}분 · 기본 ${hm2(r.base)} + 시간외 ${hm2(r.ot)} = 총 ${hm2(r.base+r.ot)}`};
+  const updBk=()=>{const el=$("#fbk"),sel=$("#fbr");if(!el)return;const a=toMin(tv("#fs")),e2=toMin(tv("#fe"));const fr_=$("#fr")?.value||"",fo_=foVal();if(k==="평일"&&(a==null||e2==null)){el.textContent="";return}const r=splitDay(k,a,e2,tv("#fb"),fr_,brkOf(),fo_);if(sel)sel.hidden=false;if(k!=="휴일"||!r.brk){el.textContent="";return}const hm2=x=>`${Math.floor(x/60)}시간${x%60}분`;el.textContent=`휴게 ${r.brk}분 · 기본 ${hm2(r.base)} + 시간외 ${hm2(r.ot)} = 총 ${hm2(r.base+r.ot)}`};
   const recalc=()=>{const fr_=$("#fr")?.value||"",fo_=foVal();if(k==="휴일")$("#fe").value=holEnd(fr_,fo_);const e_=tv("#fe");if(!mTouched)$("#fm").value=(e_||k==="휴일")?autoMin(k,tv("#fs"),e_,tv("#fb"),fr_,brkOf(),fo_):"";updBk()};
   $("#fhm").onclick=e=>{const b=e.target.closest("button");if(b){hm=b.dataset.m;applyHM()}};
   $("#fk").onclick=e=>{const b=e.target.closest("button");if(b)setK(b.dataset.k)};
