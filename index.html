@@ -840,13 +840,15 @@ function renderClaim(){
     const id=$("#cid").value.trim(),nm=$("#cnm").value.trim();
     if(!id||!nm)return $("#cerr").textContent="사번과 이름을 모두 입력해 주세요";
     try{
-      const r=await db.doc("roster/"+id).get();
-      const d=r.exists?structuredClone(r.data()):null;
+      const r0=await DA.get("roster/"+id).catch(()=>null);
+      const d=r0?structuredClone(r0):null;
       if(!d||d.active===false||String(d.name).replace(/\s/g,"")!==nm.replace(/\s/g,""))return $("#cerr").textContent="등록된 정보와 맞지 않아요. 사번과 이름을 다시 확인해 주세요. 계속 안 되면 담당자에게 문의하세요.";
-      await db.doc("sheets/"+uid).set({emp:{id,name:d.name,team:d.team||""},p:{}});
+      await DA.post({action:"set",key:"sheets/"+uid,value:JSON.stringify({emp:{id,name:d.name,team:d.team||""},p:{}})});
     }catch(e){$("#cerr").textContent="저장하지 못했어요. 링크 공유 설정(작성 권한)을 확인해 주세요."}
   };
   $("#cgo").onclick=go;$("#cnm").onkeydown=e=>e.key==="Enter"&&go();
+  // 로그인할 때 적은 사번·이름을 그대로 쓰고, 칸 입력은 다시 받지 않아요
+  const ln=LS.g("dsac_name")||"",lid=LS.g("dsac_uid")||"";if(lid&&ln){$("#cid").value=lid;$("#cnm").value=ln;go()}
 }
 
 /* ===== 근무표 (엑셀 근무계획표와 같은 줄 구성) ===== */
@@ -1535,12 +1537,14 @@ async function renderName(){
   <button class="btn" id="go">시작하기</button><div class="err" id="er"></div></div></div>`;
   const go=async()=>{
     const n=$("#nm").value.trim();if(!n)return $("#er").textContent="이름을 입력해 주세요";
-    try{if(S.mine)await db.doc("ot/"+uid).update({name:n});else await db.doc("ot/"+uid).set({name:n,items:{}});}
+    try{const cur=S.mine||{items:{}};await DA.post({action:"set",key:"ot/"+uid,value:JSON.stringify({...cur,name:n,items:cur.items||{}})});}
     catch{$("#er").textContent="저장하지 못했어요. 링크 공유 설정(작성 권한)을 확인해 주세요.";return}
     if(document.activeElement&&document.activeElement.blur)document.activeElement.blur();
     setTimeout(()=>render(true),60);
   };
-  $("#go").onclick=go;$("#nm").onkeydown=e=>e.key==="Enter"&&go();$("#nm").focus();
+  $("#go").onclick=go;$("#nm").onkeydown=e=>e.key==="Enter"&&go();
+  // 로그인할 때 적은 이름을 그대로 쓰고, 칸 입력은 다시 받지 않아요
+  const ln2=LS.g("dsac_name")||"";if(ln2){$("#nm").value=ln2;go()}else $("#nm").focus();
 }
 
 /* 직원: 신청하기 */
