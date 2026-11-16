@@ -1626,7 +1626,7 @@ function renderAdmin(){
   <div class="pick" style="margin-top:10px"><input type="date" id="af" value="${S.from}"><span class="mute">~</span><input type="date" id="at" value="${S.to}"></div>
   <div class="ttl"><span class="tt" id="tt">${esc(title)}</span></div>
   <div class="otw"><table class="gi"><thead><tr><th>연번</th><th>일 자</th><th>구 분</th><th>성 명</th><th>출근시간</th><th>퇴근시간</th><th>수당시간</th><th>근무내역</th></tr></thead><tbody>
-  ${rows.map((x,i)=>`<tr><td>${i+1}</td><td>${kdate(x.d)}</td><td>${kindLabel(x)}</td><td>${esc(x.name)}</td><td>${hm(x.s)}</td><td>${hm(x.e)}</td><td>${x.m}${x.r?`<small>(${esc(x.r)})</small>`:""}</td><td class="wk">${esc(x.w)}</td></tr>`).join("")||`<tr><td colspan="8" class="mute">이 기간에 신청이 없어요</td></tr>`}
+  ${rows.map((x,i)=>`<tr><td>${i+1}</td><td>${kdate(x.d)}</td><td>${kindLabel(x)}</td><td>${esc(x.name)}</td><td>${rangeParts(x)[0]}</td><td>${rangeParts(x)[1]}</td><td>${x.m}${paren(x)?`<small>(${esc(paren(x))})</small>`:""}</td><td class="wk">${esc(x.w)}</td></tr>`).join("")||`<tr><td colspan="8" class="mute">이 기간에 신청이 없어요</td></tr>`}
   </tbody></table></div>
   ${rows.length?`<div class="acts"><button class="btn" id="cp">표 복사</button><button class="btn ghost" id="xl">엑셀 받기</button><span class="sp"></span></div>`:""}`}
   </div>
@@ -1668,7 +1668,7 @@ async function copyTable(rows){
 async function downloadXlsx(rows,title){
   if(!window.XLSX)return toast("엑셀 기능을 불러오지 못했어요",true);
   if(!dl)return toast("이 화면에서는 파일을 받을 수 없어요",true);
-  const aoa=[[],[null,"순번","일 자","구 분","성 명","출근시간","퇴근시간","수당시간","근무내역","비 고"],...rows.map((x,i)=>[null,i+1,kdate(x.d),kindLabel(x),x.name,hm(x.s),hm(x.e),x.m,x.w,x.r?`(${x.r})`:""])];
+  const aoa=[[],[null,"순번","일 자","구 분","성 명","출근시간","퇴근시간","수당시간","근무내역","비 고"],...rows.map((x,i)=>[null,i+1,kdate(x.d),kindLabel(x),x.name,rangeParts(x)[0],rangeParts(x)[1],x.m,x.w,paren(x)?`(${paren(x)})`:""])];
   const ws=XLSX.utils.aoa_to_sheet(aoa);ws["!cols"]=[{wch:2},{wch:6},{wch:9},{wch:10},{wch:9},{wch:9},{wch:9},{wch:9},{wch:40},{wch:16}];
   const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,"양식변경");
   const data=XLSX.write(wb,{type:"array",bookType:"xlsx"});
