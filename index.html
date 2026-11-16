@@ -1553,7 +1553,7 @@ function bindForm(it){
     if(!w)return toast("근무내역을 적어 주세요",true);
     const id=it?it.id:Date.now().toString(36)+Math.random().toString(36).slice(2,6);
     const hw=winOf(hm==="all"?foVal():(winOf($("#fr").value)?$("#fr").value:foVal()));const sHol=hw?hhmm(hw.ws):"";
-    const rec={d,k,s:k==="휴일"?sHol:s,e,b:be,m,r,hm:k==="휴일"?hm:"",o:k==="휴일"?foVal():"",w,st:it&&it.st||"",ts:it&&it.ts||Date.now()};
+    const ow=k==="휴일"?winOf(foVal()):null;const rec={d,k,s:k==="휴일"?(ow?hhmm(ow.ws):sHol):s,e:k==="휴일"&&ow?hhmm(ow.we):e,b:be,m,r,hm:k==="휴일"?hm:"",o:k==="휴일"?foVal():"",w,st:it&&it.st||"",ts:it&&it.ts||Date.now()};
     busy($("#fo"),true);
     try{await db.doc("ot/"+uid).update({items:{[id]:rec}});S.edit=null;toast(it?"고쳤어요":"신청했어요");render()}
     catch{toast("저장하지 못했어요. 잠시 뒤 다시 시도해 주세요",true);busy($("#fo"),false)}
