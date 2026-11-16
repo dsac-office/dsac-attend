@@ -1296,7 +1296,7 @@ function parseActual(XL,wb){const ws=wb.Sheets[wb.SheetNames[0]];const rows=XL.u
 function bindActual(){const f=$("#actf");if(!f)return;f.onchange=async()=>{const file=f.files[0];if(!file)return;const msg=$("#actmsg");msg.textContent="읽는 중이에요…";try{const XL=await loadXL();const wb=XL.read(await file.arrayBuffer(),{type:"array"});const list=parseActual(XL,wb);const byName={};for(const [id,r] of Object.entries(S.roster||{}))if(r&&r.name)byName[r.name]=id;let ok=0;const miss=[];for(const it of list){const id=byName[it.name];if(!id){miss.push(it.name);continue}const c0=await DA.get("actual/"+id);const cur=typeof c0==="string"?JSON.parse(c0):(c0||{});await DA.post({action:"set",key:"actual/"+id,value:JSON.stringify({...cur,name:it.name,total:it.total,h:it.h,d:{...(cur.d||{}),...it.d}})});ok++}msg.textContent=`${ok}명 저장했어요${miss.length?` · 명단에 없는 이름: ${miss.join(", ")}`:""}`;toast("실제 시간외를 저장했어요")}catch(e){msg.textContent="저장하지 못했어요. 파일을 다시 확인해 주세요"}}}
 function renderManage(){
   if(window.__loadAdminFlex)window.__loadAdminFlex();
-  const tab=S.tab,st=cfg.settings;
+  const tab=S.tab||"actual",st=cfg.settings;
   const tabs=[["actual","초과근무내역"],["emp","직원 명단"],["period","단위기간"],["hol","공휴일"],["set","기준 설정"]];
   let body="";
   const linked={};for(const[u,d]of Object.entries(S.all))if(d&&d.emp)(linked[d.emp.id]??=[]).push(u);
