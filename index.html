@@ -768,6 +768,7 @@ function renderHome(){
     <div class="tiles">
       <button class="tile" data-mode="flex" data-mine><span class="ic">${ART.flex}</span><span class="tt"><b>Flex Schedule</b><small>탄력근무계획표</small></span></button>
       <button class="tile" data-mode="ot"><span class="ic">${ART.ot}</span><span class="tt"><b>Overtime</b><small>시간외근무 신청</small></span></button>
+      <button class="tile" data-inquiry><span class="ic"><svg viewBox="0 0 120 120" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 30h80v50H58L38 96V80H20z"/><path d="M42 50h36M42 62h24"/></svg></span><span class="tt"><b>Inquiry</b><small>문의·오류</small></span></button>
       <a class="tile" href="/guide.html"><span class="ic"><svg viewBox="0 0 120 120" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M24 26c18-6 36-6 36 8v60c0-14-18-14-36-8zM96 26c-18-6-36-6-36 8v60c0-14 18-14 36-8z"/></svg></span><span class="tt"><b>User Guide</b><small>이용 가이드</small></span></a>
       ${isAdmin?`<button class="tile adm" data-admin><span class="ic">${ART.adm}</span><span class="tt"><b>All Staff</b><small>전직원 탄력근무표</small></span></button>`:""}
       ${isAdmin?`<button class="tile adm" data-report><span class="ic"><svg viewBox="0 0 120 120" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="26" y="20" width="68" height="84" rx="10"/><path d="M44 16h32v12H44zM40 52h36M40 68h36M40 84h22"/></svg></span><span class="tt"><b>Overtime Log</b><small>초과근무내역 등록</small></span></button>`:""}
@@ -777,6 +778,7 @@ function renderHome(){
 document.addEventListener("click",e=>{
   const h=e.target.closest("[data-home]"),m=e.target.closest("[data-mode]"),ad=e.target.closest("[data-admin]"),mg=e.target.closest("[data-manage]");
   if(mg){MODE="flex";S.view="manage";S.tab="emp";S.target=null;render();scrollTo(0,0);return}
+  if(e.target.closest&&e.target.closest("[data-inquiry]")){MODE="flex";S.view="inquiry";S.target=null;render();scrollTo(0,0);return}
   if(e.target.closest&&e.target.closest("[data-report]")){MODE="flex";S.view="report";S.target=null;render();scrollTo(0,0);return}
   if(m&&m.dataset.mode==="flex"){S.view="me";S.target=null}
   if(m&&m.dataset.mode==="ot"&&OT.toMe)OT.toMe();
@@ -810,6 +812,7 @@ function renderInner(){
   if(S.view==="admin"&&isAdmin)return renderAdmin();
   if(S.view==="manage"&&isAdmin)return renderManage();
   if(S.view==="report"&&isAdmin)return renderReport();
+  if(S.view==="inquiry")return renderInquiry();
   if(S.view==="emp"&&isAdmin&&S.target)return renderSheetPage(S.target,"admin");
   S.view="me";
   if(S.my===undefined){app().innerHTML=shell(spinBlock(),"me");return}
@@ -1284,6 +1287,17 @@ async function csv(name,rows){
 
 /* ===== 관리자: 관리 ===== */
 async function saveCfg(){try{await db.doc("config/main").set(cfg);toast("저장했어요");return true}catch(e){toast("저장하지 못했어요",true);return false}}
+/* 문의·오류: 직원은 자기 글만, 관리자는 전체를 보고 완료 처리 */
+let INQ=null;
+function renderInquiry(){
+  if(!window.__inqOn){window.__inqOn=true;try{db.collection("inq").onSnapshot(s=>{INQ=s.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>(b.ts||0)-(a.ts||0));if(S.view==="inquiry")render()})}catch(e){}}
+  const all=INQ||[],list=isAdmin?all:all.filter(x=>x.uid===uid);
+  app().innerHTML=shell(`<div class="head"><div><h1>문의·오류</h1><p>불편한 점이나 궁금한 점을 남겨 주세요</p></div></div>
+  <div class="card"><textarea id="inqt" rows="4" aria-label="문의 내용" placeholder="어떤 점이 불편한지 적어 주세요" style="width:100%"></textarea><div class="row" style="justify-content:flex-end;margin-top:8px"><button class="btn" id="inqs">보내기</button></div></div>
+  <div class="card"><h3>${isAdmin?"전체 문의":"내 문의"} <span class="chip pri">${list.length}</span></h3><div class="list">${list.map(x=>`<div class="it"><div class="d">${esc(x.name||"")}<small>${new Date(x.ts||0).toLocaleDateString("ko-KR")}</small></div><div class="t"><div${x.done?' style="text-decoration:line-through;color:var(--muted)"':""}>${esc(x.text||"")}</div>${isAdmin?`<button class="ol" data-inqdone="${esc(x.id)}">${x.done?"완료 취소":"완료"}</button>`:""}</div></div>`).join("")||'<div class="empty">아직 문의가 없어요</div>'}</div></div>`,"report");
+  $("#inqs").onclick=async()=>{const t=$("#inqt").value.trim();if(!t)return toast("내용을 적어 주세요",true);try{await db.doc("inq/"+Date.now()+"_"+uid).set({uid,name:flexName()||(S.mine&&S.mine.name)||"",text:t,ts:Date.now(),done:false});$("#inqt").value="";toast("보냈어요")}catch{toast("보내지 못했어요. 잠시 뒤 다시 시도해 주세요",true)}};
+  app().querySelectorAll("[data-inqdone]").forEach(b=>b.onclick=async()=>{const id=b.dataset.inqdone,x=all.find(y=>y.id===id);try{await db.doc("inq/"+id).update({done:!(x&&x.done)})}catch{toast("바꾸지 못했어요",true)}});
+}
 function renderReport(){
   app().innerHTML=shell(`<div class="head"><div><h1>초과근무내역 보고</h1><p>기안문 표 붙여넣기</p></div></div>${actualBody()}`,"report");
   bindActual();bindPaste();
