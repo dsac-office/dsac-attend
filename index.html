@@ -1192,7 +1192,7 @@ function bindSheet(){
   /* 엑셀처럼 Enter·화살표로 칸 이동 */
   root.addEventListener("keydown",e=>{
     const t=e.target;if(!t.matches("input[data-k]"))return;
-    if(e.key.startsWith("Arrow")){const td=t.closest("td");if(!td)return;let target=null;
+    if(e.key.startsWith("Arrow")){if(t.type==="number"&&(e.key==="ArrowUp"||e.key==="ArrowDown"))e.preventDefault();const td=t.closest("td");if(!td)return;let target=null;
       if(e.key==="ArrowLeft"||e.key==="ArrowRight"){const step=e.key==="ArrowRight"?"nextElementSibling":"previousElementSibling";for(let c=td[step];c&&!target;c=c[step]){const x=c.querySelector("input[data-k]");if(x)target=x}}
       else{const ci=td.cellIndex,step=e.key==="ArrowDown"?"nextElementSibling":"previousElementSibling";for(let r=td.parentElement[step];r&&!target;r=r[step]){const c=r.cells[ci];const x=c&&c.querySelector("input[data-k]");if(x)target=x}}
       if(target){e.preventDefault();target.focus();target.select&&target.select()}
