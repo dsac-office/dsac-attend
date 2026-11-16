@@ -1,0 +1,180 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="claude:viewport-fit-sides" content="cover">
+<title>달서아트센터 근무관리 이용 가이드</title>
+<style>
+@font-face{font-family:'Pretendard';font-weight:400;font-style:normal;font-display:swap;src:url(/fonts/pretendard-1.woff) format('woff')}
+@font-face{font-family:'Pretendard';font-weight:600;font-style:normal;font-display:swap;src:url(/fonts/pretendard-2.woff) format('woff')}
+@font-face{font-family:'Pretendard';font-weight:700 900;font-style:normal;font-display:swap;src:url(/fonts/pretendard-3.woff) format('woff')}
+:root{
+  --bg:#ffffff;--fg:#111111;--mute:#6b6b6b;--line:#e4e4e4;--card:#f5f5f7;--accent:#58C0D0;--accent-ink:#1A8799;--actual:#2A6FDB;
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){--bg:#111111;--fg:#f5f5f5;--mute:#a0a0a0;--line:#2e2e2e;--card:#1b1b1b;--accent:#4CC3D4;--accent-ink:#6FD3E0;--actual:#7AA8FF;color-scheme:dark}
+}
+:root[data-theme="dark"]{--bg:#111111;--fg:#f5f5f5;--mute:#a0a0a0;--line:#2e2e2e;--card:#1b1b1b;--accent:#4CC3D4;--accent-ink:#6FD3E0;--actual:#7AA8FF;color-scheme:dark}
+body{margin:0;background:var(--bg);color:var(--fg);font-family:"Pretendard",-apple-system,"Apple SD Gothic Neo","Malgun Gothic",system-ui,sans-serif;font-size:15px;line-height:1.65;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:28px 48px;overflow-x:hidden}
+main{max-width:640px;margin:0 auto;min-width:0}
+h1{font-size:30px;font-weight:900;letter-spacing:-.01em;margin:0 0 4px;text-wrap:balance}
+.lead{color:var(--mute);margin:0 0 24px}
+h2{font-size:17px;margin:0 0 8px;letter-spacing:-.01em}
+h3{font-size:15px;margin:14px 0 4px}
+.step{display:flex;gap:14px;padding:18px 0;border-top:1px solid var(--line)}
+.step:first-of-type{border-top:0}
+.no{flex:0 0 36px;height:36px;border-radius:50%;border:1.5px solid var(--accent);color:var(--accent-ink);display:grid;place-items:center;font-weight:700;font-size:15px}
+.body{min-width:0;flex:1}
+ul{margin:4px 0 0;padding-left:18px}
+li{margin:3px 0}
+.sub{margin:10px 0 0;font-weight:700}
+.note{background:var(--card);border-radius:12px;padding:12px 14px;margin-top:8px}
+.rules{display:grid;grid-template-columns:auto 1fr;gap:6px 14px;align-items:baseline}
+.rules span{min-width:0}
+.tag{display:inline-block;font-size:12px;font-weight:700;border:1px solid var(--accent);color:var(--accent-ink);border-radius:999px;padding:0 8px;margin-right:4px}
+.tag.b{border-color:var(--actual);color:var(--actual)}
+.url{font-weight:700;word-break:break-all;user-select:all}
+.foot{margin-top:24px;padding-top:16px;border-top:1px solid var(--line);color:var(--mute);font-size:13px}
+</style>
+</head>
+<body>
+<main>
+  <p style="margin:0 0 16px"><a href="/" style="color:var(--accent-ink);font-weight:700;text-decoration:none">← 근무관리로 돌아가기</a></p>
+  <h1>달서아트센터 근무관리 이용 가이드</h1>
+  <p class="lead">직원들의 편의를 위해 만든 근무관리 페이지입니다.<br>아래 이용 가이드를 읽어 주세요.</p>
+
+  <section class="step">
+    <div class="no">1</div>
+    <div class="body">
+      <h2>접속하고 설치하기</h2>
+      <div class="note">주소 <span class="url">https://dsac-attend.web.app</span></div>
+      <ul>
+        <li><b>PC</b>: <b>바탕화면에 설치</b> 버튼을 누르면 바탕화면에 아이콘이 생깁니다.</li>
+        <li><b>휴대폰</b>: 브라우저 메뉴에서 <b>홈 화면에 추가</b>를 누르면 어플처럼 열립니다.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="step">
+    <div class="no">2</div>
+    <div class="body">
+      <h2>로그인하기</h2>
+      <ul>
+        <li>공유 비밀번호, 사번, 이름을 입력합니다.</li>
+        <li>이 기기에서는 다음부터 자동으로 기억됩니다.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="step">
+    <div class="no">3</div>
+    <div class="body">
+      <h2>기존 탄력근무표 가져오기</h2>
+      <ul>
+        <li>탄력근무표 화면에서 <b>엑셀 불러오기</b>를 누르고 기존 파일을 고릅니다.</li>
+        <li>등록 후 주별 값이 맞는지 확인합니다. 다르면 그 날짜를 직접 고치세요.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="step">
+    <div class="no">4</div>
+    <div class="body">
+      <h2>탄력근무표 입력하기</h2>
+      <ul>
+        <li>월별로 펼쳐 날짜마다 기본근무를 입력하면 자동 저장됩니다.</li>
+        <li>열면 이번 주로 바로 이동합니다. 지난달은 접을 수 있습니다.</li>
+      </ul>
+      <p class="sub">입력 기준</p>
+      <div class="note rules">
+        <b>주</b><span>기본 52시간 + 시간외 12시간 이내</span>
+        <b>하루</b><span>최대 12시간</span>
+        <b>단위기간</b><span>평균 기본 40시간 이하, 평균 시간외 12시간 이하</span>
+        <b>공휴일</b><span>8시간 근무로 간주</span>
+      </div>
+      <ul style="margin-top:8px">
+        <li>넘으면 주 합계가 빨간색으로 표시됩니다.</li>
+        <li>주 40시간을 넘은 기본근무는 휴무로 쌓입니다.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="step">
+    <div class="no">5</div>
+    <div class="body">
+      <h2>시간외 신청하기</h2>
+      <p class="sub">평일</p>
+      <ul>
+        <li>출근·퇴근 시간은 자동으로 설정됩니다.</li>
+        <li>바꿔야 할 때만 직접 적습니다. 예: 탄력 구간 9:00~14:00, 퇴근 19:00</li>
+        <li>시간외는 자동으로 계산됩니다.</li>
+      </ul>
+      <p class="sub">휴일</p>
+      <ul>
+        <li><span class="tag">시간외</span> 출근·퇴근 시간만 적습니다.</li>
+        <li><span class="tag">분할</span> 탄력 구간과 시간외 구간을 따로 적습니다. 출퇴근 시간은 자동으로 인식되어 적용됩니다.</li>
+      </ul>
+      <p class="sub">휴게시간</p>
+      <ul>
+        <li>총 근무 4시간 이상이면 30분, 8시간 30분 이상이면 60분이 자동으로 빠집니다.</li>
+        <li>초과에서 공제할지, 기본에서 공제할지 입력 화면에서 고를 수 있습니다.</li>
+      </ul>
+      <p class="sub">저장 전에 입력 화면 아래의 <b>기본 · 시간외 · 총합</b>을 확인하세요.</p>
+    </div>
+  </section>
+
+  <section class="step">
+    <div class="no">6</div>
+    <div class="body">
+      <h2>신청 확인, 수정, 취소하기</h2>
+      <ul>
+        <li>신청 화면 하단의 <b>신청내역</b>에서 낸 신청을 봅니다.</li>
+        <li>각 신청의 <b>수정</b>으로 고치고, <b>취소</b>로 지웁니다.</li>
+        <li>관리자가 마감한 날짜는 수정할 수 없습니다. 이후 날짜는 계속 신청할 수 있습니다.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="step">
+    <div class="no">7</div>
+    <div class="body">
+      <h2>+ 버튼으로 한눈에 보기</h2>
+      <p class="sub" style="font-weight:400;margin-top:4px">오른쪽 아래 <b>+</b>를 누르면 패널이 열립니다.</p>
+      <ul>
+        <li><b>탄력근무표</b>, <b>시간외 신청</b> 바로가기</li>
+        <li><b>하반기 시간외 잔여</b>: 총 한도, 쓴 시간, 남은 시간</li>
+        <li><b>이번 달 시간외 막대그래프</b>: 날짜별 시간외 시간</li>
+        <li><b>고정</b>에 체크하면 패널이 계속 떠 있습니다.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="step">
+    <div class="no">8</div>
+    <div class="body">
+      <h2>확정된 시간외 확인하기</h2>
+      <ul>
+        <li>확정된 날의 시간외는 <span class="tag b">파란색</span>으로 표시되고 수정할 수 없습니다.</li>
+        <li>파란색이 아닌 시간외는 아직 계획입니다.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="step">
+    <div class="no">9</div>
+    <div class="body">
+      <h2>이젠 휴대폰에서도 쓸 수 있어요</h2>
+      <ul>
+        <li>휴대폰에서도 탄력근무표 관리와 시간외 신청이 가능합니다.</li>
+        <li>홈 화면에 추가하면 어플처럼 바로 열립니다. 방법은 1번을 보세요.</li>
+      </ul>
+    </div>
+  </section>
+
+  <p class="foot">요청 및 오류 사항은 관리자(황새미)에게 알려 주세요. 화면이 이상하면 캡처해서 보내 주시면 됩니다.</p>
+</main>
+</body>
+</html>
