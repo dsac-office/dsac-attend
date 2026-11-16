@@ -1547,13 +1547,13 @@ function bindForm(it){
     if(k==="휴일"&&ovHol())return toast("탄력근무 구간과 시간외 구간이 겹쳐요. 시간을 다시 확인해 주세요",true);
     if(k==="휴일"&&hm==="all"&&(!tv("#fs")||!$("#fov").value.trim()))return toast("출근과 퇴근 시간을 적어 주세요",true);
     if(k==="휴일"&&!$("#fr").value.trim()&&!$("#fov").value.trim())return toast("기본근무 구간이나 시간외 구간을 적어 주세요",true);
-    if(!s||!e)return toast("출근·퇴근 시간을 입력해 주세요",true);
-    if(toMin(e)<=toMin(s))return toast("퇴근시간이 출근시간보다 늦어야 해요",true);
+    if(!e||(k!=="휴일"&&!s))return toast("출근·퇴근 시간을 입력해 주세요",true);
+    if(k!=="휴일"&&toMin(e)<=toMin(s))return toast("퇴근시간이 출근시간보다 늦어야 해요",true);
     if(!(m>0))return toast("수당시간(분)을 확인해 주세요",true);
     if(!w)return toast("근무내역을 적어 주세요",true);
     const id=it?it.id:Date.now().toString(36)+Math.random().toString(36).slice(2,6);
     const hw=winOf(hm==="all"?foVal():(winOf($("#fr").value)?$("#fr").value:foVal()));const sHol=hw?hhmm(hw.ws):"";
-    const ow=k==="휴일"?winOf(foVal()):null;const rec={d,k,s:k==="휴일"?(ow?hhmm(ow.ws):sHol):s,e:k==="휴일"&&ow?hhmm(ow.we):e,b:be,m,r,hm:k==="휴일"?hm:"",o:k==="휴일"?foVal():"",w,st:it&&it.st||"",ts:it&&it.ts||Date.now()};
+    const wsL=[winOf($("#fr").value),winOf(foVal())].filter(Boolean).map(x=>x.ws);const rec={d,k,s:k==="휴일"?(wsL.length?hhmm(Math.min(...wsL)):sHol):s,e,b:be,m,r,hm:k==="휴일"?hm:"",o:k==="휴일"?foVal():"",w,st:it&&it.st||"",ts:it&&it.ts||Date.now()};
     busy($("#fo"),true);
     try{await db.doc("ot/"+uid).update({items:{[id]:rec}});S.edit=null;toast(it?"고쳤어요":"신청했어요");render()}
     catch{toast("저장하지 못했어요. 잠시 뒤 다시 시도해 주세요",true);busy($("#fo"),false)}
