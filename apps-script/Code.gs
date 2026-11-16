@@ -112,23 +112,31 @@ function isClosed_() {
   return !!(cfg && cfg.otClosed);
 }
 
-// 문의(inq/...): 직원은 자기 이름으로 새 글만 쓸 수 있고, 고치거나 지울 수 없어요.
-// 관리자는 전체를 읽고 완료 표시를 바꿀 수 있어요.
+// 문의(inq/...): 직원은 자기 문의를 새로 쓰고, 고치고, 지울 수 있어요(답변·완료 표시는 불가).
+// 관리자는 전체를 읽고 고치고 지우고, 답변과 완료 표시를 바꿀 수 있어요.
 function writeInq_(p, admin, as) {
-  if (p.action !== 'set') return { ok: false, error: 'forbidden' };
-  var v = JSON.parse(p.value || 'null');
-  if (!v || typeof v !== 'object') return { ok: false, error: 'bad_value' };
-  if (!admin) {
-    if (!as || v.uid !== as) return { ok: false, error: 'forbidden' };
-    if (typeof v.text !== 'string' || v.text.length > 2000) return { ok: false, error: 'too_long' };
-    if (typeof v.img !== 'string' || v.img.length > 300000) return { ok: false, error: 'too_big' };
-  }
   var lock = LockService.getScriptLock();
   lock.waitLock(30000);
   try {
     var sh = store_();
     var row = findRow_(sh, p.key);
-    if (row >= 0 && !admin) return { ok: false, error: 'forbidden' };
+    var old = row >= 0 ? JSON.parse(sh.getRange(row, 2).getValue()) : null;
+    if (!admin && old && old.uid !== as) return { ok: false, error: 'forbidden' };
+    if (p.action === 'delete') {
+      if (!admin && !old) return { ok: false, error: 'forbidden' };
+      if (row > 0) sh.deleteRow(row);
+      cacheDrop_(p.key);
+      return { ok: true };
+    }
+    if (p.action !== 'set') return { ok: false, error: 'forbidden' };
+    var v = JSON.parse(p.value || 'null');
+    if (!v || typeof v !== 'object') return { ok: false, error: 'bad_value' };
+    if (!admin) {
+      if (!as || v.uid !== as) return { ok: false, error: 'forbidden' };
+      if (typeof v.text !== 'string' || v.text.length > 2000) return { ok: false, error: 'too_long' };
+      if (typeof v.img !== 'string' || v.img.length > 300000) return { ok: false, error: 'too_big' };
+      if (old && (v.reply !== old.reply || v.done !== old.done)) return { ok: false, error: 'forbidden' };
+    }
     var vals = [p.key, p.value, new Date()];
     if (row < 0) sh.appendRow(vals); else sh.getRange(row, 1, 1, 3).setValues([vals]);
     cacheDrop_(p.key);
