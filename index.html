@@ -1494,7 +1494,7 @@ function formHtml(it){
 function brkOf(){return document.querySelector("#fbr .on")?.dataset.v||"ot"}
 function bindForm(it){
   let k=isWk($("#fd").value)?"휴일":(it&&it.k||(isHol($("#fd").value)?"휴일":"평일")),mTouched=false;
-  const setK=x=>{k=x;$("#fk").querySelectorAll("button").forEach(b=>b.classList.toggle("on",b.dataset.k===k));$("#f .wd-only").hidden=k==="휴일";$("#f .hd-only").hidden=k!=="휴일";applyHM()};
+  const setK=x=>{k=x;$("#fk").querySelectorAll("button").forEach(b=>b.classList.toggle("on",b.dataset.k===k));document.querySelectorAll("#f .wd-only").forEach(e=>e.hidden=k==="휴일");document.querySelectorAll("#f .hd-only").forEach(e=>e.hidden=k!=="휴일");applyHM()};
   const tv=id=>normT($(id).value);
   let hm=it?(it.hm||(it.r?"split":"all")):"split";
   const applyHM=()=>{const fr=$("#fr"),fo=$("#fov"),fs=$("#fs");if(!fr||!fo||!fs)return;const frw=fr.closest(".hd-only"),fow=fo.closest(".hd-only"),sw=fs.closest("div");const lb=fow.querySelector("label");$("#fhm")?.querySelectorAll("button").forEach(b=>b.classList.toggle("on",b.dataset.m===hm));const all=hm==="all";sw.hidden=k==="휴일"?!all:false;frw.hidden=all||k!=="휴일";if(all){fr.value="";lb.textContent="퇴근시간"}else{lb.textContent="시간외 구간"}recalc()};
