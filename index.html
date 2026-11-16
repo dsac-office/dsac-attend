@@ -771,6 +771,7 @@ function renderHome(){
     <div class="tiles">
       <button class="tile" data-mode="flex" data-mine><span class="ic">${ART.flex}</span><span class="tt"><b>Flex Schedule</b><small>탄력근무계획표</small></span></button>
       <button class="tile" data-mode="ot"><span class="ic">${ART.ot}</span><span class="tt"><b>Overtime</b><small>시간외근무 신청</small></span></button>
+      <button class="tile" data-inquiry><span class="ic"><svg viewBox="0 0 120 120" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 30h80v50H58L38 96V80H20z"/><path d="M42 50h36M42 62h24"/></svg></span><span class="tt"><b>Inquiry</b><small>문의·오류</small></span></button>
       <a class="tile" href="/guide.html"><span class="ic"><svg viewBox="0 0 120 120" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M24 26c18-6 36-6 36 8v60c0-14-18-14-36-8zM96 26c-18-6-36-6-36 8v60c0-14 18-14 36-8z"/></svg></span><span class="tt"><b>User Guide</b><small>이용 가이드</small></span></a>
       ${isAdmin?`<button class="tile adm" data-admin><span class="ic">${ART.adm}</span><span class="tt"><b>All Staff</b><small>전직원 탄력근무표</small></span></button>`:""}
       ${isAdmin?`<button class="tile adm" data-report><span class="ic"><svg viewBox="0 0 120 120" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="26" y="20" width="68" height="84" rx="10"/><path d="M44 16h32v12H44zM40 52h36M40 68h36M40 84h22"/></svg></span><span class="tt"><b>Overtime Log</b><small>초과근무내역 등록</small></span></button>`:""}
@@ -780,6 +781,7 @@ function renderHome(){
 document.addEventListener("click",e=>{
   const h=e.target.closest("[data-home]"),m=e.target.closest("[data-mode]"),ad=e.target.closest("[data-admin]"),mg=e.target.closest("[data-manage]");
   if(mg){MODE="flex";S.view="manage";S.tab="emp";S.target=null;render();scrollTo(0,0);return}
+  if(e.target.closest&&e.target.closest("[data-inquiry]")){MODE="flex";S.view="inquiry";S.target=null;render();scrollTo(0,0);return}
   if(e.target.closest&&e.target.closest("[data-report]")){MODE="flex";S.view="report";S.target=null;render();scrollTo(0,0);return}
   if(m&&m.dataset.mode==="flex"){S.view="me";S.target=null}
   if(m&&m.dataset.mode==="ot"&&OT.toMe)OT.toMe();
