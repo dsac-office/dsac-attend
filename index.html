@@ -1559,10 +1559,11 @@ function bindForm(it){
     catch{toast("저장하지 못했어요. 잠시 뒤 다시 시도해 주세요",true);busy($("#fo"),false)}
   };
 }
+function rangeTxt(it){if(kindOf(it)==="휴일"&&(it.o||it.r)){const ws=[winOf(it.r||""),winOf(it.o||"")].filter(Boolean);if(ws.length)return hhmm(Math.min(...ws.map(x=>x.ws)))+"~"+hhmm(Math.max(...ws.map(x=>x.we)))}return hm(it.s)+"~"+hm(it.e)}
 function itemRow(it,mine){
   const hd=kindOf(it)==="휴일";
   return`<div class="it"><div class="d">${md(it.d)}<small class="${hd?"hd":""}">${kindLabel(it)}</small></div>
-  <div class="t"><div><b>${hm(it.s)}~${hm(it.e)}</b> · <b>${it.m}분</b>${it.r?` <span class="m">(${esc(it.r)})</span>`:""}</div><div class="w">${esc(it.w)}</div></div>
+  <div class="t"><div><b>${rangeTxt(it)}</b> · <b>${it.m}분</b>${it.r?` <span class="m">(${esc(it.r)})</span>`:""}</div><div class="w">${esc(it.w)}</div></div>
   <div class="a">${mine?`<button class="ol" data-ed="${it.id}">수정</button><button class="ol del" data-del="${it.id}">취소</button>`:""}</div></div>`;
 }
 function renderMe(){
