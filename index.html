@@ -1565,11 +1565,16 @@ function bindForm(it){
     catch{toast("저장하지 못했어요. 잠시 뒤 다시 시도해 주세요",true);busy($("#fo"),false)}
   };
 }
-function rangeTxt(it){if(kindOf(it)==="휴일"&&(it.o||it.r)){const ws=[winOf(it.r||""),winOf(it.o||"")].filter(Boolean);if(ws.length)return hhmm(Math.min(...ws.map(x=>x.ws)))+"~"+hhmm(Math.max(...ws.map(x=>x.we)))}return hm(it.s)+"~"+hm(it.e)}
+/* 휴일 분할 신청: 전체 구간 = 탄력·시간외 중 빠른 시작 ~ 늦은 끝, 괄호 = 시간외 구간 */
+function holSpan(it){const ws=[winOf(it.r||""),winOf(it.o||"")].filter(Boolean);return ws.length?[hm(hhmm(Math.min(...ws.map(x=>x.ws)))),hm(hhmm(Math.max(...ws.map(x=>x.we))))]:null}
+function oTxt(it){const w=winOf(it.o||"");return w?hm(hhmm(w.ws))+"~"+hm(hhmm(w.we)):""}
+function rangeTxt(it){if(kindOf(it)==="휴일"){const sp=holSpan(it);if(sp)return sp[0]+"~"+sp[1]}return hm(it.s)+"~"+hm(it.e)}
+function paren(it){return kindOf(it)==="휴일"&&it.o?oTxt(it):(it.r||"")}
+function rangeParts(it){return(kindOf(it)==="휴일"&&holSpan(it))||[hm(it.s),hm(it.e)]}
 function itemRow(it,mine){
   const hd=kindOf(it)==="휴일";
   return`<div class="it"><div class="d">${md(it.d)}<small class="${hd?"hd":""}">${kindLabel(it)}</small></div>
-  <div class="t"><div><b>${rangeTxt(it)}</b> · <b>${it.m}분</b>${it.r?` <span class="m">(${esc(it.r)})</span>`:""}</div><div class="w">${esc(it.w)}</div></div>
+  <div class="t"><div><b>${rangeTxt(it)}</b> · <b>${it.m}분</b>${paren(it)?` <span class="m">(${esc(paren(it))})</span>`:""}</div><div class="w">${esc(it.w)}</div></div>
   <div class="a">${mine?`<button class="ol" data-ed="${it.id}">수정</button><button class="ol del" data-del="${it.id}">취소</button>`:""}</div></div>`;
 }
 function renderMe(){
@@ -1595,7 +1600,7 @@ function allItems(){const out=[];for(const[u,doc]of Object.entries(S.all))for(co
 function pendingAll(){return allItems().filter(x=>x.st!=="done")}
 const sortG=(a,b)=>a.d.localeCompare(b.d)||a.ts-b.ts;
 function titleOf(from,to){const y=from.slice(0,4);return`시간외근무 신청서(${y}. ${kdate(from)}${to&&to!==from?"~"+(to.slice(0,4)!==y?to.slice(0,4)+". ":"")+kdate(to):""})`}
-function minCell(x){return`${x.m}${x.r?`\n(${x.r})`:""}`}
+function minCell(x){return`${x.m}${paren(x)?`\n(${paren(x)})`:""}`}
 function renderAdmin(){
   if(window.__loadAdminOT)window.__loadAdminOT();
   if(!S.adminLoaded){app().innerHTML=shell(spinBlock());return}
@@ -1648,7 +1653,7 @@ function markDone(rows,title,btn){btn.disabled=true;setStatus(rows,{st:"done",dt
 async function copyText(t,msg){try{await navigator.clipboard.writeText(t);toast(msg)}catch{toast("복사하지 못했어요",true)}}
 async function copyTable(rows){
   const head=["연번","일 자","구 분","성 명","출근시간","퇴근시간","수당시간","근무내역"];
-  const vals=rows.map((x,i)=>[i+1,kdate(x.d),kindLabel(x),x.name,hm(x.s),hm(x.e),minCell(x),x.w]);
+  const vals=rows.map((x,i)=>{const[a,b]=rangeParts(x);return[i+1,kdate(x.d),kindLabel(x),x.name,a,b,minCell(x),x.w]});
   const td='style="border:1px solid #000;padding:4px 6px;text-align:center"';
   const html=`<table style="border-collapse:collapse"><tr>${head.map(h=>`<th ${td}>${h}</th>`).join("")}</tr>${vals.map(r=>`<tr>${r.map((c,j)=>`<td ${j===7?td.replace("center","left"):td}>${esc(c).replace(/\n/g,"<br>")}</td>`).join("")}</tr>`).join("")}</table>`;
   const tsv=[head,...vals].map(r=>r.map(c=>{c=String(c);return /[\n\t"]/.test(c)?`"${c.replace(/"/g,'""')}"`:c}).join("\t")).join("\n");
