@@ -1297,7 +1297,7 @@ function bindActual(){const f=$("#actf");if(!f)return;f.onchange=async()=>{const
 function renderManage(){
   if(window.__loadAdminFlex)window.__loadAdminFlex();
   const tab=S.tab,st=cfg.settings;
-  const tabs=[["emp","직원 명단"],["period","단위기간"],["hol","공휴일"],["actual","초과근무내역"],["set","기준 설정"]];
+  const tabs=[["actual","초과근무내역"],["emp","직원 명단"],["period","단위기간"],["hol","공휴일"],["set","기준 설정"]];
   let body="";
   const linked={};for(const[u,d]of Object.entries(S.all))if(d&&d.emp)(linked[d.emp.id]??=[]).push(u);
   if(tab==="emp"){
