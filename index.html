@@ -758,7 +758,7 @@ function heroOnce(){if(window.__hp)return ' style="animation:none"';window.__hp=
 function renderHome(){
   {const lo=document.getElementById("lo");if(lo)lo.style.display="none"}
   const nm=flexName(),rk=OT.rank();
-  app().innerHTML=`<div class="top"><div class="in">${logoBtn()}<span class="sp"></span><span class="who">${isAdmin?"관리자":""}</span><button class="lo2" data-logout>로그아웃</button></div></div>
+  app().innerHTML=`<div class="top"><div class="in">${logoBtn()}<span class="sp"></span><span class="who" style="font-size:13px;color:var(--muted);font-weight:600">${nm?esc(nm):""}${isAdmin?" · 관리자":""}</span><button class="lo2" data-logout>로그아웃</button></div></div>
   <div class="wrap"><div class="home">
     <div class="card hero"><div class="hero-rv"${heroOnce()}>
       <p class="eyebrow">DALSEO ARTS CENTER</p><h1>Work Plan</h1><p class="home-sub">근무 관리</p>
