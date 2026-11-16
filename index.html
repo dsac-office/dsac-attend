@@ -1148,6 +1148,8 @@ async function importXlsx(file,target){
   const ok=found.filter(x=>x.per);
   if(!ok.length)return toast("근무계획표 양식의 분기 시트를 찾지 못했어요",true);
   const doc=getDoc(target)||{},hol=holMap();
+  let act={};try{const a=await DA.get("actual/"+((doc.emp&&doc.emp.id)||""));const av=typeof a==="string"?JSON.parse(a):(a||{});act=av.d||{}}catch(e){}
+  for(const x of ok)for(const[dk,e]of Object.entries(x.d||{}))if(act[dk]>0&&e)e.o=+act[dk];
   const rows=ok.map((x,i)=>{
     const r=calcSheet(x.per,sheetData({p:{[x.per.id]:{d:x.d}}},x.per.id).entries,hol,{});
     const had=Object.keys((doc.p&&doc.p[x.per.id]&&doc.p[x.per.id].d)||{}).length>0;
