@@ -151,10 +151,23 @@ function writeInq_(p, admin, as) {
   }
 }
 
+// 마감 중에도 허용: 신청 내용(items)은 그대로인 쓰기(처음 이름·직급 등록). 신청 추가·수정·취소는 막아요.
+function metaOnly_(p) {
+  if (p.action !== 'set') return false;
+  var v;
+  try { v = JSON.parse(p.value || 'null'); } catch (e) { return false; }
+  if (!v || typeof v !== 'object') return false;
+  var sh = store_();
+  var row = findRow_(sh, p.key);
+  var cur = null;
+  try { cur = row > 0 ? JSON.parse(sh.getRange(row, 2).getValue() || 'null') : null; } catch (e) { cur = null; }
+  return JSON.stringify(v.items || {}) === JSON.stringify((cur && cur.items) || {});
+}
+
 function write_(p, admin, as) {
   if (String(p.key).indexOf('inq/') === 0) return writeInq_(p, admin, as);
   if (!admin && !isMine_(p.key, as)) return { ok: false, error: 'forbidden' };
-  if (!admin && String(p.key).indexOf('ot/') === 0 && isClosed_()) return { ok: false, error: 'closed' };
+  if (!admin && String(p.key).indexOf('ot/') === 0 && isClosed_() && !metaOnly_(p)) return { ok: false, error: 'closed' };
   var lock = LockService.getScriptLock();
   lock.waitLock(30000);
   try {
