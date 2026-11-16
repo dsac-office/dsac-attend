@@ -1475,6 +1475,8 @@ function shell(inner){
   <span class="who">${nm?esc(nm):""}${isAdmin?" · 수합자":""}</span><button class="lo2" data-logout>로그아웃</button></div></div><div class="wrap">${inner}</div>`;
 }
 function render(ext){
+  if(!window.__navR){window.__navR=true;try{const n=JSON.parse(sessionStorage.getItem("dsac_nav")||"null");if(n){MODE=n.MODE||MODE;if(n.view)S.view=n.view;if(n.target!=null)S.target=n.target}}catch(e){}}
+  try{sessionStorage.setItem("dsac_nav",JSON.stringify({MODE,view:S.view,target:S.target}))}catch(e){}
   if(window.MODE==="home"){if(typeof renderHome==="function"&&(!ext||usable()))renderHome();return}
   if(window.MODE!=="ot"||!S.ready)return;
   if(ext&&!usable())return;
