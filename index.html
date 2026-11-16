@@ -769,12 +769,14 @@ function renderHome(){
       <button class="tile" data-mode="flex" data-mine><span class="ic">${ART.flex}</span><span class="tt"><b>Flex Schedule</b><small>탄력근무계획표</small></span></button>
       <button class="tile" data-mode="ot"><span class="ic">${ART.ot}</span><span class="tt"><b>Overtime</b><small>시간외근무 신청</small></span></button>
       ${isAdmin?`<button class="tile adm" data-admin><span class="ic">${ART.adm}</span><span class="tt"><b>All Staff</b><small>전직원 탄력근무표</small></span></button>`:""}
+      ${isAdmin?`<button class="tile adm" data-report><span class="ic">${ART.ot}</span><span class="tt"><b>Overtime Report</b><small>초과근무내역 보고</small></span></button>`:""}
       ${isAdmin?`<button class="tile adm" data-manage><span class="ic">${ART.set}</span><span class="tt"><b>Settings</b><small>관리</small></span></button>`:""}
     </div></div></div>`;
 }
 document.addEventListener("click",e=>{
   const h=e.target.closest("[data-home]"),m=e.target.closest("[data-mode]"),ad=e.target.closest("[data-admin]"),mg=e.target.closest("[data-manage]");
-  if(mg){MODE="flex";S.view="manage";S.tab="actual";S.target=null;render();scrollTo(0,0);return}
+  if(mg){MODE="flex";S.view="manage";S.tab="emp";S.target=null;render();scrollTo(0,0);return}
+  if(e.target.closest&&e.target.closest("[data-report]")){MODE="flex";S.view="report";S.target=null;render();scrollTo(0,0);return}
   if(m&&m.dataset.mode==="flex"){S.view="me";S.target=null}
   if(m&&m.dataset.mode==="ot"&&OT.toMe)OT.toMe();
   if(ad){MODE="flex";S.view="admin";S.target=null;render();scrollTo(0,0)}
@@ -806,6 +808,7 @@ function renderInner(){
   if(S.view==="admin"&&isAdmin&&!S.allLoaded){if(window.__loadAdminFlex)window.__loadAdminFlex();app().innerHTML=shell(spinBlock(),"admin");return}
   if(S.view==="admin"&&isAdmin)return renderAdmin();
   if(S.view==="manage"&&isAdmin)return renderManage();
+  if(S.view==="report"&&isAdmin)return renderReport();
   if(S.view==="emp"&&isAdmin&&S.target)return renderSheetPage(S.target,"admin");
   S.view="me";
   if(S.my===undefined){app().innerHTML=shell(spinBlock(),"me");return}
@@ -1280,6 +1283,10 @@ async function csv(name,rows){
 
 /* ===== 관리자: 관리 ===== */
 async function saveCfg(){try{await db.doc("config/main").set(cfg);toast("저장했어요");return true}catch(e){toast("저장하지 못했어요",true);return false}}
+function renderReport(){
+  app().innerHTML=shell(`<div class="head"><div><h1>초과근무내역 보고</h1><p>기안문 표 붙여넣기</p></div></div>${actualBody()}`,"report");
+  bindActual();bindPaste();
+}
 function actualBody(){return `<div class="card"><h3>초과근무내역 올리기</h3><p class="mute small">기안문 표를 복사해서 아래 칸에 붙여넣고 미리보기를 누르세요. 명단에 있는 직원만 날짜별 시간외로 저장돼요.</p><div class="form"><label>붙여넣기<textarea id="pastet" rows="6" placeholder="여기에 붙여넣기"></textarea></label></div><div class="row" style="gap:8px;margin-top:8px"><button class="btn sm" id="pastep">미리보기</button><button class="btn ghost sm" id="pastes" disabled>저장</button></div><div id="pastem" class="mute small" style="margin-top:10px"></div></div>`}
 function parsePaste(text){const ids={};for(const[id,r]of Object.entries(S.roster||{}))if(r&&r.name&&r.active!==false)ids[r.name]=id;const names=Object.keys(ids).sort((a,b)=>b.length-a.length);const pd=s=>String(s[0]).padStart(2,"0")+"-"+String(s[1]).padStart(2,"0");const tok=String(text||"").split(/\r?\n/).map(s=>s.trim()).filter(Boolean);let md="";const out=[],bad=[];
 for(let i=0;i<tok.length;i++){const t=tok[i];const whole=t.match(/^(\d{1,2})\s*[.\/-]\s*(\d{1,2})\.?$/);if(whole){md=pd(whole.slice(1));continue}
@@ -1297,8 +1304,9 @@ function bindActual(){const f=$("#actf");if(!f)return;f.onchange=async()=>{const
 function renderManage(){
   if(window.__loadAdminFlex)window.__loadAdminFlex();
   let savedTab=null;try{savedTab=localStorage.getItem("dsac_mtab")}catch(e){}
-  const tab=S.tab||savedTab||"actual",st=cfg.settings;
-  const tabs=[["actual","초과근무내역"],["emp","직원 명단"],["period","단위기간"],["hol","공휴일"],["set","기준 설정"]];
+  const okTab=t=>["emp","period","hol","set"].includes(t);
+  const tab=okTab(S.tab)?S.tab:(okTab(savedTab)?savedTab:"emp"),st=cfg.settings;
+  const tabs=[["emp","직원 명단"],["period","단위기간"],["hol","공휴일"],["set","기준 설정"]];
   let body="";
   const linked={};for(const[u,d]of Object.entries(S.all))if(d&&d.emp)(linked[d.emp.id]??=[]).push(u);
   if(tab==="emp"){
@@ -1328,10 +1336,8 @@ function renderManage(){
     <div class="tw"><table class="t" id="lt"><tr><th>이름</th><th>간주시간(h)</th><th>기본근무 자동입력(h)</th></tr>${st.leave_types.map(l=>`<tr><td><input value="${esc(l.name)}"></td><td><input type="number" step="0.5" value="${l.credit}" style="width:90px"></td><td><input type="number" step="0.5" value="${l.base??""}" style="width:90px"></td></tr>`).join("")}
     ${[0,1].map(()=>`<tr><td><input placeholder="추가"></td><td><input type="number" step="0.5" style="width:90px"></td><td><input type="number" step="0.5" style="width:90px"></td></tr>`).join("")}</table></div></div><button class="btn" id="ssave">설정 저장</button>`;
   }
-  if(tab==="actual")body=actualBody();
   app().innerHTML=shell(`<div class="head"><div><h1>관리</h1><p>직원 · 단위기간 · 공휴일 · 기준</p></div></div><div class="tabs">${tabs.map(([k,l])=>`<button data-tab="${k}" class="${k===tab?"on":""}">${l}</button>`).join("")}</div>${body}`,"manage");
   app().querySelectorAll("[data-tab]").forEach(b=>b.onclick=()=>{S.tab=b.dataset.tab;try{localStorage.setItem("dsac_mtab",S.tab)}catch(e){};renderManage()});
-  if(tab==="actual"){bindActual();bindPaste()}
   const g=id=>$("#"+id)?.value;
   const idOk=s=>/^[A-Za-z0-9_\-.~:@+]{1,40}$/.test(s);
   if(tab==="emp"){
