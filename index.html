@@ -1273,7 +1273,7 @@ async function csv(name,rows){
 
 /* ===== 관리자: 관리 ===== */
 async function saveCfg(){try{await db.doc("config/main").set(cfg);toast("저장했어요");return true}catch(e){toast("저장하지 못했어요",true);return false}}
-function actualBody(){return `<div class="card"><h3>실제 시간외 올리기</h3><p class="mute small">초과근무내역 엑셀을 고르면, 직원별 하반기 총시간과 7~11월 실제 시간외를 저장해요. 직원은 '+' 패널에서 본인 잔여만 봐요.</p><div class="form"><label>엑셀 파일<input type="file" id="actf" accept=".xlsx,.xls"></label></div><div id="actmsg" class="mute small" style="margin-top:10px"></div></div>`}
+function actualBody(){return `<div class="card"><h3>초과근무내역 올리기</h3><p class="mute small">초과근무내역 엑셀을 고르면, 직원별 하반기 총시간과 7~11월 실제 시간외를 저장해요. 직원은 '+' 패널에서 본인 잔여만 봐요.</p><div class="form"><label>엑셀 파일<input type="file" id="actf" accept=".xlsx,.xls"></label></div><div id="actmsg" class="mute small" style="margin-top:10px"></div></div>`}
 let __xl=null;
 const loadXL=()=>__xl?Promise.resolve(__xl):new Promise((res,rej)=>{const s=document.createElement("script");s.src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js";s.onload=()=>res(__xl=window.XLSX);s.onerror=()=>rej(new Error("xlsx"));document.head.append(s)});
 function parseActual(XL,wb){const ws=wb.Sheets[wb.SheetNames[0]];const rows=XL.utils.sheet_to_json(ws,{header:1,defval:null});const out=[];for(const r of rows){const nm=typeof r[2]==="string"?r[2].trim():"";if(!/^[가-힣]{2,4}$/.test(nm)||!/급$/.test(String(r[1]||"")))continue;const h={};[[7,22],[8,23],[9,24],[10,25]].forEach(([m,c])=>{h[m]=+r[c]||0});h[11]=+r[4]||0;out.push({name:nm,total:+r[21]||0,h})}return out}
@@ -1281,7 +1281,7 @@ function bindActual(){const f=$("#actf");if(!f)return;f.onchange=async()=>{const
 function renderManage(){
   if(window.__loadAdminFlex)window.__loadAdminFlex();
   const tab=S.tab,st=cfg.settings;
-  const tabs=[["emp","직원 명단"],["period","단위기간"],["hol","공휴일"],["actual","실제 시간외"],["set","기준 설정"]];
+  const tabs=[["emp","직원 명단"],["period","단위기간"],["hol","공휴일"],["actual","초과근무내역"],["set","기준 설정"]];
   let body="";
   const linked={};for(const[u,d]of Object.entries(S.all))if(d&&d.emp)(linked[d.emp.id]??=[]).push(u);
   if(tab==="emp"){
