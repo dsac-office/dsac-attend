@@ -1510,7 +1510,7 @@ async function renderName(){
 
 /* 직원: 신청하기 */
 /* 저장된 값과 무관하게 현재 휴게·수당 규칙으로 휴일 분할 신청의 수당시간을 다시 계산 */
-const items=doc=>Object.entries(doc&&doc.items||{}).map(([id,v])=>{const x={id,...v};if(x.d&&kindOf(x)==="휴일"&&(x.o||x.r))x.m=splitDay("휴일",0,0,"",x.r||"",x.brk||"ot",x.o||"").ot;return x});
+const items=doc=>Object.entries(doc&&doc.items||{}).map(([id,v])=>{const x={id,...v};if(x.d&&kindOf(x)==="휴일"&&x.o)x.m=splitDay("휴일",0,0,"",x.r||"",x.brk||"ot",x.o||"").ot;return x});
 function formHtml(it){
   const v=it||{d:today(),s:"09:00",e:"",k:"",m:"",r:"",w:"",b:"18:00"};
   const k=isWk(v.d)?"휴일":(v.k||(isHol(v.d)?"휴일":"평일"));
