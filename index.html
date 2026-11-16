@@ -1,3 +1,4 @@
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700&display=swap" rel="stylesheet">
 <title>근무 관리</title>
 <link rel="manifest" href="/manifest.json">
 <meta name="theme-color" content="#ffffff">
@@ -374,11 +375,11 @@ table.gi td small.rk{display:inline;font-size:12px;color:var(--accent-ink);margi
 @media(max-width:719px){.tiles{margin-top:0}.home{margin-top:4px}.hero{padding:8px 2px 18px;margin-bottom:4px}.hero h1{font-size:22px}.hero .home-p{font-size:14px}.tile{padding:14px 2px;gap:12px}.tile .ic{width:36px;height:36px;border-radius:11px}.tile .ic svg{width:20px;height:20px}.tile b{font-size:16px}.tile::after{font-size:20px}}
 
 /* home type: wide display English (reference style) */
-.home .eyebrow{margin:0;font-family:"Gill Sans","Gill Sans MT",var(--f);font-size:13px;letter-spacing:.14em;color:var(--muted);font-weight:600}
-.home .hero h1{font-family:"Gill Sans","Gill Sans MT",var(--f);font-size:clamp(40px,12vw,60px);font-weight:700;letter-spacing:-.01em;line-height:1.05;margin-top:8px;text-transform:none}
+.home .eyebrow{margin:0;font-family:"Outfit",var(--f);font-size:13px;letter-spacing:.14em;color:var(--muted);font-weight:600}
+.home .hero h1{font-family:"Outfit",var(--f);font-size:clamp(40px,12vw,60px);font-weight:700;letter-spacing:-.01em;line-height:1.05;margin-top:8px;text-transform:none}
 .home .home-sub{margin:10px 0 0;font-size:18px;color:var(--ink2);font-weight:600}
 .home .hero .home-p{display:none}
-.home .tile b{font-family:"Gill Sans","Gill Sans MT",var(--f);font-size:22px;font-weight:700;letter-spacing:0}
+.home .tile b{font-family:"Outfit",var(--f);font-size:22px;font-weight:700;letter-spacing:0}
 .home .tile small{display:block;margin-top:6px;font-size:14px;color:var(--muted);font-weight:600}
 .home .tile[data-mode="ot"] small{color:#BDBDC2}
 @media(min-width:720px){.home .tile b{font-size:28px}.home .hero h1{font-size:72px}}
@@ -572,7 +573,7 @@ function showLogin(){
   const box=document.createElement("div");box.id="lg";
   box.style.cssText="position:fixed;inset:0;z-index:9999;background:var(--bg);display:flex;align-items:center;justify-content:center;padding:24px 16px;overflow:auto";
   box.innerHTML=`<div style="width:100%;max-width:360px">
-    <div class="lg-title" style="font-family:'Gill Sans','Gill Sans MT',sans-serif;font-size:clamp(20px,5.6vw,24px);font-weight:700;letter-spacing:.12em;color:var(--ink);line-height:1.4;margin-bottom:28px">DALSEO ARTS CENTER<br><span style="font-size:clamp(20px,5.6vw,24px);font-weight:700;letter-spacing:0;color:var(--muted)">근무 관리</span></div>
+    <div class="lg-title" style="font-family:'Outfit',sans-serif;font-size:clamp(20px,5.6vw,24px);font-weight:700;letter-spacing:.12em;color:var(--ink);line-height:1.4;margin-bottom:28px">DALSEO ARTS CENTER<br><span style="font-size:clamp(20px,5.6vw,24px);font-weight:700;letter-spacing:0;color:var(--muted)">근무 관리</span></div>
     <div style="display:grid;gap:10px">
       <input id="lg_id" inputmode="numeric" placeholder="사번" autocomplete="username" style="${LG_IN}">
       <input id="lg_nm" placeholder="이름" autocomplete="name" style="${LG_IN}">
