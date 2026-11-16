@@ -87,14 +87,18 @@ function read_(p, admin, as) {
   }
   if (p.action === 'list') {
     var prefix = p.prefix || '';
-    if (!admin && prefix !== 'roster/') return { ok: false, error: 'forbidden' };
+    if (!admin && prefix !== 'roster/' && prefix !== 'inq/') return { ok: false, error: 'forbidden' };
     var sh2 = store_();
     var last = sh2.getLastRow();
     var outL = {};
     if (last > 1) {
       var data = sh2.getRange(2, 1, last - 1, 2).getValues();
       for (var i = 0; i < data.length; i++) {
-        if (String(data[i][0]).indexOf(prefix) === 0) outL[data[i][0]] = JSON.parse(data[i][1]);
+        if (String(data[i][0]).indexOf(prefix) !== 0) continue;
+        var item = JSON.parse(data[i][1]);
+        // 직원은 자기 문의만 보여요
+        if (!admin && prefix === 'inq/' && (!item || item.uid !== as)) continue;
+        outL[data[i][0]] = item;
       }
     }
     return { ok: true, value: outL };
@@ -108,7 +112,34 @@ function isClosed_() {
   return !!(cfg && cfg.otClosed);
 }
 
+// 문의(inq/...): 직원은 자기 이름으로 새 글만 쓸 수 있고, 고치거나 지울 수 없어요.
+// 관리자는 전체를 읽고 완료 표시를 바꿀 수 있어요.
+function writeInq_(p, admin, as) {
+  if (p.action !== 'set') return { ok: false, error: 'forbidden' };
+  var v = JSON.parse(p.value || 'null');
+  if (!v || typeof v !== 'object') return { ok: false, error: 'bad_value' };
+  if (!admin) {
+    if (!as || v.uid !== as) return { ok: false, error: 'forbidden' };
+    if (typeof v.text !== 'string' || v.text.length > 2000) return { ok: false, error: 'too_long' };
+    if (typeof v.img !== 'string' || v.img.length > 300000) return { ok: false, error: 'too_big' };
+  }
+  var lock = LockService.getScriptLock();
+  lock.waitLock(30000);
+  try {
+    var sh = store_();
+    var row = findRow_(sh, p.key);
+    if (row >= 0 && !admin) return { ok: false, error: 'forbidden' };
+    var vals = [p.key, p.value, new Date()];
+    if (row < 0) sh.appendRow(vals); else sh.getRange(row, 1, 1, 3).setValues([vals]);
+    cacheDrop_(p.key);
+    return { ok: true };
+  } finally {
+    lock.releaseLock();
+  }
+}
+
 function write_(p, admin, as) {
+  if (String(p.key).indexOf('inq/') === 0) return writeInq_(p, admin, as);
   if (!admin && !isMine_(p.key, as)) return { ok: false, error: 'forbidden' };
   if (!admin && String(p.key).indexOf('ot/') === 0 && isClosed_()) return { ok: false, error: 'closed' };
   var lock = LockService.getScriptLock();
