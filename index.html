@@ -1191,11 +1191,11 @@ function bindSheet(){
   root.addEventListener("change",e=>{const t=e.target;if(t.dataset.k==="leave")onEdit(e);else if(t.dataset.wc!==undefined){const w=+t.dataset.wc;wkSave(w);if(t.checked){const n=$("#cf"+w);if(n)wkBurst(n)}}});
   /* 엑셀처럼 Enter·화살표로 칸 이동 */
   root.addEventListener("keydown",e=>{
-    const t=e.target;if(!t.matches("input[data-k],select[data-k]"))return;
+    const t=e.target;if(!t.matches("input[data-k],select[data-k],td[tabindex]"))return;
     if(e.key.startsWith("Arrow")){if(t.tagName==="SELECT"||(t.type==="number"&&(e.key==="ArrowUp"||e.key==="ArrowDown")))e.preventDefault();const td=t.closest("td");if(!td)return;let target=null;
-      if(e.key==="ArrowLeft"||e.key==="ArrowRight"){const step=e.key==="ArrowRight"?"nextElementSibling":"previousElementSibling";for(let c=td[step];c&&!target;c=c[step]){const x=c.querySelector("input[data-k],select[data-k]");if(x)target=x}}
-      else{const ci=td.cellIndex,rows=[...root.querySelectorAll("tr")];let i=rows.indexOf(td.parentElement);const dir=e.key==="ArrowDown"?1:-1;for(i+=dir;i>=0&&i<rows.length&&!target;i+=dir){const c=rows[i].cells[ci];const x=c&&c.querySelector("input[data-k],select[data-k]");if(x)target=x}}
-      if(target){e.preventDefault();target.focus();target.select&&target.select()}
+      if(e.key==="ArrowLeft"||e.key==="ArrowRight"){const step=e.key==="ArrowRight"?"nextElementSibling":"previousElementSibling";for(let c=td[step];c&&!target;c=c[step]){if(c.tagName!=="TD")break;target=c.querySelector("input[data-k],select[data-k]")||c}}
+      else{const ci=td.cellIndex,rows=[...root.querySelectorAll("tr")];let i=rows.indexOf(td.parentElement);const dir=e.key==="ArrowDown"?1:-1;for(i+=dir;i>=0&&i<rows.length&&!target;i+=dir){const c=rows[i].cells[ci];if(c&&c.tagName==="TD")target=c.querySelector("input[data-k],select[data-k]")||c}}
+      if(target){e.preventDefault();if(target.tagName==="TD"){target.tabIndex=-1;target.focus()}else{target.focus();target.select&&target.select()}}
       return}
     const mv={ArrowUp:-1,ArrowDown:1,Enter:1}[e.key];if(mv===undefined)return;
     if(t.type==="number"&&(e.key==="ArrowUp"||e.key==="ArrowDown"))e.preventDefault();
