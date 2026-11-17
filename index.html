@@ -518,6 +518,8 @@ const DA={
   async list(prefix){const r=await fetch(`${API_URL}?action=list&prefix=${encodeURIComponent(prefix)}&${ids_()}`);const j=await r.json();if(!j.ok)throw authErr(j);return j.value||{}},
   async post(body){const r=await fetch(API_URL,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify({...body,pw:LS.g("dsac_pw")||"",as:LS.g("dsac_uid")||"",apw:LS.g("dsac_apw")||""})});const j=await r.json();if(!j.ok)throw authErr(j);clearTimeout(pollT);pollT=setTimeout(()=>pollers.forEach(f=>f()),600);return j}
 };
+/* 숫자 칸에 포커스가 있을 때 마우스 휠로 숫자가 바뀌지 않게 해요 */
+document.addEventListener("wheel",e=>{const t=e.target;if(t&&t.tagName==="INPUT"&&t.type==="number"&&document.activeElement===t)t.blur()},{passive:true});
 function snap(path,v){return{id:path,exists:v!==null&&v!==undefined,data:()=>v}}
 function poll(fn,ok,err){let last=null,stop=false;const run=async()=>{if(stop)return;try{const s=await fn();const j=JSON.stringify(s.docs?s.docs.map(d=>[d.id,d.data()]):s.data());if(j!==last){last=j;ok(s)}}catch(e){if(err)err(e)}};pollers.add(run);run();const t=setInterval(()=>{if(!document.hidden)run()},30000);document.addEventListener("visibilitychange",()=>{if(!document.hidden&&!stop)run()});return()=>{stop=true;clearInterval(t);pollers.delete(run)}}
 function docRef(path){return{
