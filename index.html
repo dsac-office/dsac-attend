@@ -855,7 +855,7 @@ function renderClaim(){
 /* ===== 근무표 (엑셀 근무계획표와 같은 줄 구성) ===== */
 let T={uid:null,pid:null,ro:false};
 function periodSelect(){return`<select id="psel" class="pill" aria-label="단위기간 선택">${cfg.periods.map(p=>`<option value="${esc(p.id)}" ${p.id===S.periodId?"selected":""}>${esc(p.name)} (${md(p.start_date)}~${md((p.end_date||addDays(p.start_date,p.weeks*7-1)))})${p.locked?" 🔒":""}</option>`).join("")}</select>`}
-async function markActual(id,p){try{if(!id||!p)return;const v=await DA.get("actual/"+id);if(!v||!v.d)return;const s=p.start_date,e=p.end_date||addDays(p.start_date,p.weeks*7-1);document.querySelectorAll('input[data-k="ot"]').forEach(inp=>{const dk=inp.dataset.d;if(dk>=s&&dk<=e&&(+v.d[dk]||0)>0){inp.classList.add("act");inp.readOnly=true;inp.title="확정된 실제 시간외예요 (수정 불가)"}})}catch(e){}}
+async function markActual(id,p){try{if(!id||!p)return;const v=await DA.get("actual/"+id);if(!v||!v.d)return;const s=p.start_date,e=p.end_date||addDays(p.start_date,p.weeks*7-1);document.querySelectorAll('input[data-k="ot"]').forEach(inp=>{const dk=inp.dataset.d;if(dk>=s&&dk<=e&&(+v.d[dk]||0)>0){const rv=String(Math.round(+v.d[dk]));if(inp.value!==rv){inp.value=rv;inp.dispatchEvent(new Event("input",{bubbles:true}));inp.dispatchEvent(new Event("change",{bubbles:true}))}inp.classList.add("act");inp.readOnly=true;inp.title="확정된 실제 시간외예요 (수정 불가)"}})}catch(e){}}
 function renderSheetPage(target,mode){
   const p=curPeriod(),doc=getDoc(target);
   if(!p){app().innerHTML=shell('<div class="card">등록된 단위기간이 없어요. 관리 메뉴에서 추가해 주세요.</div>',mode==="admin"?"admin":"me");return}
