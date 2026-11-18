@@ -1609,8 +1609,11 @@ function bindForm(it){
     const hw=winOf(hm==="all"?foVal():(winOf($("#fr").value)?$("#fr").value:foVal()));const sHol=hw?hhmm(hw.ws):"";
     const wsL=[winOf($("#fr").value),winOf(foVal())].filter(Boolean).map(x=>x.ws);const rec={d,k,s:k==="휴일"?(wsL.length?hhmm(Math.min(...wsL)):sHol):s,e,b:be,m,r,hm:k==="휴일"?hm:"",o:k==="휴일"?foVal():"",w,st:it&&it.st||"",ts:it&&it.ts||Date.now()};
     busy($("#fo"),true);
-    try{const cur=S.mine||{items:{}},nxt={...cur,items:{...(cur.items||{}),[id]:rec}};await DA.post({action:"set",key:"ot/"+uid,value:JSON.stringify(nxt)});S.mine=nxt;S.edit=null;toast(it?"고쳤어요":"신청했어요");render()}
-    catch{toast("저장하지 못했어요. 잠시 뒤 다시 시도해 주세요",true);busy($("#fo"),false)}
+    /* 화면을 먼저 바꾸고 저장은 뒤에서 기다려요. 실패하면 되돌려요 */
+    const cur=S.mine||{items:{}},nxt={...cur,items:{...(cur.items||{}),[id]:rec}};
+    S.mine=nxt;S.edit=null;toast(it?"고쳤어요":"신청했어요");render();
+    try{await DA.post({action:"set",key:"ot/"+uid,value:JSON.stringify(nxt)})}
+    catch(e){S.mine=cur;render();toast(e&&e.code==="closed"?"시간외 신청이 마감되어 저장하지 못했어요":"저장하지 못했어요. 다시 신청해 주세요",true)}
   };
 }
 /* 휴일 분할 신청: 전체 구간 = 탄력·시간외 중 빠른 시작 ~ 늦은 끝, 괄호 = 시간외 구간 */
