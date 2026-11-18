@@ -607,11 +607,11 @@ function showLogin(){
       LS.s("dsac_uid",id);
       const wantAdm=$("#lg_ad").checked;
       const adminP=wantAdm?DA.post({action:"adminAuth",admin:$("#lg_apw").value}).then(()=>true,()=>false):Promise.resolve(false);
-      const __m=await DA.getMany(["config/main","sheets/"+id,"ot/"+id]);const sh=__m["sheets/"+id],o=__m["ot/"+id];
+      const [__m,__chk]=await Promise.all([DA.getMany(["config/main","sheets/"+id,"ot/"+id]),wantAdm?Promise.resolve(null):DA.check(id,nm).catch(()=>null)]);const sh=__m["sheets/"+id],o=__m["ot/"+id];
       let adm=false;
       if(wantAdm){LS.s("dsac_apw",$("#lg_apw").value);adm=await adminP;if(!adm){LS.d("dsac_apw");$("#lg_go").disabled=false;shake("#lg_apw");return err("관리자 비밀번호가 맞지 않아요")}}
       // 명단은 관리자만 읽어요. 직원은 사번과 이름이 맞을 때 본인 정보만 받아요.
-      const r0=adm?await DA.get("roster/"+id).catch(()=>null):await DA.check(id,nm).catch(()=>null);
+      const r0=adm?await DA.get("roster/"+id).catch(()=>null):__chk;
       let r=r0;
       if(!r&&adm){r={name:nm,team:"",active:true};await DA.post({action:"set",key:"roster/"+id,value:JSON.stringify(r)})}
       if(!r||r.active===false||String(r.name).replace(/\s/g,"")!==nm.replace(/\s/g,"")){LS.d("dsac_pw");$("#lg_go").disabled=false;return err("등록된 사번과 이름이 맞지 않아요. 담당자에게 문의해 주세요")}
