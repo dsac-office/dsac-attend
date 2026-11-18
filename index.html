@@ -1300,7 +1300,7 @@ let INQ=null,INQIMG="",OPEN_INQ=null,REPLY_EDIT=null;
 /* 사진을 줄여서(최대 900px, JPEG) 문서에 함께 저장 */
 function shrinkImg(f,mx=900,q=0.72){return new Promise((res,rej)=>{const r=new FileReader();r.onerror=rej;r.onload=()=>{const im=new Image();im.onerror=rej;im.onload=()=>{const k=Math.min(1,mx/Math.max(im.width,im.height));const c=document.createElement("canvas");c.width=Math.round(im.width*k);c.height=Math.round(im.height*k);c.getContext("2d").drawImage(im,0,0,c.width,c.height);res(c.toDataURL("image/jpeg",q))};im.src=r.result};r.readAsDataURL(f)})}
 /* 문의 글을 쓰는 중(글이 있거나 칸에 커서가 있거나 사진을 골랐을 때)에는 목록을 다시 그리지 않아요 */
-const INQ_PREV=60;
+const INQ_PREV=20;
 function inqPrev_(t){t=String(t||"");return t.length>INQ_PREV?t.slice(0,INQ_PREV)+"…":t}
 function inqTyping_(){const t=document.getElementById("inqt");return !!((t&&(t.value.trim()||document.activeElement===t))||(typeof INQIMG!=="undefined"&&INQIMG))}
 function loadInq(){DA.list("inq/").then(m=>{const nxt=Object.keys(m).map(k=>({...m[k],id:k.slice(4)})).sort((a,b)=>(b.ts||0)-(a.ts||0));const j=JSON.stringify(nxt),changed=j!==window.__inqJ;window.__inqJ=j;INQ=nxt;try{LS.s("dsac_inq",j)}catch(e){}if(S.view==="inquiry"&&changed&&!inqTyping_())render()}).catch(()=>{if(S.view==="inquiry"&&INQ===null){INQ=[];render()}})}
