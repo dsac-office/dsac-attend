@@ -1316,10 +1316,13 @@ function inqNotify_(list){
     else if(x.uid===me&&prev&&((x.reply&&!prev.r)||(x.done&&!prev.d)))msgs.push(x.done?"문의가 해결됐어요":"문의에 답변이 달렸어요");
   }
   try{LS.s("dsac_inq_seen",JSON.stringify(next))}catch(e){}
-  if(msgs.length){unreadAdd_("inq",msgs.length);beep_();const t=msgs[0]+(msgs.length>1?` 외 ${msgs.length-1}건`:"");toast(t);popup_("달서아트센터 근무관리",t)}
+  if(msgs.length){msgs.forEach(m=>histAdd_("inq",m));unreadAdd_("inq",msgs.length);beep_();const t=msgs[0]+(msgs.length>1?` 외 ${msgs.length-1}건`:"");toast(t);popup_("달서아트센터 근무관리",t)}
 }
 /* 바탕화면 팝업 알림(브라우저 알림 권한이 허용된 경우) */
 function popup_(title,body){try{if(!("Notification" in window)||Notification.permission!=="granted")return;const opts={body,tag:"dsac-inq",icon:"/icon-192.png"};if(navigator.serviceWorker&&navigator.serviceWorker.getRegistration){navigator.serviceWorker.getRegistration("/").then(r=>{if(r&&r.showNotification)r.showNotification(title,opts);else new Notification(title,opts)}).catch(()=>{try{new Notification(title,opts)}catch(e){}});return}new Notification(title,opts)}catch(e){}}
+/* 알림 이력(이 기기에 최근 60건 보관) */
+function histLoad_(){try{return JSON.parse(LS.g("dsac_hist")||"[]")||[]}catch(e){return[]}}
+function histAdd_(k,x){try{const h=histLoad_();h.unshift({t:Date.now(),k,x,r:false});LS.s("dsac_hist",JSON.stringify(h.slice(0,60)))}catch(e){}}
 /* 알림용 서비스 워커 등록(캐시는 하지 않아요) */
 try{if("serviceWorker" in navigator)navigator.serviceWorker.register("/sw.js").catch(()=>{})}catch(e){}
 function notifyAsk_(){try{if(LS.g("dsac_ntf_asked"))return;if("Notification" in window&&Notification.permission==="default"){LS.s("dsac_ntf_asked","1");Notification.requestPermission()}}catch(e){}}
@@ -1337,7 +1340,7 @@ function otNotify_(){
         if(seen&&!seen[key])msgs.push((rec.name||uid)+" 시간외 신청이 들어왔어요");
       }
     }
-    try{LS.s("dsac_ot_seen",JSON.stringify(next))}catch(e){}window.__otAll=next;computeUnread_();
+    msgs.forEach(m=>histAdd_("ot",m));try{LS.s("dsac_ot_seen",JSON.stringify(next))}catch(e){}window.__otAll=next;computeUnread_();
     if(msgs.length){unreadAdd_("ot",msgs.length);if(S.view==="admin"){S.allOn=true;setTimeout(()=>render(true),0)}beep_();const t=msgs[0]+(msgs.length>1?` 외 ${msgs.length-1}건`:"");toast(t);popup_("달서아트센터 근무관리",t)}
   }).catch(()=>{});
 }
@@ -1846,6 +1849,25 @@ boot();OT.start();
 @media (prefers-reduced-motion:reduce){.fab{transition:none}.fab:hover{transform:none}}
 </style>
 <script>
+/* 알림 아이콘과 이력 목록 */
+(function(){
+  const st=document.createElement("style");
+  st.textContent=".bell{position:fixed;right:calc(max(16px,env(safe-area-inset-right,0px)) + 52px);bottom:max(16px,env(safe-area-inset-bottom,0px));z-index:60;width:44px;height:44px;border-radius:50%;border:1px solid var(--line);background:var(--surface);color:var(--ink);box-shadow:0 6px 18px rgba(0,0,0,.12);cursor:pointer;display:grid;place-items:center}.bell .bd{position:absolute;top:-4px;right:-4px;margin:0}.bell svg{width:20px;height:20px}.hist{position:fixed;right:max(16px,env(safe-area-inset-right,0px));bottom:calc(max(16px,env(safe-area-inset-bottom,0px)) + 64px);z-index:60;width:min(320px,calc(100vw - 32px));max-height:60vh;overflow:auto;background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:12px;box-shadow:0 10px 30px rgba(0,0,0,.14);display:none}.hist.on{display:block}.hist-h{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;font-size:16px;color:var(--ink)}.hist-h button{border:0;background:transparent;color:var(--muted);font-weight:700;cursor:pointer;font-size:14px}.hist-i{display:grid;grid-template-columns:auto 1fr;gap:2px 10px;padding:10px 4px;border-top:1px solid var(--line);font-size:14px;color:var(--ink)}.hist-i.new .hist-x2{font-weight:700}.hist-k{font-size:12px;font-weight:700;color:var(--muted);align-self:center}.hist-i small{grid-column:2;font-size:12px;color:var(--muted)}.hist-x2{min-width:0;overflow-wrap:anywhere}.hist-e{padding:18px 4px;font-size:14px;color:var(--muted)}";
+  document.head.appendChild(st);
+  const bell=document.createElement("button");bell.className="bell";bell.setAttribute("aria-label","알림 이력 열기");
+  bell.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 8 3 8H3s3-1 3-8"/><path d="M10.3 21a1.9 1.9 0 0 0 3.4 0"/></svg>';
+  const pn=document.createElement("div");pn.className="hist";
+  pn.innerHTML='<div class="hist-h"><b>알림 이력</b><button type="button" class="hist-c">닫기</button></div><div class="hist-l"></div>';
+  document.body.append(pn,bell);
+  const esc4=t=>String(t==null?"":t).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+  const fmt=t=>{const d=new Date(t+9*3600e3).toISOString();return d.slice(5,7)+"/"+d.slice(8,10)+" "+d.slice(11,16)};
+  const badge=()=>{const n=histLoad_().filter(x=>!x.r).length;let d=bell.querySelector(".bd");if(n>0){if(!d){d=document.createElement("i");d.className="bd";bell.appendChild(d)}const t=n>9?"9+":String(n);if(d.textContent!==t)d.textContent=t}else if(d)d.remove()};
+  const list=()=>{const h=histLoad_();pn.querySelector(".hist-l").innerHTML=h.length?h.map(x=>`<div class="hist-i${x.r?"":" new"}"><span class="hist-k">${x.k==="ot"?"시간외":"문의"}</span><span class="hist-x2">${esc4(x.x)}</span><small>${fmt(x.t)}</small></div>`).join(""):'<div class="hist-e">아직 받은 알림이 없어요</div>'};
+  const close=()=>{pn.classList.remove("on");const h=histLoad_();h.forEach(x=>x.r=true);try{LS.s("dsac_hist",JSON.stringify(h))}catch(e){}badge()};
+  bell.onclick=()=>{if(pn.classList.contains("on")){close();return}list();pn.classList.add("on")};
+  pn.querySelector(".hist-c").onclick=close;
+  badge();setInterval(()=>{badge();if(pn.classList.contains("on"))list()},5000);
+})();
 (function(){
   let pinned=false;try{pinned=localStorage.getItem("dsac_fab_pin")==="1"}catch(e){}
   const b=document.createElement("button");b.className="fab";b.setAttribute("aria-label","바로가기 열기");
