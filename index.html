@@ -1337,27 +1337,45 @@ function otNotify_(){
         if(seen&&!seen[key])msgs.push((rec.name||uid)+" 시간외 신청이 들어왔어요");
       }
     }
-    try{LS.s("dsac_ot_seen",JSON.stringify(next))}catch(e){}
+    try{LS.s("dsac_ot_seen",JSON.stringify(next))}catch(e){}window.__otAll=next;computeUnread_();
     if(msgs.length){unreadAdd_("ot",msgs.length);beep_();const t=msgs[0]+(msgs.length>1?` 외 ${msgs.length-1}건`:"");toast(t);popup_("달서아트센터 근무관리",t)}
   }).catch(()=>{});
 }
 setInterval(()=>{if(!document.hidden)otNotify_()},60000);
 setTimeout(otNotify_,8000);
-/* 확인하지 않은 알림 개수: 메뉴 옆에 빨간 숫자로 보여 줘요 */
+/* 확인하지 않은 알림 개수: 읽음 기록은 시트의 본인 시간외 기록(ot/사번, seen 항목)에 저장해서 PC와 폰이 같은 숫자를 봐요 */
 (function(){const st=document.createElement("style");st.textContent=".bd{display:inline-block;min-width:16px;height:16px;padding:0 4px;margin-left:4px;border-radius:999px;background:var(--warn);color:#fff;font-size:11px;font-style:normal;line-height:16px;text-align:center;vertical-align:middle}";document.head.appendChild(st)})();
-function unreadGet_(){try{return JSON.parse(LS.g("dsac_unread")||"{}")||{}}catch(e){return{}}}
-function unreadSet_(u){try{LS.s("dsac_unread",JSON.stringify(u))}catch(e){}}
-function unreadAdd_(k,n){const u=unreadGet_();u[k]=(u[k]||0)+n;unreadSet_(u);paintBadges_()}
-function unreadClear_(k){const u=unreadGet_();if(!u[k])return;u[k]=0;unreadSet_(u);paintBadges_()}
-function paintBadges_(){
-  if(S.view==="inquiry")unreadClear_("inq");
-  const u=unreadGet_();
-  const put=(sel,n)=>{document.querySelectorAll(sel).forEach(b=>{let d=b.querySelector(".bd");if(n>0){if(!d){d=document.createElement("i");d.className="bd";b.appendChild(d)}const t=n>9?"9+":String(n);if(d.textContent!==t)d.textContent=t}else if(d)d.remove()})};
-  put('[data-inquiry]',u.inq||0);put('[data-mode="ot"]',u.ot||0);
+window.__seen=null;window.__unread={inq:0,ot:0};window.__otAll=null;window.__mapInq=null;window.__mk=false;
+function seenMe_(){return LS.g("dsac_uid")||(typeof uid!=="undefined"&&uid)||""}
+function stOf_(x){return x.done?"d":x.reply?"r":"n"}
+function unreadAdd_(){computeUnread_()}
+async function seenLoad_(){try{const d=await DA.get("ot/"+seenMe_());window.__seen=(d&&d.seen)||{inq:{},ot:{}}}catch(e){window.__seen=window.__seen||{inq:{},ot:{}}}computeUnread_()}
+async function seenSave_(kind,map){const me=seenMe_();try{const cur=(await DA.get("ot/"+me))||{items:{}};const seen={...((cur&&cur.seen)||{}),[kind]:map};window.__seen=seen;await DA.post({action:"set",key:"ot/"+me,value:JSON.stringify({...cur,seen})})}catch(e){}computeUnread_()}
+function computeUnread_(){
+  const me=seenMe_(),S0=window.__seen||{inq:{},ot:{}},mapInq={};let inq=0;
+  for(const x of (INQ||[])){
+    if(!isAdmin&&x.uid!==me)continue;
+    const st=stOf_(x);mapInq[x.id]=st;
+    if(!isAdmin&&st==="n")continue;
+    if(((S0.inq||{})[x.id])!==st)inq++;
+  }
+  let ot=0;
+  if(isAdmin&&window.__otAll){for(const k of Object.keys(window.__otAll)){if(!((S0.ot||{})[k]))ot++}}
+  window.__mapInq=mapInq;window.__unread={inq,ot};paintBadges_();
 }
-document.addEventListener("click",e=>{if(e.target.closest&&e.target.closest('[data-mode="ot"]'))unreadClear_("ot")},true);
+async function markInqSeen_(){if(!window.__mapInq||window.__mk)return;window.__mk=true;try{await seenSave_("inq",window.__mapInq)}finally{window.__mk=false}}
+async function markOtSeen_(){if(!isAdmin||!window.__otAll)return;const m={};for(const k of Object.keys(window.__otAll))m[k]=1;await seenSave_("ot",m)}
+function paintBadges_(){
+  if(S.view==="inquiry"&&window.__unread&&window.__unread.inq&&!window.__mk)markInqSeen_();
+  const u=window.__unread||{inq:0,ot:0};
+  const put=(sel,n)=>{document.querySelectorAll(sel).forEach(b=>{let d=b.querySelector(".bd");if(n>0){if(!d){d=document.createElement("i");d.className="bd";b.appendChild(d)}const t=n>9?"9+":String(n);if(d.textContent!==t)d.textContent=t}else if(d)d.remove()})};
+  put('[data-inquiry]',u.inq||0);put('[data-mode="ot"]',isAdmin?(u.ot||0):0);
+}
+document.addEventListener("click",e=>{if(e.target.closest&&e.target.closest('[data-mode="ot"]'))markOtSeen_()},true);
 (function(){const ap=document.getElementById("app");if(ap)new MutationObserver(()=>paintBadges_()).observe(ap,{childList:true,subtree:true})})();
-function loadInq(){DA.list("inq/").then(m=>{const nxt=Object.keys(m).map(k=>({...m[k],id:k.slice(4)})).sort((a,b)=>(b.ts||0)-(a.ts||0));const j=JSON.stringify(nxt),changed=j!==window.__inqJ;window.__inqJ=j;INQ=nxt;inqNotify_(nxt);try{LS.s("dsac_inq",j)}catch(e){}if(S.view==="inquiry"&&changed&&!inqTyping_())render()}).catch(()=>{if(S.view==="inquiry"&&INQ===null){INQ=[];render()}})}
+setTimeout(()=>{seenLoad_();loadInq()},7000);
+setInterval(()=>{if(!document.hidden)loadInq()},60000);
+function loadInq(){DA.list("inq/").then(m=>{const nxt=Object.keys(m).map(k=>({...m[k],id:k.slice(4)})).sort((a,b)=>(b.ts||0)-(a.ts||0));const j=JSON.stringify(nxt),changed=j!==window.__inqJ;window.__inqJ=j;INQ=nxt;inqNotify_(nxt);computeUnread_();try{LS.s("dsac_inq",j)}catch(e){}if(S.view==="inquiry"&&changed&&!inqTyping_())render()}).catch(()=>{if(S.view==="inquiry"&&INQ===null){INQ=[];render()}})}
 // 문의 사진은 시트 한 칸(약 5만 자) 안에 들어가도록 점점 더 작게 줄인다
 async function shrinkInq(f){for(const [mx,q] of [[640,0.6],[480,0.5],[360,0.45],[280,0.4]]){const d=await shrinkImg(f,mx,q);if(d.length<=30000)return d}throw Object.assign(new Error("too_big"),{code:"too_big"})}
 function renderInquiry(){
