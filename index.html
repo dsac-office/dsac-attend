@@ -1338,7 +1338,7 @@ function otNotify_(){
       }
     }
     try{LS.s("dsac_ot_seen",JSON.stringify(next))}catch(e){}window.__otAll=next;computeUnread_();
-    if(msgs.length){unreadAdd_("ot",msgs.length);beep_();const t=msgs[0]+(msgs.length>1?` 외 ${msgs.length-1}건`:"");toast(t);popup_("달서아트센터 근무관리",t)}
+    if(msgs.length){unreadAdd_("ot",msgs.length);if(S.view==="admin"){S.allOn=true;setTimeout(()=>render(true),0)}beep_();const t=msgs[0]+(msgs.length>1?` 외 ${msgs.length-1}건`:"");toast(t);popup_("달서아트센터 근무관리",t)}
   }).catch(()=>{});
 }
 setInterval(()=>{if(!document.hidden)otNotify_()},60000);
