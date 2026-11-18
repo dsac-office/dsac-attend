@@ -67,11 +67,21 @@ function isMine_(key, as) {
 
 function canRead_(key, admin, as) {
   if (admin) return true;
-  if (key === 'config/main' || String(key).indexOf('roster/') === 0) return true;
+  if (key === 'config/main') return true;
+  if (String(key).indexOf('roster/') === 0) return false; // 명단은 관리자만
   return isMine_(key, as) || key === 'actual/' + as;
 }
 
+// 직원 로그인 확인: 사번과 이름이 맞을 때만 본인 정보(이름·팀·직급)를 돌려줘요. 명단 전체는 주지 않아요.
+function checkLogin_(p) {
+  var rec = readValue_('roster/' + String(p.id || ''));
+  var norm = function (s) { return String(s || '').replace(/\s/g, ''); };
+  if (!rec || rec.active === false || norm(rec.name) !== norm(p.name)) return { ok: false, error: 'nomatch' };
+  return { ok: true, value: { name: rec.name, team: rec.team || '', rank: rec.rank || '' } };
+}
+
 function read_(p, admin, as) {
+  if (p.action === 'checkLogin') return checkLogin_(p);
   if (p.action === 'get') {
     if (!canRead_(p.key, admin, as)) return { ok: false, error: 'forbidden' };
     return { ok: true, value: readValue_(p.key) };
@@ -87,7 +97,7 @@ function read_(p, admin, as) {
   }
   if (p.action === 'list') {
     var prefix = p.prefix || '';
-    if (!admin && prefix !== 'roster/' && prefix !== 'inq/') return { ok: false, error: 'forbidden' };
+    if (!admin && prefix !== 'inq/') return { ok: false, error: 'forbidden' };
     var sh2 = store_();
     var last = sh2.getLastRow();
     var outL = {};
@@ -198,7 +208,7 @@ function handle_(p) {
   }
   var admin = !!p.apw && p.apw === props_().getProperty('ADMIN_PASSWORD');
   var as = String(p.as || '');
-  if (p.action === 'get' || p.action === 'getMany' || p.action === 'list') return read_(p, admin, as);
+  if (p.action === 'get' || p.action === 'getMany' || p.action === 'list' || p.action === 'checkLogin') return read_(p, admin, as);
   return write_(p, admin, as);
 }
 

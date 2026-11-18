@@ -515,6 +515,7 @@ function authErr(j){const e=new Error(j.error||"fail");e.code=j.error||"fail";re
 const DA={
   async get(key){const r=await fetch(`${API_URL}?action=get&key=${encodeURIComponent(key)}&${ids_()}`);const j=await r.json();if(!j.ok)throw authErr(j);return j.value},
   async getMany(keys){try{const r=await fetch(`${API_URL}?action=getMany&keys=${encodeURIComponent(JSON.stringify(keys))}&${ids_()}`);const j=await r.json();if(j.ok)return j.value||{}}catch(e){}const vals=await Promise.all(keys.map(k=>DA.get(k)));const out={};keys.forEach((k,i)=>out[k]=vals[i]);return out},
+  async check(id,name){const r=await fetch(`${API_URL}?action=checkLogin&id=${encodeURIComponent(id)}&name=${encodeURIComponent(name)}&${ids_()}`);const j=await r.json();return j.ok?j.value:null},
   async list(prefix){const r=await fetch(`${API_URL}?action=list&prefix=${encodeURIComponent(prefix)}&${ids_()}`);const j=await r.json();if(!j.ok)throw authErr(j);return j.value||{}},
   async post(body){const r=await fetch(API_URL,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify({...body,pw:LS.g("dsac_pw")||"",as:LS.g("dsac_uid")||"",apw:LS.g("dsac_apw")||""})});const j=await r.json();if(!j.ok)throw authErr(j);clearTimeout(pollT);pollT=setTimeout(()=>pollers.forEach(f=>f()),600);return j}
 };
@@ -606,9 +607,11 @@ function showLogin(){
       LS.s("dsac_uid",id);
       const wantAdm=$("#lg_ad").checked;
       const adminP=wantAdm?DA.post({action:"adminAuth",admin:$("#lg_apw").value}).then(()=>true,()=>false):Promise.resolve(false);
-      const __m=await DA.getMany(["config/main","roster/"+id,"sheets/"+id,"ot/"+id]);const r0=__m["roster/"+id],sh=__m["sheets/"+id],o=__m["ot/"+id];
+      const __m=await DA.getMany(["config/main","sheets/"+id,"ot/"+id]);const sh=__m["sheets/"+id],o=__m["ot/"+id];
       let adm=false;
       if(wantAdm){LS.s("dsac_apw",$("#lg_apw").value);adm=await adminP;if(!adm){LS.d("dsac_apw");$("#lg_go").disabled=false;shake("#lg_apw");return err("관리자 비밀번호가 맞지 않아요")}}
+      // 명단은 관리자만 읽어요. 직원은 사번과 이름이 맞을 때 본인 정보만 받아요.
+      const r0=adm?await DA.get("roster/"+id).catch(()=>null):await DA.check(id,nm).catch(()=>null);
       let r=r0;
       if(!r&&adm){r={name:nm,team:"",active:true};await DA.post({action:"set",key:"roster/"+id,value:JSON.stringify(r)})}
       if(!r||r.active===false||String(r.name).replace(/\s/g,"")!==nm.replace(/\s/g,"")){LS.d("dsac_pw");$("#lg_go").disabled=false;return err("등록된 사번과 이름이 맞지 않아요. 담당자에게 문의해 주세요")}
