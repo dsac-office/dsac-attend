@@ -1322,8 +1322,8 @@ function inqNotify_(list){
 function popup_(title,body){try{if(!("Notification" in window)||Notification.permission!=="granted")return;const opts={body,tag:"dsac-inq",icon:"/icon-192.png"};if(navigator.serviceWorker&&navigator.serviceWorker.getRegistration){navigator.serviceWorker.getRegistration("/").then(r=>{if(r&&r.showNotification)r.showNotification(title,opts);else new Notification(title,opts)}).catch(()=>{try{new Notification(title,opts)}catch(e){}});return}new Notification(title,opts)}catch(e){}}
 /* 알림용 서비스 워커 등록(캐시는 하지 않아요) */
 try{if("serviceWorker" in navigator)navigator.serviceWorker.register("/sw.js").catch(()=>{})}catch(e){}
-function notifyAsk_(){try{if("Notification" in window&&Notification.permission==="default")Notification.requestPermission()}catch(e){}}
-document.addEventListener("click",()=>notifyAsk_(),{capture:true});
+function notifyAsk_(){try{if(LS.g("dsac_ntf_asked"))return;if("Notification" in window&&Notification.permission==="default"){LS.s("dsac_ntf_asked","1");Notification.requestPermission()}}catch(e){}}
+document.addEventListener("click",()=>{if(window.MODE==="home")notifyAsk_()},{capture:true});
 /* 관리자 알림: 새 시간외 신청이 들어오면 소리와 팝업(앱이 열려 있는 동안) */
 function otNotify_(){
   if(!isAdmin)return;
