@@ -1319,7 +1319,9 @@ function inqNotify_(list){
   if(msgs.length){beep_();const t=msgs[0]+(msgs.length>1?` 외 ${msgs.length-1}건`:"");toast(t);popup_("달서아트센터 근무관리",t)}
 }
 /* 바탕화면 팝업 알림(브라우저 알림 권한이 허용된 경우) */
-function popup_(title,body){try{if("Notification" in window&&Notification.permission==="granted")new Notification(title,{body,tag:"dsac-inq"})}catch(e){}}
+function popup_(title,body){try{if(!("Notification" in window)||Notification.permission!=="granted")return;const opts={body,tag:"dsac-inq",icon:"/icon-192.png"};if(navigator.serviceWorker&&navigator.serviceWorker.getRegistration){navigator.serviceWorker.getRegistration("/").then(r=>{if(r&&r.showNotification)r.showNotification(title,opts);else new Notification(title,opts)}).catch(()=>{try{new Notification(title,opts)}catch(e){}});return}new Notification(title,opts)}catch(e){}}
+/* 알림용 서비스 워커 등록(캐시는 하지 않아요) */
+try{if("serviceWorker" in navigator)navigator.serviceWorker.register("/sw.js").catch(()=>{})}catch(e){}
 function notifyAsk_(){try{if("Notification" in window&&Notification.permission==="default")Notification.requestPermission()}catch(e){}}
 document.addEventListener("click",()=>{if(S.view==="inquiry")notifyAsk_()},{once:false,capture:true});
 function loadInq(){DA.list("inq/").then(m=>{const nxt=Object.keys(m).map(k=>({...m[k],id:k.slice(4)})).sort((a,b)=>(b.ts||0)-(a.ts||0));const j=JSON.stringify(nxt),changed=j!==window.__inqJ;window.__inqJ=j;INQ=nxt;inqNotify_(nxt);try{LS.s("dsac_inq",j)}catch(e){}if(S.view==="inquiry"&&changed&&!inqTyping_())render()}).catch(()=>{if(S.view==="inquiry"&&INQ===null){INQ=[];render()}})}
