@@ -1344,7 +1344,7 @@ function otNotify_(){
 setInterval(()=>{if(!document.hidden)otNotify_()},60000);
 setTimeout(otNotify_,8000);
 /* 확인하지 않은 알림 개수: 읽음 기록은 시트의 본인 시간외 기록(ot/사번, seen 항목)에 저장해서 PC와 폰이 같은 숫자를 봐요 */
-(function(){const st=document.createElement("style");st.textContent=".bd{display:inline-block;min-width:16px;height:16px;padding:0 4px;margin-left:4px;border-radius:999px;background:var(--warn);color:#fff;font-size:11px;font-style:normal;line-height:16px;text-align:center;vertical-align:middle}";document.head.appendChild(st)})();
+(function(){const st=document.createElement("style");st.textContent=".bd{display:inline-block;min-width:16px;height:16px;padding:0 4px;margin-left:4px;border-radius:999px;background:var(--warn);color:#fff;font-size:11px;font-style:normal;line-height:16px;text-align:center;vertical-align:middle}.home .tile .al{display:block;margin-top:6px;font-size:14px;font-style:normal;font-weight:700;color:var(--ink)}";document.head.appendChild(st)})();
 window.__seen=null;window.__unread={inq:0,ot:0};window.__otAll=null;window.__mapInq=null;window.__mk=false;
 function seenMe_(){return LS.g("dsac_uid")||(typeof uid!=="undefined"&&uid)||""}
 function stOf_(x){return x.done?"d":x.reply?"r":"n"}
@@ -1370,6 +1370,9 @@ function paintBadges_(){
   const u=window.__unread||{inq:0,ot:0};
   const put=(sel,n)=>{document.querySelectorAll(sel).forEach(b=>{let d=b.querySelector(".bd");if(n>0){if(!d){d=document.createElement("i");d.className="bd";b.appendChild(d)}const t=n>9?"9+":String(n);if(d.textContent!==t)d.textContent=t}else if(d)d.remove()})};
   put('[data-inquiry]',u.inq||0);put('[data-mode="ot"]',isAdmin?(u.ot||0):0);
+  // 홈 화면 타일에는 어떤 알림인지 글자로도 보여줘요
+  const tag=(sel,n,label)=>{document.querySelectorAll(sel).forEach(b=>{const tt=b.querySelector(".tt");if(!tt)return;let t=tt.querySelector(".al");if(n>0){if(!t){t=document.createElement("em");t.className="al";tt.appendChild(t)}const s=label+" "+n+"건";if(t.textContent!==s)t.textContent=s}else if(t)t.remove()})};
+  tag('.home [data-inquiry]',u.inq||0,"새 문의·답변");tag('.home [data-mode="ot"]',isAdmin?(u.ot||0):0,"새 시간외 신청");
 }
 document.addEventListener("click",e=>{if(e.target.closest&&e.target.closest('[data-mode="ot"]'))markOtSeen_()},true);
 (function(){const ap=document.getElementById("app");if(ap)new MutationObserver(()=>paintBadges_()).observe(ap,{childList:true,subtree:true})})();
