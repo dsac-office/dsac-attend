@@ -1323,7 +1323,7 @@ function popup_(title,body){try{if(!("Notification" in window)||Notification.per
 /* 알림용 서비스 워커 등록(캐시는 하지 않아요) */
 try{if("serviceWorker" in navigator)navigator.serviceWorker.register("/sw.js").catch(()=>{})}catch(e){}
 function notifyAsk_(){try{if("Notification" in window&&Notification.permission==="default")Notification.requestPermission()}catch(e){}}
-document.addEventListener("click",()=>{if(S.view==="inquiry")notifyAsk_()},{once:false,capture:true});
+document.addEventListener("click",()=>notifyAsk_(),{capture:true});
 /* 관리자 알림: 새 시간외 신청이 들어오면 소리와 팝업(앱이 열려 있는 동안) */
 function otNotify_(){
   if(!isAdmin)return;
