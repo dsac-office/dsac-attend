@@ -1303,7 +1303,7 @@ function shrinkImg(f,mx=900,q=0.72){return new Promise((res,rej)=>{const r=new F
 function inqTyping_(){const t=document.getElementById("inqt");return !!((t&&(t.value.trim()||document.activeElement===t))||(typeof INQIMG!=="undefined"&&INQIMG))}
 function loadInq(){DA.list("inq/").then(m=>{const nxt=Object.keys(m).map(k=>({...m[k],id:k.slice(4)})).sort((a,b)=>(b.ts||0)-(a.ts||0));const j=JSON.stringify(nxt),changed=j!==window.__inqJ;window.__inqJ=j;INQ=nxt;try{LS.s("dsac_inq",j)}catch(e){}if(S.view==="inquiry"&&changed&&!inqTyping_())render()}).catch(()=>{if(S.view==="inquiry"&&INQ===null){INQ=[];render()}})}
 // 문의 사진은 시트 한 칸(약 5만 자) 안에 들어가도록 점점 더 작게 줄인다
-async function shrinkInq(f){for(const [mx,q] of [[800,0.7],[600,0.6],[480,0.5],[360,0.45]]){const d=await shrinkImg(f,mx,q);if(d.length<=45000)return d}throw Object.assign(new Error("too_big"),{code:"too_big"})}
+async function shrinkInq(f){for(const [mx,q] of [[640,0.6],[480,0.5],[360,0.45],[280,0.4]]){const d=await shrinkImg(f,mx,q);if(d.length<=30000)return d}throw Object.assign(new Error("too_big"),{code:"too_big"})}
 function renderInquiry(){
   if(INQ===null){try{INQ=JSON.parse(LS.g("dsac_inq")||"null")}catch(e){INQ=null}}
   if(!window.__inqOn){window.__inqOn=true;loadInq();setInterval(()=>{if(S.view==="inquiry"&&!document.hidden)loadInq()},30000)}
