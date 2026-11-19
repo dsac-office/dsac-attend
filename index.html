@@ -1809,7 +1809,7 @@ async function copyTable(rows){
   const th=`style="${base};text-align:center"`;
   const td=`style="${base};text-align:center"`;
   const tl=`style="${base};text-align:left"`;
-  const html=`<table style="border-collapse:collapse;border:1px solid #000;font-family:맑은 고딕,Malgun Gothic,sans-serif;font-size:10pt"><tr>${head.map(h=>`<th ${th}>${h}</th>`).join("")}</tr>${vals.map(r=>`<tr>${r.map((c,j)=>`<td ${j===7?tl:td}>${esc(c).replace(/\n/g,"<br>")}</td>`).join("")}</tr>`).join("")}</table>`;
+  const html=`<table style="border-collapse:collapse;border:1px solid #000;font-family:맑은 고딕,Malgun Gothic,sans-serif;font-size:10pt"><tr>${head.map(h=>`<th ${th}>${h}</th>`).join("")}</tr>${vals.map(r=>`<tr>${r.map((c,j)=>`<td ${td}>${esc(c).replace(/\n/g,"<br>")}</td>`).join("")}</tr>`).join("")}</table>`;
   const tsv=[head,...vals].map(r=>r.map(c=>{c=String(c);return /[\n\t"]/.test(c)?`"${c.replace(/"/g,'""')}"`:c}).join("\t")).join("\n");
   try{
     if(window.ClipboardItem)await navigator.clipboard.write([new ClipboardItem({"text/html":new Blob([html],{type:"text/html"}),"text/plain":new Blob([tsv],{type:"text/plain"})})]);
