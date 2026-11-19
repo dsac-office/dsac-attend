@@ -1667,7 +1667,7 @@ function formHtml(it){
   <div><label for="fm">시간외 (분) <span style="font-weight:600;color:var(--accent-ink)">자동 계산</span></label><div class="min"><input type="number" id="fm" readonly inputmode="numeric" min="0" step="10" value="${esc(v.m)}"><span>분</span></div></div>
   <div class="w2"><label for="fw">근무내역</label><input id="fw" value="${esc(v.w)}" placeholder="예: 기획공연 준비"></div>
   <div class="w2 hd-only" ${k==="휴일"?"":"hidden"}><label>휴게시간 차감</label><span class="bk" id="fbr" role="group" aria-label="휴게 공제 위치"><button type="button" data-v="ot" class="on" aria-pressed="true">초과에서</button><button type="button" data-v="base" aria-pressed="false">기본에서</button></span><span id="fbk" style="display:block;font-size:12px;color:var(--muted);margin-top:6px"></span></div>
-  <div id="fdm" role="status" style="font-weight:700;color:var(--ink);margin:0 0 10px;min-height:0"></div><div class="fbar">${it?`<button class="btn ghost" id="fc">취소</button>`:""}<button class="btn" id="fo">${it?"수정":"신청"}</button></div>
+  <div id="fdm" role="status" style="background:#58C0D0;color:#06262c;border-radius:14px;padding:14px 16px;margin:0 0 12px;font-weight:700;line-height:1.5;empty:none"></div><div class="fbar">${it?`<button class="btn ghost" id="fc">취소</button>`:""}<button class="btn" id="fo">${it?"수정":"신청"}</button></div>
   </div></div>`;
 }
 function brkOf(){return document.querySelector("#fbr .on")?.dataset.v||"ot"}
@@ -1690,9 +1690,9 @@ function bindForm(it){
   $("#fbr").onclick=e=>{const b=e.target.closest("button");if(!b)return;$("#fbr").querySelectorAll("button").forEach(x=>{const on=x===b;x.classList.toggle("on",on);x.setAttribute("aria-pressed",on)});mTouched=false;recalc()};
   recalc();applyHM();
   if(it)$("#fc").onclick=()=>{S.edit=null;render()};
-  const cmsg_=()=>{const d=$("#fd")?.value;const c=closedDay(d);const m=$("#fdm");if(m)m.textContent=c?`마감됐습니다`:"";const b=$("#fo");if(b)b.disabled=c};
+  const cmsg_=()=>{const d=$("#fd")?.value;const c=closedDay(d);const m=$("#fdm");if(m)m.textContent=c?"해당 일자는 시간외 신청이 마감됐습니다.":"";const b=$("#fo");if(b)b.disabled=c};
   $("#fd")?.addEventListener("change",cmsg_);cmsg_();
-  $("#fo").onclick=async()=>{if(closedDay($("#fd")?.value)){toast("마감됐습니다",true);return}
+  $("#fo").onclick=async()=>{if(closedDay($("#fd")?.value)){toast("해당 일자는 시간외 신청이 마감됐습니다",true);return}
     const d=$("#fd").value,s=tv("#fs"),e=k==="휴일"?holEnd($("#fr").value,foVal()):tv("#fe"),w=$("#fw").value.trim(),be=k==="평일"?(bEnd(tv("#fb"))||"18:00"):"",m=$("#fm").value===""?autoMin(k,s,e,be,$("#fr")?.value,brkOf(),foVal()):Math.round(+$("#fm").value);
     const r=k==="휴일"?$("#fr").value.trim():(be!=="18:00"?`${hmT(be)}~${hmT(e)}`:"");
     if(!d)return toast("일자를 골라 주세요",true);
