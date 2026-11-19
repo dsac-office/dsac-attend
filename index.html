@@ -1323,6 +1323,17 @@ function inqNotify_(list){
 }
 /* 바탕화면 팝업 알림(브라우저 알림 권한이 허용된 경우) */
 function popup_(title,body){try{if(!("Notification" in window)||Notification.permission!=="granted")return;const opts={body,tag:"dsac-inq",icon:"/icon-192.png"};if(navigator.serviceWorker&&navigator.serviceWorker.getRegistration){navigator.serviceWorker.getRegistration("/").then(r=>{if(r&&r.showNotification)r.showNotification(title,opts);else new Notification(title,opts)}).catch(()=>{try{new Notification(title,opts)}catch(e){}});return}new Notification(title,opts)}catch(e){}}
+/* 저장 중 표시: 화면 위쪽에 도는 원만 보여요(글자 없음). 저장이 끝나면 사라져요 */
+function sv_(on){
+  let el=document.getElementById("sv");
+  if(!on){if(el)el.remove();return}
+  if(el)return;
+  if(!document.getElementById("svk")){const k=document.createElement("style");k.id="svk";k.textContent="@keyframes svspin{to{transform:rotate(360deg)}}";document.head.append(k)}
+  el=document.createElement("div");el.id="sv";el.setAttribute("role","status");el.setAttribute("aria-label","저장 중");
+  el.style.cssText="position:fixed;left:50%;top:max(14px,env(safe-area-inset-top,0px));transform:translateX(-50%);z-index:70;background:var(--surface);border:1px solid var(--line);border-radius:999px;padding:9px;box-shadow:0 6px 18px rgba(0,0,0,.12);pointer-events:none";
+  el.innerHTML='<i style="display:block;width:16px;height:16px;border:2px solid var(--line);border-top-color:var(--ink);border-radius:50%;animation:svspin .8s linear infinite"></i>';
+  document.body.append(el);
+}
 /* 알림 이력(이 기기에 최근 60건 보관) */
 function histLoad_(){try{return JSON.parse(LS.g("dsac_hist")||"[]")||[]}catch(e){return[]}}
 function histAdd_(k,x){try{const h=histLoad_();h.unshift({t:Date.now(),k,x,r:false});LS.s("dsac_hist",JSON.stringify(h.slice(0,60)))}catch(e){}}
@@ -1697,8 +1708,10 @@ function bindForm(it){
     /* 화면을 먼저 바꾸고 저장은 뒤에서 기다려요. 실패하면 되돌려요 */
     const cur=S.mine||{items:{}},nxt={...cur,items:{...(cur.items||{}),[id]:rec}};
     S.mine=nxt;S.edit=null;render();
+    sv_(true);
     try{await DA.post({action:"set",key:"ot/"+uid,value:JSON.stringify(nxt)});toast(it?"고쳤어요":"신청했어요")}
     catch(e){S.mine=cur;render();toast(e&&e.code==="closed"?"시간외 신청이 마감되어 저장하지 못했어요":"저장하지 못했어요. 다시 신청해 주세요",true)}
+    finally{sv_(false)}
   };
 }
 /* 휴일 분할 신청: 전체 구간 = 탄력·시간외 중 빠른 시작 ~ 늦은 끝, 괄호 = 시간외 구간 */
