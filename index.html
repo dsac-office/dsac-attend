@@ -689,7 +689,7 @@ const DEFAULT_CFG={
 /* ===== 상태 ===== */
 let db=null,userNS=null,dl=null,uid=null,isAdmin=false,canWrite=null;
 let cfg=structuredClone(DEFAULT_CFG);
-let OT_CUT="",OT_ALL=false;const todayKST=()=>new Date(Date.now()+9*36e5).toISOString().slice(0,10);const closedDay=d=>!!OT_CUT&&!!d&&d<=OT_CUT;
+let OT_DATES=[];const todayKST=()=>new Date(Date.now()+9*36e5).toISOString().slice(0,10);const closedDay=d=>!!d&&OT_DATES.includes(d);
 const S={view:"me",periodId:null,my:undefined,all:{},roster:{},target:null,tab:"emp",names:{},ready:false,showLeave:false};
 const holMap=()=>Object.fromEntries(cfg.holidays.map(h=>[h.date,h.name]));
 const curPeriod=()=>cfg.periods.find(p=>p.id===S.periodId);
@@ -1517,7 +1517,7 @@ async function boot(){
   let savedView=null;try{savedView=JSON.parse(sessionStorage.getItem("dsac_nav")||"null")?.view||null}catch(e){}
   S.view=savedView||(isAdmin?"admin":"me");
   db.doc("config/main").onSnapshot(s=>{
-    OT_ALL=!!(s.exists&&s.data().otClosed);OT_CUT=OT_ALL?"9999-12-31":(s.exists?(s.data().otCutoff||""):"");
+    OT_DATES=s.exists&&Array.isArray(s.data().otDates)?s.data().otDates:[];
     if(s.exists){const d=structuredClone(s.data());cfg={settings:{...DEFAULT_CFG.settings,...(d.settings||{})},periods:d.periods||DEFAULT_CFG.periods,holidays:d.holidays||DEFAULT_CFG.holidays}}
     if(!cfg.periods.find(p=>p.id===S.periodId))S.periodId=cfg.periods[cfg.periods.length-1].id;
     if(S.my!==undefined&&usable())render();
@@ -1731,7 +1731,7 @@ function renderMe(){
   const edit=S.edit&&list.find(x=>x.id===S.edit);
   const wait=list.filter(x=>Date.now()-(x.ts||0)<864e5),done=[];
   app().innerHTML=shell(`<div class="head"><div><h1>${esc(S.mine.name)} · 시간외근무 신청</h1></div></div>
-  ${OT_CUT?`<div role="status" style="background:#58C0D0;color:#06262c;border-radius:14px;padding:14px 16px;margin:0 0 12px;font-weight:700;line-height:1.5">${OT_ALL?"시간외 신청이 마감됐어요. 신청·수정·삭제를 할 수 없어요.":esc(OT_CUT)+"까지 시간외 신청이 마감됐어요. 마감된 날짜는 신청·수정·삭제할 수 없어요. 그 이후 날짜만 가능해요."}</div>`:""}
+  ${OT_DATES.length?`<div role="status" style="background:#58C0D0;color:#06262c;border-radius:14px;padding:14px 16px;margin:0 0 12px;font-weight:700;line-height:1.5">마감된 날짜: ${OT_DATES.map(d=>+d.slice(5,7)+"/"+ +d.slice(8)).join(", ")}. 이 날짜는 신청·수정·삭제할 수 없어요.</div>`:""}
   ${formHtml(edit)}
   <div class="card"><h3>신청내역 <span class="chip pri">${wait.length}</span></h3><div class="list">${wait.map(x=>itemRow(x,!closedDay(x.d))).join("")||`<div class="empty">아직 없어요</div>`}</div></div>
   ${done.length?`<div class="card"><h3>마감</h3><div class="list">${done.map(x=>itemRow(x,!closedDay(x.d))).join("")}</div>${!S.showDone&&list.filter(x=>x.st==="done").length>5?`<button class="ol" id="more">더 보기</button>`:""}</div>`:""}`);
@@ -1769,7 +1769,7 @@ function renderAdmin(){
   const groups={};for(const x of done)(groups[x.dt||"(제목 없음)"]??=[]).push(x);
   const gl=Object.entries(groups).sort((a,b)=>Math.max(...b[1].map(x=>x.da||0))-Math.max(...a[1].map(x=>x.da||0))).slice(0,S.showDone?100:6);
   const cnt=d=>pend.filter(x=>x.d===d).length;
-  app().innerHTML=shell(`<div class="head"><div><h1>시간외 신청현황</h1><p>기안 올리기 전 ${all.length}건</p></div><span class="sp"></span><label class="tgl"><input type="checkbox" role="switch" id="otc" ${OT_CUT?"checked":""}><span class="trk"><span class="knob"></span></span><span class="tl">마감</span></label><label class="tgl"><input type="checkbox" role="switch" id="allp" ${S.allOn?"checked":""}><span class="trk"><span class="knob"></span></span><span class="tl">전체 보기</span></label></div>
+  app().innerHTML=shell(`<div class="head"><div><h1>시간외 신청현황</h1><p>기안 올리기 전 ${all.length}건</p></div><span class="sp"></span><div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center"><input type="date" id="otd" aria-label="마감할 날짜" style="border:1px solid var(--line);border-radius:10px;padding:8px 10px;background:var(--surface);color:var(--ink)"><button type="button" id="otdadd" style="border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:999px;padding:8px 14px;font-weight:700;cursor:pointer">이 날짜 마감</button>${OT_DATES.length?OT_DATES.map(d=>`<button type="button" class="otdx" data-d="${d}" style="border:0;background:var(--track);color:var(--ink);border-radius:999px;padding:7px 12px;font-weight:700;cursor:pointer">${+d.slice(5,7)}/${+d.slice(8)} 마감 풀기 ✕</button>`).join(""):'<span class="mute">마감한 날짜 없음</span>'}</div><label class="tgl"><input type="checkbox" role="switch" id="allp" ${S.allOn?"checked":""}><span class="trk"><span class="knob"></span></span><span class="tl">전체 보기</span></label></div>
   <div class="card">${!all.length?`<div class="empty">기안할 신청이 없어요</div>`:`
   <div class="pick" style="margin-top:10px"><input type="date" id="af" value="${S.from}"><span class="mute">~</span><input type="date" id="at" value="${S.to}"></div>
   <div class="ttl"><span class="tt" id="tt">${esc(title)}</span></div>
@@ -1787,7 +1787,7 @@ function renderAdmin(){
     render();
   });
   const af=$("#af"),at=$("#at");
-  const otc=$("#otc");if(otc)otc.onchange=async()=>{const v=otc.checked;try{await db.doc("config/main").update({otClosed:v,otCutoff:null});OT_ALL=v;OT_CUT=v?"9999-12-31":"";toast(v?"시간외 신청을 모두 마감했어요":"마감을 풀었어요");render()}catch{otc.checked=!v;toast("저장하지 못했어요",true)}};const allp=$("#allp");if(allp)allp.onchange=()=>{S.allOn=allp.checked;if(!S.allOn){S.from=S.to=null}render()};
+  const setDates_=async(dates)=>{await db.doc("config/main").update({otDates:dates});OT_DATES=dates;render()};const otdadd=$("#otdadd");if(otdadd)otdadd.onclick=async()=>{const d=$("#otd").value;if(!d){toast("날짜를 골라 주세요",true);return}const cur=OT_DATES.slice();if(!cur.includes(d))cur.push(d);cur.sort();try{await setDates_(cur);toast(d+" 마감했어요")}catch{toast("저장하지 못했어요",true)}};app().querySelectorAll(".otdx").forEach(b=>b.onclick=async()=>{const d=b.dataset.d;try{await setDates_(OT_DATES.filter(x=>x!==d));toast(d+" 마감을 풀었어요")}catch{toast("저장하지 못했어요",true)}});const allp=$("#allp");if(allp)allp.onchange=()=>{S.allOn=allp.checked;if(!S.allOn){S.from=S.to=null}render()};
   if(af){af.onchange=()=>{S.allOn=false;if(af.value){S.from=af.value;const we=wkend(af.value);if(we)[S.from,S.to]=we;else if(S.to<S.from||wkend(S.to))S.to=S.from;render()}};at.onchange=()=>{S.allOn=false;if(at.value){S.to=at.value;if(S.to<S.from)S.from=S.to;render()}}}
   const cp=$("#cp");if(cp)cp.onclick=()=>copyTable(rows);
   const xl=$("#xl");if(xl)xl.onclick=()=>downloadXlsx(rows,title);

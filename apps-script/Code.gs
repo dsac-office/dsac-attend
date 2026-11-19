@@ -174,12 +174,12 @@ function metaOnly_(p) {
   return JSON.stringify(v.items || {}) === JSON.stringify((cur && cur.items) || {});
 }
 
-// 마감일(otCutoff, 날짜 이하) 안의 신청은 직원이 바꾸거나 지울 수 없어요.
+// 마감한 날짜(otDates)의 신청은 직원이 바꾸거나 지울 수 없어요.
 // 마감일 이후 신청과 이름·직급 같은 정보 변경은 그대로 허용해요.
 function lockedWrite_(p) {
   var cfg = readValue_('config/main') || {};
-  var cut = cfg.otClosed ? '9999-12-31' : String(cfg.otCutoff || ''); // 마감을 누르면 모든 날짜가 잠겨요
-  if (!cut) return false;
+  var dates = cfg.otDates || []; // 관리자가 마감한 날짜 목록(날짜별로 따로 잠가요)
+  if (!dates.length) return false;
   if (p.action !== 'set') return true;
   var nv;
   try { nv = JSON.parse(p.value || 'null'); } catch (e) { return true; }
@@ -195,7 +195,7 @@ function lockedWrite_(p) {
   Object.keys(newI).forEach(function (k) { ids[k] = 1; });
   for (var id in ids) {
     var a = oldI[id] || null, b = newI[id] || null;
-    var locked = (a && a.d && a.d <= cut) || (b && b.d && b.d <= cut);
+    var locked = (a && dates.indexOf(a.d) >= 0) || (b && dates.indexOf(b.d) >= 0);
     if (locked && JSON.stringify(a) !== JSON.stringify(b)) return true;
   }
   return false;
