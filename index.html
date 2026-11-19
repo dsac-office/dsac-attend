@@ -1726,7 +1726,7 @@ function rangeParts(it){return(kindOf(it)==="휴일"&&holSpan(it))||[hm(it.s),hm
 function itemRow(it,mine){
   const hd=kindOf(it)==="휴일";
   return`<div class="it"><div class="d">${md(it.d)}<small class="${hd?"hd":""}">${kindLabel(it)}</small></div>
-  <div class="t"><div><b>${rangeTxt(it)}</b> · <b>${it.m}분</b>${paren(it)?` <span class="m">(${esc(paren(it))})</span>`:""}</div><div class="w">${esc(it.w)}</div></div>
+  <div class="t"><div><b>${rangeTxt(it)}</b> · <b>${it.m}분</b>${paren(it)?` <span class="m">(${esc(paren(it))})</span>`:""}</div><div class="w">${esc(it.w)}</div>${it.ts?`<div class="w" style="font-size:12px;color:var(--muted)">신청 ${new Date(it.ts+9*36e5).toISOString().slice(5,16).replace("-","/").replace("T"," ")}</div>`:""}</div>
   <div class="a">${mine?`<button class="ol" data-ed="${it.id}">수정</button><button class="ol del" data-del="${it.id}">취소</button>`:""}</div></div>`;
 }
 function renderMe(){
