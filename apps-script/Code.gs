@@ -174,10 +174,38 @@ function metaOnly_(p) {
   return JSON.stringify(v.items || {}) === JSON.stringify((cur && cur.items) || {});
 }
 
+// 마감일(otCutoff, 날짜 이하) 안의 신청은 직원이 바꾸거나 지울 수 없어요.
+// 마감일 이후 신청과 이름·직급 같은 정보 변경은 그대로 허용해요.
+function lockedWrite_(p) {
+  var cfg = readValue_('config/main') || {};
+  var cut = String(cfg.otCutoff || '');
+  if (!cut && cfg.otClosed) cut = '9999-12-31'; // 예전 방식(전체 마감)
+  if (!cut) return false;
+  if (p.action !== 'set') return true;
+  var nv;
+  try { nv = JSON.parse(p.value || 'null'); } catch (e) { return true; }
+  if (!nv || typeof nv !== 'object') return true;
+  var sh = store_();
+  var row = findRow_(sh, p.key);
+  var cur = null;
+  try { cur = row > 0 ? JSON.parse(sh.getRange(row, 2).getValue() || 'null') : null; } catch (e) { cur = null; }
+  var oldI = (cur && cur.items) || {};
+  var newI = nv.items || {};
+  var ids = {};
+  Object.keys(oldI).forEach(function (k) { ids[k] = 1; });
+  Object.keys(newI).forEach(function (k) { ids[k] = 1; });
+  for (var id in ids) {
+    var a = oldI[id] || null, b = newI[id] || null;
+    var locked = (a && a.d && a.d <= cut) || (b && b.d && b.d <= cut);
+    if (locked && JSON.stringify(a) !== JSON.stringify(b)) return true;
+  }
+  return false;
+}
+
 function write_(p, admin, as) {
   if (String(p.key).indexOf('inq/') === 0) return writeInq_(p, admin, as);
   if (!admin && !isMine_(p.key, as)) return { ok: false, error: 'forbidden' };
-  if (!admin && String(p.key).indexOf('ot/') === 0 && isClosed_() && !metaOnly_(p)) return { ok: false, error: 'closed' };
+  if (!admin && String(p.key).indexOf('ot/') === 0 && lockedWrite_(p)) return { ok: false, error: 'closed' };
   var lock = LockService.getScriptLock();
   lock.waitLock(30000);
   try {
