@@ -1692,7 +1692,7 @@ function bindForm(it){
   if(it)$("#fc").onclick=()=>{S.edit=null;render()};
   const cmsg_=()=>{const d=$("#fd")?.value;const c=closedDay(d);const m=$("#fdm");if(m)m.textContent=c?`마감됐습니다`:"";const b=$("#fo");if(b)b.disabled=c};
   $("#fd")?.addEventListener("change",cmsg_);cmsg_();
-  $("#fo").onclick=async()=>{if(closedDay($("#fd")?.value)){toast(`${$("#fd").value}은 마감되었어요`,true);return}
+  $("#fo").onclick=async()=>{if(closedDay($("#fd")?.value)){toast("마감됐습니다",true);return}
     const d=$("#fd").value,s=tv("#fs"),e=k==="휴일"?holEnd($("#fr").value,foVal()):tv("#fe"),w=$("#fw").value.trim(),be=k==="평일"?(bEnd(tv("#fb"))||"18:00"):"",m=$("#fm").value===""?autoMin(k,s,e,be,$("#fr")?.value,brkOf(),foVal()):Math.round(+$("#fm").value);
     const r=k==="휴일"?$("#fr").value.trim():(be!=="18:00"?`${hmT(be)}~${hmT(e)}`:"");
     if(!d)return toast("일자를 골라 주세요",true);
