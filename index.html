@@ -1815,15 +1815,20 @@ async function copyTable(rows){
   }catch{try{await navigator.clipboard.writeText(tsv);toast(`${rows.length}건을 복사했어요`)}catch{toast("복사하지 못했어요",true)}}
 }
 async function downloadXlsx(rows,title){
-  if(!window.XLSX)return toast("엑셀 기능을 불러오지 못했어요",true);
+  try{await loadLib("exceljs")}catch{return toast("엑셀 기능을 불러오지 못했어요. 잠시 뒤 다시 시도해 주세요",true)}
   if(!dl)return toast("이 화면에서는 파일을 받을 수 없어요",true);
-  const aoa=[[],[null,"순번","일 자","구 분","성 명","출근시간","퇴근시간","수당시간","근무내역","비 고"],...rows.map((x,i)=>[null,i+1,kdate(x.d),kindLabel(x),x.name,rangeParts(x)[0],rangeParts(x)[1],x.m,x.w,paren(x)?`(${paren(x)})`:""])];
-  const ws=XLSX.utils.aoa_to_sheet(aoa);ws["!cols"]=[{wch:2},{wch:6},{wch:9},{wch:10},{wch:9},{wch:9},{wch:9},{wch:9},{wch:40},{wch:16}];
-  const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,"양식변경");
-  const data=XLSX.write(wb,{type:"array",bookType:"xlsx"});
-  try{await dl.save({filename:title.replace(/[\\/:*?"<>|]/g,"")+".xlsx",data:new Blob([data],{type:"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"})})}catch{}
+  const wb=new ExcelJS.Workbook();wb.creator="DSAC 근무 관리";
+  const ws=wb.addWorksheet("양식변경");
+  ws.columns=[{width:2},{width:6},{width:11},{width:10},{width:10},{width:10},{width:10},{width:10},{width:40},{width:16}];
+  ws.addRow([]);
+  const hr=ws.addRow([null,"순번","일 자","구 분","성 명","출근시간","퇴근시간","수당시간","근무내역","비 고"]);
+  hr.font={bold:true};
+  rows.forEach((x,i)=>ws.addRow([null,i+1,kdate(x.d),kindLabel(x),x.name,rangeParts(x)[0],rangeParts(x)[1],x.m,x.w,paren(x)?`(${paren(x)})`:""]));
+  const thin={style:"thin"},box={top:thin,left:thin,bottom:thin,right:thin};
+  for(let r=2;r<=ws.rowCount;r++)for(let c=2;c<=10;c++){const cell=ws.getCell(r,c);cell.border=box;cell.alignment={vertical:"middle",horizontal:c===9?"left":"center",wrapText:true}}
+  const buf=await wb.xlsx.writeBuffer();
+  try{await dl.save({filename:title.replace(/[\\/:*?"<>|]/g,"")+".xlsx",data:new Blob([buf],{type:"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"})})}catch{}
 }
-
 /* 시작 */
 function usable(){const a=document.activeElement;return !(a&&a.closest&&a.closest(".of,.center,.pick"))}
 async function boot(){
