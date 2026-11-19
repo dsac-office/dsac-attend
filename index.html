@@ -1806,7 +1806,7 @@ async function copyTable(rows){
   const head=["연번","일 자","구 분","성 명","출근시간","퇴근시간","수당시간","근무내역"];
   const vals=rows.map((x,i)=>{const[a,b]=rangeParts(x);return[i+1,kdate(x.d),kindLabel(x),x.name,a,b,minCell(x),x.w]});
   const base='border:1px solid #000;padding:4px 6px;font-family:맑은 고딕,Malgun Gothic,sans-serif;font-size:10pt;vertical-align:middle';
-  const th=`style="${base};text-align:center;background:#F2F2F2;font-weight:bold"`;
+  const th=`style="${base};text-align:center"`;
   const td=`style="${base};text-align:center"`;
   const tl=`style="${base};text-align:left"`;
   const html=`<table style="border-collapse:collapse;border:1px solid #000;font-family:맑은 고딕,Malgun Gothic,sans-serif;font-size:10pt"><tr>${head.map(h=>`<th ${th}>${h}</th>`).join("")}</tr>${vals.map(r=>`<tr>${r.map((c,j)=>`<td ${j===7?tl:td}>${esc(c).replace(/\n/g,"<br>")}</td>`).join("")}</tr>`).join("")}</table>`;
