@@ -178,8 +178,7 @@ function metaOnly_(p) {
 // 마감일 이후 신청과 이름·직급 같은 정보 변경은 그대로 허용해요.
 function lockedWrite_(p) {
   var cfg = readValue_('config/main') || {};
-  var cut = String(cfg.otCutoff || '');
-  if (!cut && cfg.otClosed) cut = '9999-12-31'; // 예전 방식(전체 마감)
+  var cut = cfg.otClosed ? '9999-12-31' : String(cfg.otCutoff || ''); // 마감을 누르면 모든 날짜가 잠겨요
   if (!cut) return false;
   if (p.action !== 'set') return true;
   var nv;

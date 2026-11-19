@@ -689,7 +689,7 @@ const DEFAULT_CFG={
 /* ===== 상태 ===== */
 let db=null,userNS=null,dl=null,uid=null,isAdmin=false,canWrite=null;
 let cfg=structuredClone(DEFAULT_CFG);
-let OT_CUT="";const todayKST=()=>new Date(Date.now()+9*36e5).toISOString().slice(0,10);const closedDay=d=>!!OT_CUT&&!!d&&d<=OT_CUT;
+let OT_CUT="",OT_ALL=false;const todayKST=()=>new Date(Date.now()+9*36e5).toISOString().slice(0,10);const closedDay=d=>!!OT_CUT&&!!d&&d<=OT_CUT;
 const S={view:"me",periodId:null,my:undefined,all:{},roster:{},target:null,tab:"emp",names:{},ready:false,showLeave:false};
 const holMap=()=>Object.fromEntries(cfg.holidays.map(h=>[h.date,h.name]));
 const curPeriod=()=>cfg.periods.find(p=>p.id===S.periodId);
@@ -1517,7 +1517,7 @@ async function boot(){
   let savedView=null;try{savedView=JSON.parse(sessionStorage.getItem("dsac_nav")||"null")?.view||null}catch(e){}
   S.view=savedView||(isAdmin?"admin":"me");
   db.doc("config/main").onSnapshot(s=>{
-    OT_CUT=s.exists?(s.data().otCutoff||(s.data().otClosed?todayKST():"")):"";
+    OT_ALL=!!(s.exists&&s.data().otClosed);OT_CUT=OT_ALL?"9999-12-31":(s.exists?(s.data().otCutoff||""):"");
     if(s.exists){const d=structuredClone(s.data());cfg={settings:{...DEFAULT_CFG.settings,...(d.settings||{})},periods:d.periods||DEFAULT_CFG.periods,holidays:d.holidays||DEFAULT_CFG.holidays}}
     if(!cfg.periods.find(p=>p.id===S.periodId))S.periodId=cfg.periods[cfg.periods.length-1].id;
     if(S.my!==undefined&&usable())render();
@@ -1731,7 +1731,7 @@ function renderMe(){
   const edit=S.edit&&list.find(x=>x.id===S.edit);
   const wait=list.filter(x=>Date.now()-(x.ts||0)<864e5),done=[];
   app().innerHTML=shell(`<div class="head"><div><h1>${esc(S.mine.name)} · 시간외근무 신청</h1></div></div>
-  ${OT_CUT?`<div role="status" style="background:#58C0D0;color:#06262c;border-radius:14px;padding:14px 16px;margin:0 0 12px;font-weight:700;line-height:1.5">${esc(OT_CUT)}까지 시간외 신청이 마감됐어요. 마감된 날짜는 신청·수정·삭제할 수 없어요. 그 이후 날짜만 가능해요.</div>`:""}
+  ${OT_CUT?`<div role="status" style="background:#58C0D0;color:#06262c;border-radius:14px;padding:14px 16px;margin:0 0 12px;font-weight:700;line-height:1.5">${OT_ALL?"시간외 신청이 마감됐어요. 신청·수정·삭제를 할 수 없어요.":esc(OT_CUT)+"까지 시간외 신청이 마감됐어요. 마감된 날짜는 신청·수정·삭제할 수 없어요. 그 이후 날짜만 가능해요."}</div>`:""}
   ${formHtml(edit)}
   <div class="card"><h3>신청내역 <span class="chip pri">${wait.length}</span></h3><div class="list">${wait.map(x=>itemRow(x,!closedDay(x.d))).join("")||`<div class="empty">아직 없어요</div>`}</div></div>
   ${done.length?`<div class="card"><h3>마감</h3><div class="list">${done.map(x=>itemRow(x,!closedDay(x.d))).join("")}</div>${!S.showDone&&list.filter(x=>x.st==="done").length>5?`<button class="ol" id="more">더 보기</button>`:""}</div>`:""}`);
@@ -1787,7 +1787,7 @@ function renderAdmin(){
     render();
   });
   const af=$("#af"),at=$("#at");
-  const otc=$("#otc");if(otc)otc.onchange=async()=>{const v=otc.checked;try{const cut=v?todayKST():null;await db.doc("config/main").update({otCutoff:cut,otClosed:false});OT_CUT=cut||"";toast(v?`${cut}까지 마감했어요. 다음 날짜는 신청할 수 있어요`:"마감을 풀었어요");render()}catch{otc.checked=!v;toast("저장하지 못했어요",true)}};const allp=$("#allp");if(allp)allp.onchange=()=>{S.allOn=allp.checked;if(!S.allOn){S.from=S.to=null}render()};
+  const otc=$("#otc");if(otc)otc.onchange=async()=>{const v=otc.checked;try{await db.doc("config/main").update({otClosed:v,otCutoff:null});OT_ALL=v;OT_CUT=v?"9999-12-31":"";toast(v?"시간외 신청을 모두 마감했어요":"마감을 풀었어요");render()}catch{otc.checked=!v;toast("저장하지 못했어요",true)}};const allp=$("#allp");if(allp)allp.onchange=()=>{S.allOn=allp.checked;if(!S.allOn){S.from=S.to=null}render()};
   if(af){af.onchange=()=>{S.allOn=false;if(af.value){S.from=af.value;const we=wkend(af.value);if(we)[S.from,S.to]=we;else if(S.to<S.from||wkend(S.to))S.to=S.from;render()}};at.onchange=()=>{S.allOn=false;if(at.value){S.to=at.value;if(S.to<S.from)S.from=S.to;render()}}}
   const cp=$("#cp");if(cp)cp.onclick=()=>copyTable(rows);
   const xl=$("#xl");if(xl)xl.onclick=()=>downloadXlsx(rows,title);
