@@ -1517,7 +1517,7 @@ async function boot(){
   let savedView=null;try{savedView=JSON.parse(sessionStorage.getItem("dsac_nav")||"null")?.view||null}catch(e){}
   S.view=savedView||(isAdmin?"admin":"me");
   db.doc("config/main").onSnapshot(s=>{
-    OT_DATES=s.exists&&Array.isArray(s.data().otDates)?s.data().otDates:[];
+    const __nd=s.exists&&Array.isArray(s.data().otDates)?s.data().otDates:[];const __pd=OT_DATES;OT_DATES=__nd;if(window.__otdInit&&!isAdmin){const __add=__nd.filter(x=>!__pd.includes(x));__add.forEach(d=>{const t=`${+d.slice(5,7)}/${+d.slice(8)} 시간외 신청이 마감됐어요`;histAdd_("ot",t);toast(t);popup_("달서아트센터 근무관리",t)});if(__add.length)beep_()}window.__otdInit=true;
     if(s.exists){const d=structuredClone(s.data());cfg={settings:{...DEFAULT_CFG.settings,...(d.settings||{})},periods:d.periods||DEFAULT_CFG.periods,holidays:d.holidays||DEFAULT_CFG.holidays}}
     if(!cfg.periods.find(p=>p.id===S.periodId))S.periodId=cfg.periods[cfg.periods.length-1].id;
     if(S.my!==undefined&&usable())render();
