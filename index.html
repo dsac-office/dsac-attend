@@ -1885,7 +1885,7 @@ boot();OT.start();
   const bell=document.createElement("button");bell.className="bell";bell.setAttribute("aria-label","알림 이력 열기");
   bell.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 8 3 8H3s3-1 3-8"/><path d="M10.3 21a1.9 1.9 0 0 0 3.4 0"/></svg>';
   const pn=document.createElement("div");pn.className="hist";
-  pn.innerHTML='<div class="hist-h"><b>알림 이력</b><span><button type="button" class="hist-clr">전체 지우기</button> <button type="button" class="hist-c">닫기</button></span></div><div class="hist-l"></div>';
+  pn.innerHTML='<div class="hist-h"><b>알림</b><span><button type="button" class="hist-clr">전체 지우기</button> <button type="button" class="hist-c">닫기</button></span></div><div class="hist-l"></div>';
   document.body.append(pn,bell);
   const esc4=t=>String(t==null?"":t).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
   const fmt=t=>{const d=new Date(t+9*3600e3).toISOString();return d.slice(5,7)+"/"+d.slice(8,10)+" "+d.slice(11,16)};
