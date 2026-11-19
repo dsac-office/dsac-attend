@@ -1731,7 +1731,7 @@ function renderMe(){
   const edit=S.edit&&list.find(x=>x.id===S.edit);
   const wait=list.filter(x=>Date.now()-(x.ts||0)<864e5),done=[];
   app().innerHTML=shell(`<div class="head"><div><h1>${esc(S.mine.name)} · 시간외근무 신청</h1></div></div>
-  ${OT_DATES.length?`<div role="status" style="background:#58C0D0;color:#06262c;border-radius:14px;padding:14px 16px;margin:0 0 12px;font-weight:700;line-height:1.5">마감된 날짜: ${OT_DATES.map(d=>+d.slice(5,7)+"/"+ +d.slice(8)).join(", ")}. 이 날짜는 신청·수정·삭제할 수 없어요.</div>`:""}
+  
   ${formHtml(edit)}
   <div class="card"><h3>신청내역 <span class="chip pri">${wait.length}</span></h3><div class="list">${wait.map(x=>itemRow(x,!closedDay(x.d))).join("")||`<div class="empty">아직 없어요</div>`}</div></div>
   ${done.length?`<div class="card"><h3>마감</h3><div class="list">${done.map(x=>itemRow(x,!closedDay(x.d))).join("")}</div>${!S.showDone&&list.filter(x=>x.st==="done").length>5?`<button class="ol" id="more">더 보기</button>`:""}</div>`:""}`);
