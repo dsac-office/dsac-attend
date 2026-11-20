@@ -102,15 +102,13 @@ function read_(p, admin, as) {
     var last = sh2.getLastRow();
     var outL = {};
     if (last > 1) {
-      // 키 칸만 먼저 읽고, 맞는 줄의 값만 읽어요(전체 값을 한꺼번에 읽지 않아요)
-      var keys = sh2.getRange(2, 1, last - 1, 1).getValues();
-      var hits = [];
-      for (var i = 0; i < keys.length; i++) {
-        if (String(keys[i][0]).indexOf(prefix) === 0) hits.push(i + 2);
-      }
-      for (var h = 0; h < hits.length; h++) {
-        var key = String(sh2.getRange(hits[h], 1).getValue());
-        var item = JSON.parse(sh2.getRange(hits[h], 2).getValue());
+      // 키와 값을 한 번에 읽고(시트 호출을 한 번으로 줄여요), 맞는 줄만 골라요
+      var rowsL = sh2.getRange(2, 1, last - 1, 2).getValues();
+      for (var i = 0; i < rowsL.length; i++) {
+        var key = String(rowsL[i][0]);
+        if (key.indexOf(prefix) !== 0) continue;
+        var item = null;
+        try { item = JSON.parse(rowsL[i][1] || 'null'); } catch (e) { item = null; }
         // 직원은 자기 문의만 보여요
         if (!admin && prefix === 'inq/' && (!item || item.uid !== as)) continue;
         outL[key] = item;
