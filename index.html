@@ -620,7 +620,7 @@ function showLogin(){
       LS.s("dsac_uid",id);
       const wr=[];
       if(!sh)wr.push(DA.post({action:"set",key:"sheets/"+id,value:JSON.stringify({emp:{id,name:r.name,team:r.team||""},p:{}})}));
-      if(!o||o.name!==r.name||(o.rank||"")!==(r.rank||""))wr.push(DA.post({action:"set",key:"ot/"+id,value:JSON.stringify({...(o||{items:{}}),name:r.name,rank:r.rank||""})}));
+      if(!o||o.name!==r.name||(o.rank||"")!==(r.rank||""))wr.push(DA.post({action:"patchMeta",key:"ot/"+id,fields:JSON.stringify({name:r.name,rank:r.rank||""})}));
       await Promise.all(wr);
       LS.s("dsac_uid",id);LS.s("dsac_name",r.name);LS.s("dsac_adm",adm?"1":"0");if(!adm)LS.d("dsac_apw");
       try{sessionStorage.removeItem("dsac_nav")}catch(e){}
@@ -1369,7 +1369,7 @@ function seenMe_(){return LS.g("dsac_uid")||(typeof uid!=="undefined"&&uid)||""}
 function stOf_(x){return x.done?"d":x.reply?"r":"n"}
 function unreadAdd_(){computeUnread_()}
 async function seenLoad_(){try{const d=await DA.get("ot/"+seenMe_());window.__seen=(d&&d.seen)||{inq:{},ot:{}}}catch(e){window.__seen=window.__seen||{inq:{},ot:{}}}computeUnread_()}
-async function seenSave_(kind,map){const me=seenMe_();try{const cur=(await DA.get("ot/"+me))||{items:{}};const seen={...((cur&&cur.seen)||{}),[kind]:map};window.__seen=seen;await DA.post({action:"set",key:"ot/"+me,value:JSON.stringify({...cur,seen})})}catch(e){}computeUnread_()}
+async function seenSave_(kind,map){const me=seenMe_();try{const cur=(await DA.get("ot/"+me))||{items:{}};const seen={...((cur&&cur.seen)||{}),[kind]:map};window.__seen=seen;await DA.post({action:"patchMeta",key:"ot/"+me,fields:JSON.stringify({seen:{[kind]:map}})})}catch(e){}computeUnread_()}
 function computeUnread_(){
   const me=seenMe_(),S0=window.__seen||{inq:{},ot:{}},mapInq={};let inq=0;
   for(const x of (INQ||[])){
@@ -1641,7 +1641,7 @@ async function renderName(){
   <button class="btn" id="go">시작하기</button><div class="err" id="er"></div></div></div>`;
   const go=async()=>{
     const n=$("#nm").value.trim();if(!n)return $("#er").textContent="이름을 입력해 주세요";
-    try{const cur=S.mine||{items:{}};await DA.post({action:"set",key:"ot/"+uid,value:JSON.stringify({...cur,name:n,items:cur.items||{}})});}
+    try{const cur=S.mine||{items:{}};await DA.post({action:"patchMeta",key:"ot/"+uid,fields:JSON.stringify({name:n})});}
     catch(e){$("#er").textContent=e&&e.code==="closed"?"시간외 신청이 마감되어 이름을 저장할 수 없어요. 관리자에게 문의해 주세요":"저장하지 못했어요. 링크 공유 설정(작성 권한)을 확인해 주세요.";return}
     if(document.activeElement&&document.activeElement.blur)document.activeElement.blur();
     setTimeout(()=>render(true),60);

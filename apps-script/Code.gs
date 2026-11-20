@@ -241,9 +241,47 @@ function patchItem_(p, admin, as) {
   }
 }
 
+// 이름·직급·확인 기록(seen)만 바꿔요. 신청 목록(items)은 건드리지 않아요.
+// seen 은 종류(inq, ot)별로 합쳐요. 최신 기록을 서버에서 다시 읽고 바뀐 칸만 고쳐 써요.
+function patchMeta_(p, admin, as) {
+  if (!admin && String(p.key) !== 'ot/' + as) return { ok: false, error: 'forbidden' };
+  var fields;
+  try { fields = JSON.parse(p.fields || 'null'); } catch (e) { return { ok: false, error: 'bad_value' }; }
+  if (!fields || typeof fields !== 'object') return { ok: false, error: 'bad_value' };
+  var allowed = { name: 1, rank: 1, seen: 1 };
+  var lock = LockService.getScriptLock();
+  lock.waitLock(30000);
+  try {
+    var sh = store_();
+    var row = findRow_(sh, p.key);
+    var cur = null;
+    try { cur = row > 0 ? JSON.parse(sh.getRange(row, 2).getValue() || 'null') : null; } catch (e) { cur = null; }
+    if (!cur || typeof cur !== 'object') cur = { items: {} };
+    Object.keys(fields).forEach(function (k) {
+      if (!allowed[k]) return;
+      if (k === 'seen' && fields.seen && typeof fields.seen === 'object') {
+        var merged = {};
+        var old = cur.seen || {};
+        Object.keys(old).forEach(function (kk) { merged[kk] = old[kk]; });
+        Object.keys(fields.seen).forEach(function (kk) { merged[kk] = fields.seen[kk]; });
+        cur.seen = merged;
+      } else {
+        cur[k] = fields[k];
+      }
+    });
+    var vals = [p.key, JSON.stringify(cur), new Date()];
+    if (row < 0) sh.appendRow(vals); else sh.getRange(row, 1, 1, 3).setValues([vals]);
+    cacheDrop_(p.key);
+    return { ok: true };
+  } finally {
+    lock.releaseLock();
+  }
+}
+
 function write_(p, admin, as) {
   if (String(p.key).indexOf('inq/') === 0) return writeInq_(p, admin, as);
   if (p.action === 'patchItem') return patchItem_(p, admin, as);
+  if (p.action === 'patchMeta') return patchMeta_(p, admin, as);
   if (!admin && !isMine_(p.key, as)) return { ok: false, error: 'forbidden' };
   if (!admin && String(p.key).indexOf('ot/') === 0 && lockedWrite_(p)) return { ok: false, error: 'closed' };
   var lock = LockService.getScriptLock();
