@@ -1772,8 +1772,10 @@ function renderAdmin(){
   const todayK=new Date(Date.now()+9*3600e3).toISOString().slice(0,10);
   const wkend=d=>{const w=pd(d).getUTCDay();return w===6?[d,addDays(d,1)]:w===0?[addDays(d,-1),d]:null};
   if(!S.from||!S.to){S.from=S.to=todayK;const we=wkend(todayK);if(we)[S.from,S.to]=we}
-  if(S.allOn&&pend.length){const ds=pend.map(x=>x.d).sort();S.from=ds[0];S.to=ds[ds.length-1]}
-  const rows=S.allOn?pend:pend.filter(x=>S.from&&x.d>=S.from&&x.d<=S.to);
+  const tdy=new Date(Date.now()+9*3600e3).toISOString().slice(0,10);
+  const upc=pend.filter(x=>x.d>=tdy);
+  if(S.allOn&&upc.length){const ds=upc.map(x=>x.d).sort();S.from=ds[0];S.to=ds[ds.length-1]}
+  const rows=S.allOn?upc:pend.filter(x=>S.from&&x.d>=S.from&&x.d<=S.to);
   const title=S.from?titleOf(S.from,S.to):"";
   const done=allItems().filter(x=>x.st==="done");
   const groups={};for(const x of done)(groups[x.dt||"(제목 없음)"]??=[]).push(x);
