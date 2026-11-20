@@ -201,8 +201,49 @@ function lockedWrite_(p) {
   return false;
 }
 
+// 신청 한 건만 바꿔요(추가·수정·취소). 서버에서 최신 기록을 다시 읽고 그 한 건만 고쳐 쓰므로,
+// 오래된 화면이 전체 기록을 덮어써서 취소한 신청이 되살아나지 않아요.
+// 마감한 날짜의 신청을 새로 넣거나, 고치거나, 지우는 것은 막아요(바뀌는 한 건만 검사).
+function patchItem_(p, admin, as) {
+  if (!admin && String(p.key) !== 'ot/' + as) return { ok: false, error: 'forbidden' };
+  var id = String(p.id || '');
+  if (!id) return { ok: false, error: 'bad_value' };
+  var newIt = null;
+  if (p.item !== undefined && p.item !== 'null') {
+    try { newIt = JSON.parse(p.item); } catch (e) { return { ok: false, error: 'bad_value' }; }
+    if (!newIt || typeof newIt !== 'object') return { ok: false, error: 'bad_value' };
+  }
+  var lock = LockService.getScriptLock();
+  lock.waitLock(30000);
+  try {
+    var sh = store_();
+    var row = findRow_(sh, p.key);
+    var cur = null;
+    try { cur = row > 0 ? JSON.parse(sh.getRange(row, 2).getValue() || 'null') : null; } catch (e) { cur = null; }
+    if (!cur || typeof cur !== 'object') cur = { items: {} };
+    var items = cur.items || {};
+    var oldIt = items[id] || null;
+    if (!admin) {
+      var cfg = readValue_('config/main') || {};
+      var dates = cfg.otDates || [];
+      var changed = JSON.stringify(oldIt) !== JSON.stringify(newIt);
+      var locked = (oldIt && dates.indexOf(oldIt.d) >= 0) || (newIt && dates.indexOf(newIt.d) >= 0);
+      if (changed && locked) return { ok: false, error: 'closed' };
+    }
+    if (newIt) items[id] = newIt; else delete items[id];
+    cur.items = items;
+    var vals = [p.key, JSON.stringify(cur), new Date()];
+    if (row < 0) sh.appendRow(vals); else sh.getRange(row, 1, 1, 3).setValues([vals]);
+    cacheDrop_(p.key);
+    return { ok: true };
+  } finally {
+    lock.releaseLock();
+  }
+}
+
 function write_(p, admin, as) {
   if (String(p.key).indexOf('inq/') === 0) return writeInq_(p, admin, as);
+  if (p.action === 'patchItem') return patchItem_(p, admin, as);
   if (!admin && !isMine_(p.key, as)) return { ok: false, error: 'forbidden' };
   if (!admin && String(p.key).indexOf('ot/') === 0 && lockedWrite_(p)) return { ok: false, error: 'closed' };
   var lock = LockService.getScriptLock();
