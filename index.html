@@ -1740,7 +1740,7 @@ function renderMe(){
   
   ${formHtml(edit)}
   <div class="card"><h3>신청내역 <span class="chip pri">${wait.length}</span></h3><div class="list">${wait.map(x=>itemRow(x,!closedDay(x.d))).join("")||`<div class="empty">아직 없어요</div>`}</div></div>
-  ${past.length?`<div class="card"><h3>지난 신청 <span class="chip">${past.length}</span></h3>${S.showDone?`<div class="list">${past.map(x=>itemRow(x,false)).join("")}</div>`:""}<button class="ol" id="more">${S.showDone?"접기":"이력 보기"}</button></div>`:""}`);
+  ${past.length?`<div class="card" style="padding-top:12px"><button id="more" style="border:0;background:none;color:inherit;font:inherit;font-size:13px;text-decoration:underline;cursor:pointer;padding:0">${S.showDone?"지난 신청 접기":`지난 신청 보기 (${past.length})`}</button>${S.showDone?`<div class="list" style="margin-top:12px">${past.map(x=>itemRow(x,false)).join("")}</div>`:""}</div>`:""}`);
   bindForm(edit);
   const mo=$("#more");if(mo)mo.onclick=()=>{S.showDone=!S.showDone;render()};
   app().querySelectorAll("[data-ed]").forEach(b=>b.onclick=()=>{S.edit=b.dataset.ed;render();scrollTo({top:0,behavior:"smooth"})});
