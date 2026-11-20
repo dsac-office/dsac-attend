@@ -1723,7 +1723,7 @@ function bindForm(it){
 function holSpan(it){const ws=[winOf(it.r||""),winOf(it.o||"")].filter(Boolean);return ws.length?[hm(hhmm(Math.min(...ws.map(x=>x.ws)))),hm(hhmm(Math.max(...ws.map(x=>x.we))))]:null}
 function oTxt(it){const w=winOf(it.o||"");return w?hm(hhmm(w.ws))+"~"+hm(hhmm(w.we)):""}
 function rangeTxt(it){if(kindOf(it)==="휴일"){const sp=holSpan(it);if(sp)return sp[0]+"~"+sp[1]}return hm(it.s)+"~"+hm(it.e)}
-function paren(it){return kindOf(it)==="휴일"&&it.o?oTxt(it):(it.r||"")}
+function paren(it){if(kindOf(it)==="휴일")return it.r&&it.o?oTxt(it):"";return it.r||""}
 function rangeParts(it){return(kindOf(it)==="휴일"&&holSpan(it))||[hm(it.s),hm(it.e)]}
 function itemRow(it,mine){
   const hd=kindOf(it)==="휴일";
