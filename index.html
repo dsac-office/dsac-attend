@@ -851,7 +851,9 @@ function renderClaim(){
       const r0=await DA.get("roster/"+id).catch(()=>null);
       const d=r0?structuredClone(r0):null;
       if(!d||d.active===false||String(d.name).replace(/\s/g,"")!==nm.replace(/\s/g,""))return $("#cerr").textContent="등록된 정보와 맞지 않아요. 사번과 이름을 다시 확인해 주세요. 계속 안 되면 담당자에게 문의하세요.";
-      await DA.post({action:"set",key:"sheets/"+uid,value:JSON.stringify({emp:{id,name:d.name,team:d.team||""},p:{}})});
+      /* 이미 계획표가 있으면 덮어쓰지 않아요. 읽기에 실패하면 여기서 멈춰요(빈 계획표로 바꾸지 않음) */
+      const __ex=await DA.get("sheets/"+uid);
+      if(!__ex)await DA.post({action:"set",key:"sheets/"+uid,value:JSON.stringify({emp:{id,name:d.name,team:d.team||""},p:{}})});
     }catch(e){$("#cerr").textContent="저장하지 못했어요. 링크 공유 설정(작성 권한)을 확인해 주세요."}
   };
   $("#cgo").onclick=go;$("#cnm").onkeydown=e=>e.key==="Enter"&&go();
