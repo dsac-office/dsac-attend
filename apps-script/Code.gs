@@ -239,8 +239,8 @@ function patchItem_(p, admin, as) {
     cacheDrop_(p.key);
     // 새 신청이 들어오면 관리자 기기에 알림을 보내요. 알림이 실패해도 저장은 그대로 성공해요.
     if (!admin && newIt && !oldIt) {
-      // 알림에는 날짜와 "시간외 신청"만 보여요. 자세한 내용은 앱에서 확인해요.
-      try { notifyAdmins_('시간외 신청', newIt.d + ' 시간외 신청'); } catch (e) {}
+      // 알림에는 이름, 날짜, "시간외 신청"만 보여요. 자세한 내용은 앱에서 확인해요.
+      try { notifyAdmins_('시간외 신청', (cur.name || as) + ' · ' + newIt.d + ' 시간외 신청'); } catch (e) {}
     }
     return { ok: true };
   } finally {
