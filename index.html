@@ -1340,7 +1340,7 @@ function sv_(on){
 }
 /* 알림 이력(이 기기에 최근 60건 보관) */
 function histLoad_(){try{return JSON.parse(LS.g("dsac_hist")||"[]")||[]}catch(e){return[]}}
-function histAdd_(k,x){try{const h=histLoad_();h.unshift({t:Date.now(),k,x,r:false});LS.s("dsac_hist",JSON.stringify(h.slice(0,60)))}catch(e){}}
+function histAdd_(k,x,at){try{const h=histLoad_();h.unshift({t:+at||Date.now(),k,x,r:false});LS.s("dsac_hist",JSON.stringify(h.slice(0,60)))}catch(e){}}
 /* 관리자: 서버에 남은 알림 기록(신청 시각 포함)을 이 기기 목록에 합쳐요. 같은 알림은 한 번만 넣어요 */
 async function syncNotices_(){
   if(!isAdmin)return;
@@ -1365,15 +1365,15 @@ function otNotify_(){
   if(!isAdmin)return;
   DA.list("ot/").then(m=>{
     let seen=null;try{seen=JSON.parse(LS.g("dsac_ot_seen")||"null")}catch(e){seen=null}
-    const next={},msgs=[];
+    const next={},msgs=[],times=[];
     for(const k of Object.keys(m)){
       const uid=k.slice(3),rec=m[k]||{},items=rec.items||{};
       for(const id of Object.keys(items)){
         const key=uid+"/"+id;next[key]=1;
-        if(seen&&!seen[key])msgs.push((rec.name||uid)+" 시간외 신청이 들어왔어요");
+        if(seen&&!seen[key]){msgs.push((rec.name||uid)+" 시간외 신청이 들어왔어요");times.push(items[id].ts)}
       }
     }
-    msgs.forEach(m=>histAdd_("ot",m));try{LS.s("dsac_ot_seen",JSON.stringify(next))}catch(e){}window.__otAll=next;computeUnread_();
+    msgs.forEach((m,i)=>histAdd_("ot",m,times[i]));try{LS.s("dsac_ot_seen",JSON.stringify(next))}catch(e){}window.__otAll=next;computeUnread_();
     if(msgs.length){unreadAdd_("ot",msgs.length);if(S.view==="admin"){S.allOn=true;setTimeout(()=>render(true),0)}beep_();const t=msgs[0]+(msgs.length>1?` 외 ${msgs.length-1}건`:"");toast(t);popup_("달서아트센터 근무관리",t)}
   }).catch(()=>{});
 }
