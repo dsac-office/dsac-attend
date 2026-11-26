@@ -150,6 +150,10 @@ function writeInq_(p, admin, as) {
       if (typeof v.img !== 'string' || v.img.length > 300000) return { ok: false, error: 'too_big' };
       if (old && (v.reply !== old.reply || v.done !== old.done)) return { ok: false, error: 'forbidden' };
     }
+    // 새 문의가 들어오면 관리자 기기에 알림(문의 시각 기록 포함)
+    if (!admin && !old) {
+      try { notifyAdmins_('문의', '새 문의: ' + String(v.text || '').slice(0, 40), 'inq'); } catch (e) {}
+    }
     var vals = [p.key, p.value, new Date()];
     if (row < 0) sh.appendRow(vals); else sh.getRange(row, 1, 1, 3).setValues([vals]);
     cacheDrop_(p.key);
@@ -301,12 +305,12 @@ function sendPush_(tokens, title, body) {
   });
 }
 // 관리자로 등록된 기기(fcmAdm)의 토큰을 모아 알림을 보내요
-function notifyAdmins_(title, body) {
+function notifyAdmins_(title, body, kind) {
   // 알림 기록을 서버에 남겨요(어느 기기에서 열어도 같은 목록이 보이도록)
   try {
     var shN = store_();
     var nowT = Date.now();
-    shN.appendRow(['notice/' + nowT + '_' + Math.floor(Math.random() * 1e6), JSON.stringify({ t: nowT, k: 'ot', x: body }), new Date()]);
+    shN.appendRow(['notice/' + nowT + '_' + Math.floor(Math.random() * 1e6), JSON.stringify({ t: nowT, k: kind || 'ot', x: body }), new Date()]);
   } catch (e) {}
   var sh = store_();
   var last = sh.getLastRow();
