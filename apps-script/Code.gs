@@ -233,10 +233,88 @@ function patchItem_(p, admin, as) {
     var vals = [p.key, JSON.stringify(cur), new Date()];
     if (row < 0) sh.appendRow(vals); else sh.getRange(row, 1, 1, 3).setValues([vals]);
     cacheDrop_(p.key);
+    // 새 신청이 들어오면 관리자 기기에 알림을 보내요. 알림이 실패해도 저장은 그대로 성공해요.
+    if (!admin && newIt && !oldIt) {
+      try { notifyAdmins_('시간외 신청', (cur.name || as) + ' · ' + newIt.d + ' ' + (newIt.w || '')); } catch (e) {}
+    }
     return { ok: true };
   } finally {
     lock.releaseLock();
   }
+}
+
+// ===== 실시간 알림(FCM HTTP v1) =====
+// 스크립트 속성 FCM_SA 에 서비스 계정 JSON 전체를 넣어 두어야 해요.
+function b64u_(bytesOrString) {
+  return Utilities.base64EncodeWebSafe(bytesOrString).replace(/=+$/, '');
+}
+function fcmAccess_() {
+  var cache = CacheService.getScriptCache();
+  var hit = cache.get('fcm_access');
+  if (hit) return hit;
+  var sa = JSON.parse(props_().getProperty('FCM_SA') || 'null');
+  if (!sa) throw new Error('no_sa');
+  var now = Math.floor(Date.now() / 1000);
+  var head = b64u_(JSON.stringify({ alg: 'RS256', typ: 'JWT' }));
+  var claim = b64u_(JSON.stringify({
+    iss: sa.client_email,
+    scope: 'https://www.googleapis.com/auth/firebase.messaging',
+    aud: 'https://oauth2.googleapis.com/token',
+    iat: now,
+    exp: now + 3600
+  }));
+  var sig = Utilities.computeRsaSha256Signature(head + '.' + claim, sa.private_key);
+  var jwt = head + '.' + claim + '.' + b64u_(sig);
+  var r = UrlFetchApp.fetch('https://oauth2.googleapis.com/token', {
+    method: 'post',
+    payload: { grant_type: 'urn:ietf:params:oauth:grant-type:jwt-bearer', assertion: jwt },
+    muteHttpExceptions: true
+  });
+  var j = JSON.parse(r.getContentText());
+  if (!j.access_token) throw new Error('no_token');
+  cache.put('fcm_access', j.access_token, 3000);
+  return j.access_token;
+}
+function sendPush_(tokens, title, body) {
+  var sa = JSON.parse(props_().getProperty('FCM_SA') || 'null');
+  if (!sa || !tokens.length) return;
+  var acc = fcmAccess_();
+  var url = 'https://fcm.googleapis.com/v1/projects/' + sa.project_id + '/messages:send';
+  tokens.forEach(function (t) {
+    try {
+      UrlFetchApp.fetch(url, {
+        method: 'post',
+        contentType: 'application/json',
+        headers: { Authorization: 'Bearer ' + acc },
+        payload: JSON.stringify({
+          message: {
+            token: t,
+            webpush: {
+              notification: { title: title, body: body, icon: '/icon-192.png' },
+              fcm_options: { link: 'https://dsac-attend.web.app/' }
+            }
+          }
+        }),
+        muteHttpExceptions: true
+      });
+    } catch (e) {}
+  });
+}
+// 관리자로 등록된 기기(fcmAdm)의 토큰을 모아 알림을 보내요
+function notifyAdmins_(title, body) {
+  var sh = store_();
+  var last = sh.getLastRow();
+  if (last < 2) return;
+  var rows = sh.getRange(2, 1, last - 1, 2).getValues();
+  var toks = [];
+  rows.forEach(function (r) {
+    if (String(r[0]).indexOf('ot/') !== 0) return;
+    try {
+      var d = JSON.parse(r[1] || 'null');
+      if (d && d.fcmAdm && d.fcm) toks.push(d.fcm);
+    } catch (e) {}
+  });
+  sendPush_(toks, title, body);
 }
 
 // 이름·직급·확인 기록(seen)만 바꿔요. 신청 목록(items)은 건드리지 않아요.
@@ -246,7 +324,7 @@ function patchMeta_(p, admin, as) {
   var fields;
   try { fields = JSON.parse(p.fields || 'null'); } catch (e) { return { ok: false, error: 'bad_value' }; }
   if (!fields || typeof fields !== 'object') return { ok: false, error: 'bad_value' };
-  var allowed = { name: 1, rank: 1, seen: 1 };
+  var allowed = { name: 1, rank: 1, seen: 1, fcm: 1, fcmAdm: 1 };
   var lock = LockService.getScriptLock();
   lock.waitLock(30000);
   try {
