@@ -1907,9 +1907,13 @@ async function pushOn_(){
     if(!tok||!uid)return toast("알림을 켜지 못했어요",true);
     await DA.post({action:"patchMeta",key:"ot/"+uid,fields:JSON.stringify({fcm:tok,fcmAdm:!!isAdmin})});
     msg.onMessage(p=>{const n=p.notification||{};toast(((n.title?n.title+" ":"")+(n.body||"")).trim())});
+    try{LS.s("dsac_push","1")}catch(e){}
+    labelPush_();
     toast("실시간 알림을 켰어요");
   }catch(e){toast("알림을 켜지 못했어요. 다시 해 주세요",true)}
 }
+/* 버튼 글자로 켜짐 여부를 보여줘요 */
+function labelPush_(){try{const b=document.querySelector(".hist-push");if(!b)return;const on=LS.g("dsac_push")==="1"&&("Notification" in window)&&Notification.permission==="granted";b.textContent=on?"실시간 알림 켜짐":"실시간 알림 켜기";b.disabled=false}catch(e){}}
 boot();OT.start();
 </script>
 <style>
@@ -1945,6 +1949,7 @@ boot();OT.start();
   bell.onclick=()=>{if(pn.classList.contains("on")){close();return}list();pn.classList.add("on");syncNotices_().then(()=>{list();badge()})};
   pn.querySelector(".hist-c").onclick=close;
   pn.querySelector(".hist-push").onclick=()=>pushOn_();
+  labelPush_();
   pn.querySelector(".hist-clr").onclick=()=>{try{LS.s("dsac_hist","[]")}catch(e){}list();badge()};
   badge();setInterval(()=>{badge();if(pn.classList.contains("on"))list()},5000);
 })();
