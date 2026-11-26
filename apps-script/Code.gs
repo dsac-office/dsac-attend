@@ -302,6 +302,12 @@ function sendPush_(tokens, title, body) {
 }
 // 관리자로 등록된 기기(fcmAdm)의 토큰을 모아 알림을 보내요
 function notifyAdmins_(title, body) {
+  // 알림 기록을 서버에 남겨요(어느 기기에서 열어도 같은 목록이 보이도록)
+  try {
+    var shN = store_();
+    var nowT = Date.now();
+    shN.appendRow(['notice/' + nowT + '_' + Math.floor(Math.random() * 1e6), JSON.stringify({ t: nowT, k: 'ot', x: body }), new Date()]);
+  } catch (e) {}
   var sh = store_();
   var last = sh.getLastRow();
   if (last < 2) return;

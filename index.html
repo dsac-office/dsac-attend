@@ -1341,6 +1341,21 @@ function sv_(on){
 /* 알림 이력(이 기기에 최근 60건 보관) */
 function histLoad_(){try{return JSON.parse(LS.g("dsac_hist")||"[]")||[]}catch(e){return[]}}
 function histAdd_(k,x){try{const h=histLoad_();h.unshift({t:Date.now(),k,x,r:false});LS.s("dsac_hist",JSON.stringify(h.slice(0,60)))}catch(e){}}
+/* 관리자: 서버에 남은 알림 기록(신청 시각 포함)을 이 기기 목록에 합쳐요. 같은 알림은 한 번만 넣어요 */
+async function syncNotices_(){
+  if(!isAdmin)return;
+  try{
+    const m=await DA.list("notice/");
+    const h=histLoad_();
+    let added=false;
+    Object.values(m||{}).forEach(v=>{
+      if(!v||!v.t)return;
+      if(h.some(x=>x.x===v.x&&Math.abs(x.t-v.t)<120000))return;
+      h.push({t:+v.t,k:v.k||"ot",x:v.x||"",r:false});added=true;
+    });
+    if(added){h.sort((a,b)=>b.t-a.t);LS.s("dsac_hist",JSON.stringify(h.slice(0,60)))}
+  }catch(e){}
+}
 /* 알림용 서비스 워커 등록(캐시는 하지 않아요) */
 try{if("serviceWorker" in navigator)navigator.serviceWorker.register("/sw.js").catch(()=>{})}catch(e){}
 function notifyAsk_(){try{if(LS.g("dsac_ntf_asked"))return;if("Notification" in window&&Notification.permission==="default"){LS.s("dsac_ntf_asked","1");Notification.requestPermission()}}catch(e){}}
@@ -1927,7 +1942,7 @@ boot();OT.start();
   const badge=()=>{const n=histLoad_().filter(x=>!x.r).length;let d=bell.querySelector(".bd");if(n>0){if(!d){d=document.createElement("i");d.className="bd";bell.appendChild(d)}const t=n>9?"9+":String(n);if(d.textContent!==t)d.textContent=t}else if(d)d.remove()};
   const list=()=>{const h=histLoad_();pn.querySelector(".hist-l").innerHTML=h.length?h.map(x=>`<div class="hist-i${x.r?"":" new"}"><span class="hist-k">${x.k==="ot"?"시간외":"문의"}</span><span class="hist-x2">${esc4(x.x)}</span><small>${fmt(x.t)}</small></div>`).join(""):'<div class="hist-e">아직 받은 알림이 없어요</div>'};
   const close=()=>{pn.classList.remove("on");const h=histLoad_();h.forEach(x=>x.r=true);try{LS.s("dsac_hist",JSON.stringify(h))}catch(e){}badge()};
-  bell.onclick=()=>{if(pn.classList.contains("on")){close();return}list();pn.classList.add("on")};
+  bell.onclick=()=>{if(pn.classList.contains("on")){close();return}list();pn.classList.add("on");syncNotices_().then(()=>{list();badge()})};
   pn.querySelector(".hist-c").onclick=close;
   pn.querySelector(".hist-push").onclick=()=>pushOn_();
   pn.querySelector(".hist-clr").onclick=()=>{try{LS.s("dsac_hist","[]")}catch(e){}list();badge()};
