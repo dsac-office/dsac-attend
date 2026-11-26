@@ -364,6 +364,36 @@ function patchMeta_(p, admin, as) {
   }
 }
 
+// 계획표 값(JSON 문자열)이 비어 있는지: p 가 없거나 비어 있으면 true
+function isEmptyPlan_(v) {
+  try {
+    var o = typeof v === 'string' ? JSON.parse(v) : v;
+    if (!o || typeof o !== 'object') return true;
+    return !o.p || Object.keys(o.p).length === 0;
+  } catch (e) { return true; }
+}
+
+// 매일 새벽 2시쯤 store 탭을 통째로 복사해 백업(최근 30개만 남김)
+function backupStore() {
+  var ss = SpreadsheetApp.openById(props_().getProperty('SHEET_ID'));
+  var src = ss.getSheetByName('store');
+  if (!src) return;
+  var now = new Date();
+  var name = 'store_백업_' + Utilities.formatDate(now, 'Asia/Seoul', 'yyyyMMdd_HHmm');
+  src.copyTo(ss).setName(name);
+  var backups = ss.getSheets().filter(function (s) { return s.getName().indexOf('store_백업_') === 0; });
+  backups.sort(function (a, b) { return a.getName() < b.getName() ? 1 : -1; });
+  for (var i = 30; i < backups.length; i++) ss.deleteSheet(backups[i]);
+}
+
+// 한 번만 실행: 매일 02시 backupStore 자동 실행 트리거 설치(중복 설치 방지)
+function installBackupTrigger() {
+  ScriptApp.getProjectTriggers().forEach(function (t) {
+    if (t.getHandlerFunction() === 'backupStore') ScriptApp.deleteTrigger(t);
+  });
+  ScriptApp.newTrigger('backupStore').timeBased().everyDays(1).atHour(2).create();
+}
+
 function write_(p, admin, as) {
   if (String(p.key).indexOf('inq/') === 0) return writeInq_(p, admin, as);
   if (p.action === 'patchItem') return patchItem_(p, admin, as);
@@ -376,6 +406,11 @@ function write_(p, admin, as) {
     var sh = store_();
     if (p.action === 'set') {
       var row = findRow_(sh, p.key);
+      // 안전장치: 계획표(sheets/)가 이미 내용이 있는데 빈 계획표로 덮어쓰려 하면 막아요.
+      if (row > 0 && String(p.key).indexOf('sheets/') === 0 && isEmptyPlan_(p.value)) {
+        var old = sh.getRange(row, 2).getValue();
+        if (!isEmptyPlan_(old)) return { ok: false, error: 'guard' };
+      }
       var vals = [p.key, p.value, new Date()];
       if (row < 0) sh.appendRow(vals); else sh.getRange(row, 1, 1, 3).setValues([vals]);
       cacheDrop_(p.key);
