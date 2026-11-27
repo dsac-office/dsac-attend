@@ -1707,6 +1707,7 @@ function bindForm(it){
   $("#fd").onchange=()=>{const d=$("#fd").value;if(!d)return;const ks=isWk(d)?["휴일"]:["평일","휴일"];$("#fk").innerHTML=ks.map(x=>`<button type="button" data-k="${x}" class="${x==="휴일"?"hd":""}">${x}(<span class="dw">${DOW[pd(d).getUTCDay()]}</span>)</button>`).join("");setK(isHol(d)?"휴일":"평일")};
   ["#fs","#fe","#fb","#fr","#fov"].forEach(id=>{const el=$(id);el.oninput=()=>{autoColon(el);mTouched=false;recalc()};el.onblur=()=>{if(el.value.includes("~"))return;const n=normT(el.value);if(n)el.value=n}});
   $("#fm").oninput=()=>{mTouched=$("#fm").value!=="";updBk()};
+  if(it&&it.brk)$("#fbr").querySelectorAll("button").forEach(x=>{const on=x.dataset.v===it.brk;x.classList.toggle("on",on);x.setAttribute("aria-pressed",on)});
   $("#fbr").onclick=e=>{const b=e.target.closest("button");if(!b)return;$("#fbr").querySelectorAll("button").forEach(x=>{const on=x===b;x.classList.toggle("on",on);x.setAttribute("aria-pressed",on)});mTouched=false;recalc()};
   recalc();applyHM();
   if(it)$("#fc").onclick=()=>{S.edit=null;render()};
@@ -1726,6 +1727,7 @@ function bindForm(it){
     const id=it?it.id:Date.now().toString(36)+Math.random().toString(36).slice(2,6);
     const hw=winOf(hm==="all"?foVal():(winOf($("#fr").value)?$("#fr").value:foVal()));const sHol=hw?hhmm(hw.ws):"";
     const wsL=[winOf($("#fr").value),winOf(foVal())].filter(Boolean).map(x=>x.ws);const rec={d,k,s:k==="휴일"?(wsL.length?hhmm(Math.min(...wsL)):sHol):s,e,b:be,m,r,hm:k==="휴일"?hm:"",o:k==="휴일"?foVal():"",w,st:it&&it.st||"",ts:it&&it.ts||Date.now()};
+    if(k==="휴일")rec.brk=brkOf();
     busy($("#fo"),true);
     /* 화면을 먼저 바꾸고 저장은 뒤에서 기다려요. 실패하면 되돌려요 */
     const cur=S.mine||{items:{}},nxt={...cur,items:{...(cur.items||{}),[id]:rec}};
